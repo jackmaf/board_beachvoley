@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voley Playa Scout</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header class="app-header">
+        <h1>🏐 Voley Playa Scout</h1>
+        <nav>
+            <button id="nav-config" class="nav-btn active">Config</button>
+            <button id="nav-registro" class="nav-btn" disabled>Registro</button>
+            <button id="nav-estadisticas" class="nav-btn" disabled>Estadísticas</button>
+        </nav>
+    </header>
+
+    <main id="app-content">
+        <!-- VISTA CONFIGURACION -->
+        <section id="vista-configuracion" class="view active-view">
+            <div class="card config-card">
+                <h2>Configuración del Partido</h2>
+                <form id="config-form">
+                    <div class="teams-config">
+                        <div class="team-config group-a">
+                            <h3>Equipo A</h3>
+                            <input type="text" id="input-team-a" placeholder="Nombre Equipo (Ej. Brasil)" required>
+                            <input type="text" id="input-a1" placeholder="Nombre Jugador 1" required>
+                            <input type="text" id="input-a2" placeholder="Nombre Jugador 2" required>
+                        </div>
+                        <div class="team-config group-b">
+                            <h3>Equipo B</h3>
+                            <input type="text" id="input-team-b" placeholder="Nombre Equipo (Ej. España)" required>
+                            <input type="text" id="input-b1" placeholder="Nombre Jugador 1" required>
+                            <input type="text" id="input-b2" placeholder="Nombre Jugador 2" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="primary-btn">Empezar Partido</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VISTA REGISTRO -->
+        <section id="vista-registro" class="view">
+            <div class="scoreboard">
+                <div class="team team-a">
+                    <span class="team-name" id="name-team-a">Equipo A</span>
+                    <span class="score" id="score-a">0</span>
+                </div>
+                <div class="divider">:</div>
+                <div class="team team-b">
+                    <span class="score" id="score-b">0</span>
+                    <span class="team-name" id="name-team-b">Equipo B</span>
+                </div>
+            </div>
+
+            <div class="court-container">
+                <div class="court" id="main-court">
+                    <div class="court-half half-a"></div>
+                    <div class="net"></div>
+                    <div class="line vertical-line"></div>
+                    <div class="court-half half-b"></div>
+                </div>
+
+                <!-- Modal Menu para seleccionar jugador y accion -->
+                <div class="player-menu hidden" id="player-menu">
+                    <h3>¿Quién fue el responsable?</h3>
+
+                    <div class="action-type-toggle">
+                        <label class="radio-label">
+                            <input type="radio" name="actionType" value="punto" checked>
+                            <span class="radio-btn point-radio">✔ Punto (Winner)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="actionType" value="error">
+                            <span class="radio-btn error-radio">✖ Error</span>
+                        </label>
+                    </div>
+
+                    <div class="player-grid">
+                        <button class="player-btn team-a-btn" data-player="A1" data-team="A" id="btn-a1">A1</button>
+                        <button class="player-btn team-a-btn" data-player="A2" data-team="A" id="btn-a2">A2</button>
+                        <button class="player-btn team-b-btn" data-player="B1" data-team="B" id="btn-b1">B1</button>
+                        <button class="player-btn team-b-btn" data-player="B2" data-team="B" id="btn-b2">B2</button>
+                    </div>
+
+                    <button class="cancel-btn" id="cancel-point">Cancelar</button>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-end-match" class="danger-btn">Terminar y Guardar Partido</button>
+            </div>
+        </section>
+
+        <!-- VISTA ESTADISTICAS -->
+        <section id="vista-estadisticas" class="view">
+            <div class="stats-dashboard">
+                <div class="card summary-card">
+                    <h2>Resumen del Partido</h2>
+                    <div class="summary-details">
+                        <div class="final-score" id="final-score">A 0 - 0 B</div>
+                        <div class="duration">Duración: <span id="match-duration">00:00</span></div>
+                        <div class="total-points">Acciones totales: <span id="total-points">0</span></div>
+                    </div>
+                </div>
+
+                <div class="card players-card">
+                    <h2>Desglose por Jugador</h2>
+                    <div class="players-stats-container" id="players-stats-container">
+                        <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <div class="card heatmap-card">
+                    <h2>Mapa de Calor</h2>
+                    <div class="heatmap-legend">
+                        <span class="legend-item"><span class="legend-dot dot-a"></span> Acción Eq. A</span>
+                        <span class="legend-item"><span class="legend-dot dot-b"></span> Acción Eq. B</span>
+                        <span class="legend-item"><span class="legend-dot error-border"></span> Borde = Error</span>
+                    </div>
+                    <div class="heatmap-container">
+                        <div class="court mini-court" id="mini-court">
+                            <div class="court-half half-a"></div>
+                            <div class="net"></div>
+                            <div class="line vertical-line"></div>
+                            <div class="court-half half-b"></div>
+                            <div id="heatmap-points"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
