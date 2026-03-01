@@ -6,10 +6,21 @@ document.addEventListener('DOMContentLoaded', () => {
             { scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 } // index 0 = Set 1
         ],
         currentSetIndex: 0,
-        points: [], // { equipo, jugadorId, tipoAccion, coordenadas: {x, y}, marcadorMomento, timestamp, setNumber }
+        points: [], // { equipo, jugadorId, tipoAccion, coordenadas: {x, y}, marcadorMomento, timestamp, setNumber, matchSecond }
         currentPendingPoint: null,
-        matchStartTime: null
+        matchStartTime: null, // Legacy real-world start time
+        matchTimeSeconds: 0,  // Official stopwatch time in seconds
+        isTimerRunning: false
     };
+
+    // DOM Elements - Timer
+    const uiBogotaClock = document.getElementById('bogota-clock');
+    const uiMatchStopwatch = document.getElementById('match-stopwatch');
+    const btnTimerPlay = document.getElementById('btn-timer-play');
+    const btnTimerPause = document.getElementById('btn-timer-pause');
+
+    let timerInterval = null;
+    let clockInterval = null;
 
     // DOM Elements - Nav
     const navConfig = document.getElementById('nav-config');
@@ -88,13 +99,51 @@ document.addEventListener('DOMContentLoaded', () => {
     themeRadios.forEach(r => {
         if (r.value === savedTheme) r.checked = true;
         r.addEventListener('change', (e) => {
-            const newTheme = e.target.value;
-            document.body.setAttribute('data-theme', newTheme);
-            localStorage.setItem('voley-theme', newTheme);
+            document.body.setAttribute('data-theme', e.target.value);
+            localStorage.setItem('voley-theme', e.target.value);
         });
     });
 
-    // init load
+    // --- CLOCK AND TIMER LOGIC ---
+    function updateBogotaClock() {
+        if (!uiBogotaClock) return;
+        const now = new Date();
+        const options = { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+        const timeString = new Intl.DateTimeFormat('es-CO', options).format(now);
+        uiBogotaClock.innerText = `${timeString} (Bogotá)`;
+    }
+
+    function updateStopwatchUI() {
+        if (!uiMatchStopwatch) return;
+        const m = Math.floor(state.matchTimeSeconds / 60).toString().padStart(2, '0');
+        const s = (state.matchTimeSeconds % 60).toString().padStart(2, '0');
+        uiMatchStopwatch.innerText = `${m}:${s}`;
+
+        btnTimerPlay.disabled = state.isTimerRunning;
+        btnTimerPause.disabled = !state.isTimerRunning;
+    }
+
+    function toggleTimer(running) {
+        state.isTimerRunning = running;
+        if (running) {
+            timerInterval = setInterval(() => {
+                state.matchTimeSeconds++;
+                updateStopwatchUI();
+            }, 1000);
+        } else {
+            clearInterval(timerInterval);
+        }
+        updateStopwatchUI();
+    }
+
+    btnTimerPlay?.addEventListener('click', () => toggleTimer(true));
+    btnTimerPause?.addEventListener('click', () => toggleTimer(false));
+
+    // Start Real time clock once
+    clockInterval = setInterval(updateBogotaClock, 1000);
+    updateBogotaClock();
+
+    // Setup navigation load
     loadState();
 
     // Setup navigation
@@ -268,6 +317,15 @@ document.addEventListener('DOMContentLoaded', () => {
             state.sets = [{ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 }];
             state.currentSetIndex = 0;
             state.matchStartTime = null;
+            state.matchTimeSeconds = 0;
+            toggleTimer(false); // Make sure it's stopped initially
+        } else {
+            // Re-bind timer if reloading an active match
+            if (state.isTimerRunning) {
+                toggleTimer(true);
+            } else {
+                updateStopwatchUI();
+            }
         }
 
         saveState();
@@ -376,29 +434,47 @@ document.addEventListener('DOMContentLoaded', () => {
     btnTimeoutB.addEventListener('click', () => registerTimeout('B'));
 
     function registerTimeout(team) {
-        if (!state.matchStartTime) state.matchStartTime = Date.now();
-        const curSet = state.sets[state.currentSetIndex];
+        if (!state.config) return;
 
-        if (team === 'A' && curSet.timeoutsA < 1) {
-            curSet.timeoutsA++;
-        } else if (team === 'B' && curSet.timeoutsB < 1) {
-            curSet.timeoutsB++;
-        } else {
-            return; // Ya se usó el tiempo libre de este set
+        // Auto pause the official stopwatch
+        if (state.isTimerRunning) {
+            toggleTimer(false);
         }
 
-        // Add to log (fake coordinates since it's a timeout)
-        state.points.push({
-            pointNumber: state.points.length + 1,
-            equipo: team,
-            jugadorId: `Eq.${team}`,
-            tipoAccion: 'timeout',
-            coordenadas: { x: 50, y: 50 }, // middle of court conceptually
-            marcadorMomento: `${curSet.scoreA}-${curSet.scoreB}`,
-            timestamp: Date.now(),
-            setNumber: state.currentSetIndex + 1
-        });
+        const currentSet = state.sets[state.currentSetIndex];
+        const maxTimeouts = 1;
 
+        if (team === 'A' && currentSet.timeoutsA < maxTimeouts) {
+            currentSet.timeoutsA++;
+            // Add to log (fake coordinates since it's a timeout)
+            state.points.push({
+                pointNumber: state.points.length + 1, // This will be adjusted by renderStatistics for non-timeout points
+                equipo: team,
+                jugadorId: `Eq.${team}`,
+                tipoAccion: 'timeout',
+                coordenadas: { x: 50, y: 50 }, // middle of court conceptually
+                marcadorMomento: `${currentSet.scoreA}-${currentSet.scoreB}`,
+                timestamp: Date.now(),
+                setNumber: state.currentSetIndex + 1,
+                matchSecond: state.matchTimeSeconds
+            });
+        } else if (team === 'B' && currentSet.timeoutsB < maxTimeouts) {
+            currentSet.timeoutsB++;
+            // Add to log (fake coordinates since it's a timeout)
+            state.points.push({
+                pointNumber: state.points.length + 1, // This will be adjusted by renderStatistics for non-timeout points
+                equipo: team,
+                jugadorId: `Eq.${team}`,
+                tipoAccion: 'timeout',
+                coordenadas: { x: 50, y: 50 }, // middle of court conceptually
+                marcadorMomento: `${currentSet.scoreA}-${currentSet.scoreB}`,
+                timestamp: Date.now(),
+                setNumber: state.currentSetIndex + 1,
+                matchSecond: state.matchTimeSeconds
+            });
+        } else {
+            alert(`El Equipo ${team} ya no tiene tiempos muertos en este set.`);
+        }
         saveState();
         updateScoreUI();
     }
@@ -421,7 +497,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentSetIndex: 0,
                 points: [],
                 currentPendingPoint: null,
-                matchStartTime: null
+                matchStartTime: null,
+                matchTimeSeconds: 0,
+                isTimerRunning: false
             };
             saveState();
 
@@ -447,17 +525,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pointGoesTo === 'A') curSet.scoreA++;
         else curSet.scoreB++;
 
-        state.points.push({
-            pointNumber: state.points.length + 1,
+        const pointData = {
             equipo: team,
             jugadorId: playerId,
             tipoAccion: actionType,
-            coordenadas: state.currentPendingPoint,
-            marcadorMomento: `${curSet.scoreA}-${curSet.scoreB}`,
+            coordenadas: { ...state.currentPendingPoint },
+            marcadorMomento: `${state.sets[state.currentSetIndex].scoreA}-${state.sets[state.currentSetIndex].scoreB}`,
             timestamp: Date.now(),
-            setNumber: state.currentSetIndex + 1
-        });
+            setNumber: state.currentSetIndex + 1,
+            matchSecond: state.matchTimeSeconds, // Capturing exact official time of action
+            pointNumber: state.points.filter(p => p.tipoAccion !== 'timeout').length + 1
+        };
 
+        state.points.push(pointData);
         checkSetWinner();
         saveState();
         updateScoreUI();
@@ -614,13 +694,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Custom duration logic based on set
         let matchSeconds = 0;
         if (pointsBySet.length > 0) {
-            const firstPt = pointsBySet[0].timestamp;
-            const lastPt = pointsBySet[pointsBySet.length - 1].timestamp;
-            matchSeconds = Math.max(0, Math.floor((lastPt - firstPt) / 1000));
+            // Find max matchSecond recorded in the filtered view
+            const maxSec = Math.max(...pointsBySet.map(p => p.matchSecond || 0));
+            const minSec = Math.min(...pointsBySet.map(p => p.matchSecond || 0));
+            matchSeconds = maxSec - minSec;
         } else if (activeFilters.set === 'all') {
-            const lastPointTime = pointsInTime.length > 0 ? pointsInTime[pointsInTime.length - 1].timestamp : (statsState.matchStartTime || Date.now());
-            const diffMs = statsState.matchStartTime ? Math.max(0, lastPointTime - statsState.matchStartTime) : 0;
-            matchSeconds = Math.floor(diffMs / 1000);
+            matchSeconds = statsState.matchTimeSeconds || 0;
         }
 
         const minutes = Math.floor(matchSeconds / 60);
@@ -721,6 +800,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const dashHeatmap = document.getElementById('dash-heatmap-points');
         dashHeatmap.innerHTML = '';
 
+        // Tracker for Best Minute (points per minute)
+        const pointsPerMinute = {};
+
         // Track points for detailed log
         let detailedLog = [];
         const tbody = document.getElementById('dash-table-body');
@@ -751,6 +833,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (p.tipoAccion === 'punto' && diff <= 2) {
                     clutchPoints++;
+                }
+
+                // Analyze Best Minute
+                if (p.tipoAccion === 'punto') {
+                    // matchSecond / 60 = official minute zero-indexed
+                    const officialMinute = Math.floor((p.matchSecond || 0) / 60) + 1; // +1 to say "Minute 1", "Minute 2"
+                    pointsPerMinute[officialMinute] = (pointsPerMinute[officialMinute] || 0) + 1;
                 }
 
                 // Zones (only considering points, normally attacks/serves)
@@ -806,6 +895,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dash-eff').innerText = `${efficiency.toFixed(1)}%`;
         document.getElementById('dash-eff').style.color = efficiency < 0 ? '#e84118' : 'var(--primary)';
 
+        // Calculate Best Minute string
+        let bestMinText = "--";
+        let bestMinVal = 0;
+        let bestMinCount = 0;
+
+        Object.keys(pointsPerMinute).forEach(minute => {
+            if (pointsPerMinute[minute] > bestMinCount) {
+                bestMinCount = pointsPerMinute[minute];
+                bestMinVal = minute;
+            }
+        });
+
+        if (bestMinCount > 0) {
+            bestMinText = `${bestMinVal} (${bestMinCount} pts)`;
+        }
+        document.getElementById('dash-best-minute').innerText = bestMinText === "--" ? "Ninguno aún" : `Minuto ${bestMinText}`;
+
         // Clutch
         document.getElementById('dash-clutch').innerText = clutchPoints;
 
@@ -827,7 +933,8 @@ document.addEventListener('DOMContentLoaded', () => {
             playerName, playerId, team: myTeam, nameTeamA, nameTeamB,
             playerPts, playerErrs, clutchPoints, efficiency, leftZoneAtks, rightZoneAtks, pctL, pctR,
             bitacora_acciones: detailedLog,
-            activeSetFilterText
+            activeSetFilterText,
+            bestMinute: bestMinText
         };
 
         playerDashboard.classList.remove('hidden');

@@ -102,6 +102,19 @@
                 <span class="set-team" id="set-name-b">Eq. B</span>
             </div>
 
+            <!-- RELOJ OFICIAL Y CRONOMETRO -->
+            <div class="match-time-panel">
+                <div class="real-time" id="bogota-clock">14:00:00 (Bogotá)</div>
+                <div class="stopwatch-container">
+                    <div class="stopwatch-time" id="match-stopwatch">00:00</div>
+                    <div class="stopwatch-controls">
+                        <button id="btn-timer-play" class="timer-btn" title="Iniciar/Reanudar Reloj">▶️</button>
+                        <button id="btn-timer-pause" class="timer-btn empty-btn" title="Pausar Reloj"
+                            disabled>⏸️</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="scoreboard">
                 <div class="team team-a">
                     <h2 class="team-name" id="name-team-a">Equipo A</h2>
@@ -300,6 +313,10 @@
                             </div>
                             <span class="z-val" id="dash-zone-r-val">0%</span>
                         </div>
+                    </div>
+                    <div class="dash-stat-row" style="margin-top: 10px; font-weight: bold; color: var(--text-dark);">
+                        <span>👑 Minuto Más Productivo:</span>
+                        <span id="dash-best-minute" style="color: var(--primary);">Minuto --</span>
                     </div>
                 </div>
 

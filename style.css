@@ -343,6 +343,86 @@ input[type="text"]:focus {
     border-width: 3px;
 }
 
+/* RELOJ Y CRONOMETRO */
+.match-time-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin: -0.5rem 1rem 1rem;
+    /* Negative top margin to pull up closer to sets tracker */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.real-time {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.5px;
+}
+
+.stopwatch-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stopwatch-time {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    font-family: monospace;
+    letter-spacing: 1px;
+    background: #f8f9fa;
+    padding: 0.2rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.stopwatch-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.timer-btn {
+    border: none;
+    background: var(--bg-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.timer-btn:hover:not(:disabled) {
+    transform: scale(1.1);
+    background: var(--primary);
+    color: white;
+}
+
+.timer-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.timer-btn.empty-btn {
+    opacity: 0.6;
+}
+
+.timer-btn.empty-btn:hover:not(:disabled) {
+    background: #ff4757;
+    opacity: 1;
+}
+
 /* Scoreboard */
 .scoreboard {
     display: flex;
