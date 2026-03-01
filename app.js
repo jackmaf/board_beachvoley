@@ -260,14 +260,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             timelineInterval = setInterval(() => {
                 let currentVal = parseInt(slider.value);
-                currentVal += 10;
 
                 if (currentVal >= 100) {
-                    currentVal = 100;
-                    clearInterval(timelineInterval);
-                    timelineInterval = null;
-                    btnPlayTimeline.innerHTML = '▶️ Play';
-                    btnPlayTimeline.classList.remove('playing');
+                    // Loop back to 0
+                    currentVal = 0;
+                } else {
+                    currentVal += 10;
                 }
 
                 slider.value = currentVal;
