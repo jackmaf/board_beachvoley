@@ -531,6 +531,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.currentPendingPoint) return;
 
         const actionType = document.querySelector('input[name="actionType"]:checked').value;
+        const actionDetailNode = document.querySelector('input[name="actionDetail"]:checked');
+        const actionDetail = actionDetailNode ? actionDetailNode.value : 'Ataque';
+
         const curSet = state.sets[state.currentSetIndex];
 
         let pointGoesTo = team;
@@ -545,6 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
             equipo: team,
             jugadorId: playerId,
             tipoAccion: actionType,
+            actionDetail: actionDetail,
             coordenadas: { ...state.currentPendingPoint },
             marcadorMomento: `${state.sets[state.currentSetIndex].scoreA}-${state.sets[state.currentSetIndex].scoreB}`,
             timestamp: Date.now(),
@@ -876,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Build detailed log
             const isPoint = p.tipoAccion === 'punto';
-            let actionLabel = isTimeout ? 'TIEMPO MUERTO' : (isPoint ? 'Punto Ganador' : 'Error');
+            let actionLabel = isTimeout ? 'TIEMPO MUERTO' : `${p.actionDetail || 'Acción'} (${isPoint ? 'Punto' : 'Error'})`;
 
             detailedLog.push({
                 punto_nro: p.pointNumber,
@@ -902,6 +906,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const totalActions = playerPts + playerErrs;
+
+        // --- NEW METRIC: Plus/Minus (+/-) ---
+        let plusMinusVal = playerPts - playerErrs;
+        const pmEl = document.getElementById('dash-plus-minus');
+        pmEl.innerText = plusMinusVal > 0 ? `+${plusMinusVal}` : plusMinusVal;
+
+        if (plusMinusVal > 0) {
+            pmEl.style.color = 'var(--primary)'; // Green
+        } else if (plusMinusVal < 0) {
+            pmEl.style.color = '#e84118'; // Red
+        } else {
+            pmEl.style.color = 'var(--dark)'; // Black if 0
+        }
 
         // Net Efficiency
         let efficiency = 0;

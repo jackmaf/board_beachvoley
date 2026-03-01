@@ -700,6 +700,12 @@ input[type="text"]:focus {
     color: white;
 }
 
+.radio-label input:checked+.detail-radio {
+    background: var(--dark);
+    border-color: var(--dark);
+    color: white;
+}
+
 .player-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
