@@ -181,6 +181,14 @@
             <div class="dashboard-header">
                 <div class="dash-badge" id="dash-badge">A1</div>
                 <h2 id="dash-name">Nombre Jugador</h2>
+
+                <div class="export-actions" id="export-actions">
+                    <button class="export-btn pdf-btn" id="btn-export-pdf" title="Descargar como PDF">📄 PDF</button>
+                    <button class="export-btn csv-btn" id="btn-export-csv" title="Descargar datos en CSV">📊
+                        CSV</button>
+                    <button class="export-btn json-btn" id="btn-export-json" title="Descargar datos en JSON">📋
+                        JSON</button>
+                </div>
             </div>
 
             <div class="dash-grid">
@@ -234,6 +242,8 @@
         </div>
     </div>
 
+    <!-- Html2Pdf Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="app.js"></script>
 </body>
 

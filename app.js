@@ -55,6 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Modal
     const playerDashboard = document.getElementById('player-dashboard');
     const closeDashboardBtn = document.getElementById('close-dashboard');
+    const btnExportPdf = document.getElementById('btn-export-pdf');
+    const btnExportCsv = document.getElementById('btn-export-csv');
+    const btnExportJson = document.getElementById('btn-export-json');
 
     // Filter state
     let activeFilters = {
@@ -62,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
         action: 'all', // 'all', 'punto', 'error'
         maxTimePct: 100 // 0 to 100
     };
+
+    // Keep track of current dashboard data for exports
+    let currentDashData = null;
 
     let currentMarker = null;
 
@@ -130,6 +136,11 @@ document.addEventListener('DOMContentLoaded', () => {
     closeDashboardBtn.addEventListener('click', () => {
         playerDashboard.classList.add('hidden');
     });
+
+    // Exports
+    btnExportCsv.addEventListener('click', exportToCSV);
+    btnExportJson.addEventListener('click', exportToJSON);
+    btnExportPdf.addEventListener('click', exportToPDF);
 
     navConfig.addEventListener('click', () => setView('vista-configuracion'));
     navRegistro.addEventListener('click', () => setView('vista-registro'));
@@ -519,9 +530,80 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dash-zone-l').style.width = `${pctL}%`;
         document.getElementById('dash-zone-l-val').innerText = `${pctL.toFixed(0)}%`;
 
-        document.getElementById('dash-zone-r').style.width = `${pctR}%`;
-        document.getElementById('dash-zone-r-val').innerText = `${pctR.toFixed(0)}%`;
+        // Save data for exports
+        currentDashData = {
+            playerName, playerId, team: myTeam, nameTeamA, nameTeamB,
+            playerPts, playerErrs, clutchPoints, efficiency, leftZoneAtks, rightZoneAtks, pctL, pctR
+        };
 
         playerDashboard.classList.remove('hidden');
+    }
+
+    // EXPORT FUNCTIONS
+    function exportToJSON() {
+        if (!currentDashData) return;
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(currentDashData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `VoleyPlaya_Scouting_${currentDashData.playerName.replace(/\s+/g, '_')}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    function exportToCSV() {
+        if (!currentDashData) return;
+        const d = currentDashData;
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + "Metrica,Valor\n"
+            + `Jugador,${d.playerName} (${d.playerId})\n`
+            + `Eficiencia Neta (%),${d.efficiency.toFixed(1)}\n`
+            + `Puntos Ganadores,${d.playerPts}\n`
+            + `Errores,${d.playerErrs}\n`
+            + `Puntos Clutch,${d.clutchPoints}\n`
+            + `Ataques Zona Izquierda (%),${d.pctL.toFixed(1)}\n`
+            + `Ataques Zona Derecha (%),${d.pctR.toFixed(1)}\n`;
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `VoleyPlaya_Scouting_${d.playerName.replace(/\s+/g, '_')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    }
+
+    function exportToPDF() {
+        if (!currentDashData) return;
+
+        // Hide UI elements naturally via CSS during print process
+        const element = document.querySelector('.dashboard-content');
+
+        // Temporarily change background so the PDF isn't transparent/dark
+        const originalBg = element.style.background;
+        element.style.background = '#F6F6F6'; // var(--light)
+        element.classList.add('html2pdf__container'); // Apply print styles
+
+        const opt = {
+            margin: 10,
+            filename: `VoleyPlaya_Scouting_${currentDashData.playerName.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F6F6F6' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // If html2pdf is loaded, execute promise
+        if (window.html2pdf) {
+            btnExportPdf.innerText = "Exportando...";
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.style.background = originalBg;
+                element.classList.remove('html2pdf__container');
+                btnExportPdf.innerText = "📄 PDF";
+            });
+        } else {
+            alert("La librería de PDF no pudo cargar. Comprueba tu conexión a internet.");
+            element.style.background = originalBg;
+            element.classList.remove('html2pdf__container');
+        }
     }
 });

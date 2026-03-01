@@ -796,6 +796,8 @@ input[type="text"]:focus {
     margin-bottom: 2rem;
     border-bottom: 2px solid #ddd;
     padding-bottom: 1rem;
+    flex-wrap: wrap;
+    /* Allow wrapping on small screens */
 }
 
 .dash-badge {
@@ -813,6 +815,62 @@ input[type="text"]:focus {
 #dash-name {
     font-size: 1.5rem;
     color: var(--dark);
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Export Buttons */
+.export-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-left: auto;
+    /* Push to right */
+}
+
+.export-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+    color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.export-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.export-btn:active {
+    transform: translateY(0);
+}
+
+.pdf-btn {
+    background: #e74c3c;
+}
+
+.csv-btn {
+    background: #27ae60;
+}
+
+.json-btn {
+    background: #f39c12;
+}
+
+/* Print optimization for html2pdf - hide elements we don't want exported */
+.html2pdf__container .close-dashboard,
+.html2pdf__container .export-actions {
+    display: none !important;
+}
+
+/* Ensure background colors are printed by html2pdf */
+.html2pdf__container .dash-kpi,
+.html2pdf__container .zone-bars,
+.html2pdf__container .dash-heatmap-box {
+    background: #ffffff !important;
 }
 
 .dash-grid {
