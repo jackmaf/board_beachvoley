@@ -122,12 +122,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filter Logic setup
     function resetFilters() {
-        activeFilters = { player: 'all', action: 'all', maxTimePct: 100 };
+        activeFilters = { player: 'all', action: 'all', maxTimePct: 100, set: 'all' };
         document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
         document.querySelector('#filter-players [data-filter="all"]').classList.add('active');
         document.querySelector('#filter-actions [data-filter="all"]').classList.add('active');
+
         filterTimeline.value = 100;
         timelineVal.innerText = "Todo el partido";
+
+        if (state.config) {
+            generateSetFilters();
+        }
+    }
+
+    function generateSetFilters() {
+        const container = document.getElementById('filter-sets');
+        if (!container) return;
+
+        container.innerHTML = `<button class="filter-pill active" data-filter="all">Todos los Sets</button>`;
+
+        const maxSets = state.config.maxSets || 3;
+        // Solo mostrar selector si hay mas de 1 set
+        document.getElementById('filter-sets-container').style.display = maxSets > 1 ? 'flex' : 'none';
+
+        if (maxSets > 1) {
+            for (let i = 1; i <= maxSets; i++) {
+                container.innerHTML += `<button class="filter-pill" data-filter="${i}">Set ${i}</button>`;
+            }
+        }
+
+        // Attach events to new buttons
+        const setBtns = container.querySelectorAll('.filter-pill');
+        setBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeFilters.set = btn.getAttribute('data-filter') === 'all' ? 'all' : parseInt(btn.getAttribute('data-filter'));
+                renderStatistics();
+            });
+        });
     }
 
     filterPlayerBtns.forEach(btn => {
@@ -558,24 +591,40 @@ document.addEventListener('DOMContentLoaded', () => {
         const lastIndexForTime = Math.floor((statsState.points.length * activeFilters.maxTimePct) / 100);
         const pointsInTime = statsState.points.slice(0, lastIndexForTime);
 
-        // Calculate score at the chosen time
+        // Apply Set Filter strictly FIRST to both Summary and Visuals
+        let pointsBySet = pointsInTime;
+        if (activeFilters.set && activeFilters.set !== 'all') {
+            pointsBySet = pointsInTime.filter(p => p.setNumber === activeFilters.set);
+        }
+
+        // Calculate score at the chosen time for the chosen Set(s)
         let tempScoreA = 0; let tempScoreB = 0;
-        pointsInTime.forEach(p => {
+        pointsBySet.forEach(p => {
             let pointGoesTo = p.equipo;
             if (p.tipoAccion === 'error') pointGoesTo = p.equipo === 'A' ? 'B' : 'A';
             if (pointGoesTo === 'A') tempScoreA++; else tempScoreB++;
         });
 
-        uiFinalScore.innerText = `${teamNameA} ${tempScoreA} - ${tempScoreB} ${teamNameB}`;
-        uiTotalPoints.innerText = pointsInTime.length;
+        uiFinalScore.innerText = activeFilters.set !== 'all'
+            ? `${teamNameA} ${tempScoreA} - ${tempScoreB} ${teamNameB} (S${activeFilters.set})`
+            : `${teamNameA} ${tempScoreA} - ${tempScoreB} ${teamNameB}`;
 
-        const lastPointTime = pointsInTime.length > 0 ? pointsInTime[pointsInTime.length - 1].timestamp : (statsState.matchStartTime || Date.now());
-        const diffMs = statsState.matchStartTime ? Math.max(0, lastPointTime - statsState.matchStartTime) : 0;
+        uiTotalPoints.innerText = pointsBySet.length;
 
-        const totalSeconds = Math.floor(diffMs / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
+        // Custom duration logic based on set
+        let matchSeconds = 0;
+        if (pointsBySet.length > 0) {
+            const firstPt = pointsBySet[0].timestamp;
+            const lastPt = pointsBySet[pointsBySet.length - 1].timestamp;
+            matchSeconds = Math.max(0, Math.floor((lastPt - firstPt) / 1000));
+        } else if (activeFilters.set === 'all') {
+            const lastPointTime = pointsInTime.length > 0 ? pointsInTime[pointsInTime.length - 1].timestamp : (statsState.matchStartTime || Date.now());
+            const diffMs = statsState.matchStartTime ? Math.max(0, lastPointTime - statsState.matchStartTime) : 0;
+            matchSeconds = Math.floor(diffMs / 1000);
+        }
 
+        const minutes = Math.floor(matchSeconds / 60);
+        const seconds = matchSeconds % 60;
         uiMatchDuration.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
         // Player Breakdown & Heatmap
@@ -588,8 +637,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         heatmapPoints.innerHTML = '';
 
-        // Filter points
-        let filteredPoints = pointsInTime.filter(p => {
+        // Filter points for visuals
+        let filteredPoints = pointsBySet.filter(p => {
             if (p.tipoAccion === 'timeout') return false; // Ignore timeouts for heatmap and stats
             if (activeFilters.player !== 'all' && activeFilters.player !== p.jugadorId) return false;
             if (activeFilters.action !== 'all' && activeFilters.action !== p.tipoAccion) return false;
@@ -771,11 +820,14 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dash-zone-l').style.width = `${pctL}%`;
         document.getElementById('dash-zone-l-val').innerText = `${pctL.toFixed(0)}%`;
 
+        let activeSetFilterText = activeFilters.set === 'all' ? 'All' : `Set_${activeFilters.set}`;
+
         // Save data for exports
         currentDashData = {
             playerName, playerId, team: myTeam, nameTeamA, nameTeamB,
             playerPts, playerErrs, clutchPoints, efficiency, leftZoneAtks, rightZoneAtks, pctL, pctR,
-            bitacora_acciones: detailedLog
+            bitacora_acciones: detailedLog,
+            activeSetFilterText
         };
 
         playerDashboard.classList.remove('hidden');
@@ -820,7 +872,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `VoleyPlaya_Scouting_${d.playerName.replace(/\s+/g, '_')}.csv`);
+        link.setAttribute("download", `VoleyPlaya_Scouting_${d.playerName.replace(/\s+/g, '_')}_${d.activeSetFilterText}.csv`);
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -845,7 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const opt = {
             margin: 10,
-            filename: `VoleyPlaya_Scouting_${currentDashData.playerName.replace(/\s+/g, '_')}.pdf`,
+            filename: `VoleyPlaya_Scouting_${currentDashData.playerName.replace(/\s+/g, '_')}_${currentDashData.activeSetFilterText}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F6F6F6', windowWidth: 800, scrollY: 0 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
