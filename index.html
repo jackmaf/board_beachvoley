@@ -355,8 +355,22 @@
                     <strong class="kpi-value highlight" id="dash-clutch">0</strong>
                     <span class="kpi-sub">Dif. de marcador <= 2</span>
                 </div>
+            </div> <!-- CLOSE dash-grid -->
 
-                <div class="dash-kpi">
+            <!-- Zone Attack Bars -->
+            <div class="zone-bars" style="margin-top: 20px;">
+                <div class="zone-bar">
+                    <span class="z-lbl">Izqda.</span>
+                    <div class="z-track">
+                        <div class="z-fill" id="dash-zone-l" style="width: 0%;"></div>
+                    </div>
+                    <span class="z-val" id="dash-zone-l-val">0%</span>
+                </div>
+                <div class="zone-bar">
+                    <span class="z-lbl">Drcha.</span>
+                    <div class="z-track">
+                        <div class="z-fill" id="dash-zone-r" style="width: 0%;"></div>
+                    </div>
                     <span class="z-val" id="dash-zone-r-val">0%</span>
                 </div>
             </div>
@@ -364,43 +378,50 @@
                 <span>👑 Minuto Más Productivo:</span>
                 <span id="dash-best-minute" style="color: var(--primary);">Minuto --</span>
             </div>
-        </div>
 
-        <!-- Personal Heatmap -->
-        <div class="dash-heatmap-box">
-            <h3>Puntos Ganadores Exclusivos</h3>
-            <div class="mini-court-wrapper">
-                <div class="court dash-court">
-                    <div class="court-half half-a"></div>
-                    <div class="net"></div>
-                    <div class="line vertical-line"></div>
-                    <div class="court-half half-b"></div>
-                    <div id="dash-heatmap-points"></div>
+            <!-- Personal Heatmap -->
+            <div class="dash-heatmap-box">
+                <h3>Puntos Ganadores Exclusivos</h3>
+                <div class="mini-court-wrapper">
+                    <div class="court dash-court">
+                        <div class="court-half half-a"></div>
+                        <div class="net"></div>
+                        <div class="line vertical-line"></div>
+                        <div class="court-half half-b"></div>
+                        <div id="dash-heatmap-points"></div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Perfil Táctico (Hexagrama) -->
+            <div class="dash-radar-box"
+                style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; margin-top: 1rem;">
+                <h3
+                    style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--dark); border-bottom: 2px solid #ddd; padding-bottom: 0.5rem;">
+                    Perfil Táctico (Heptagrama)</h3>
+                <canvas id="player-radar-chart" width="280" height="280" style="max-width: 100%;"></canvas>
+            </div>
+
+            <!-- Detailed Log Table for PDF -->
+            <div class="dash-log-section" id="dash-log-section">
+                <h3>Bitácora de Acciones (Orden Cronológico)</h3>
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th># Punto</th>
+                            <th>Acción</th>
+                            <th>Marcador</th>
+                            <th>X (m)</th>
+                            <th>Y (m)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dash-table-body">
+                        <!-- Llenado por JS -->
+                    </tbody>
+                </table>
+            </div>
+
         </div>
-    </div>
-
-    <!-- Detailed Log Table for PDF -->
-    <div class="dash-log-section" id="dash-log-section">
-        <h3>Bitácora de Acciones (Orden Cronológico)</h3>
-        <table class="dash-table">
-            <thead>
-                <tr>
-                    <th># Punto</th>
-                    <th>Acción</th>
-                    <th>Marcador</th>
-                    <th>X (m)</th>
-                    <th>Y (m)</th>
-                </tr>
-            </thead>
-            <tbody id="dash-table-body">
-                <!-- Llenado por JS -->
-            </tbody>
-        </table>
-    </div>
-
-    </div>
     </div>
 
     <!-- Html2Pdf Library -->

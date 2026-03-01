@@ -1059,8 +1059,15 @@ document.addEventListener('DOMContentLoaded', () => {
             pctR = (rightZoneAtks / totalZone) * 100;
         }
 
-        document.getElementById('dash-zone-l').style.width = `${pctL}%`;
-        document.getElementById('dash-zone-l-val').innerText = `${pctL.toFixed(0)}%`;
+        const elDashZoneL = document.getElementById('dash-zone-l');
+        const elDashZoneLVal = document.getElementById('dash-zone-l-val');
+        if (elDashZoneL) elDashZoneL.style.width = `${pctL}%`;
+        if (elDashZoneLVal) elDashZoneLVal.innerText = `${pctL.toFixed(0)}%`;
+
+        const elDashZoneR = document.getElementById('dash-zone-r');
+        const elDashZoneRVal = document.getElementById('dash-zone-r-val');
+        if (elDashZoneR) elDashZoneR.style.width = `${pctR}%`;
+        if (elDashZoneRVal) elDashZoneRVal.innerText = `${pctR.toFixed(0)}%`;
 
         let activeSetFilterText = activeFilters.set === 'all' ? 'All' : `Set_${activeFilters.set}`;
 
