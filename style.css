@@ -193,6 +193,64 @@ nav {
     color: var(--dark);
 }
 
+/* Match Rules Config */
+.match-rules-config {
+    margin-bottom: 2rem;
+    background: rgba(0, 0, 0, 0.03);
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
+.match-rules-config h3 {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--dark);
+    margin-bottom: 1rem;
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 600px) {
+    .rules-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+}
+
+.rule-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rule-group label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.rule-group select,
+.rule-group input[type="number"] {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--light);
+    color: var(--text-main);
+}
+
+.rule-group select:focus,
+.rule-group input[type="number"]:focus {
+    border-color: var(--primary);
+}
+
 input[type="text"] {
     width: 100%;
     padding: 0.8rem;

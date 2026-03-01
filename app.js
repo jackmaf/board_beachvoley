@@ -175,7 +175,10 @@ document.addEventListener('DOMContentLoaded', () => {
             pA1: document.getElementById('input-a1').value.trim() || 'A1',
             pA2: document.getElementById('input-a2').value.trim() || 'A2',
             pB1: document.getElementById('input-b1').value.trim() || 'B1',
-            pB2: document.getElementById('input-b2').value.trim() || 'B2'
+            pB2: document.getElementById('input-b2').value.trim() || 'B2',
+            maxSets: parseInt(document.getElementById('input-max-sets').value) || 3,
+            ptsNormal: parseInt(document.getElementById('input-pts-normal').value) || 21,
+            ptsTiebreak: parseInt(document.getElementById('input-pts-tiebreak').value) || 15
         };
 
         // Reset match data if it's a new match start
@@ -219,6 +222,22 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('input-a2').value = state.config.pA2;
         document.getElementById('input-b1').value = state.config.pB1;
         document.getElementById('input-b2').value = state.config.pB2;
+
+        document.getElementById('input-max-sets').value = state.config.maxSets || 3;
+        document.getElementById('input-pts-normal').value = state.config.ptsNormal || 21;
+        document.getElementById('input-pts-tiebreak').value = state.config.ptsTiebreak || 15;
+
+        // Setup Set boxes based on maxSets
+        const maxSets = state.config.maxSets || 3;
+        const boxesA = document.getElementById('set-boxes-a');
+        const boxesB = document.getElementById('set-boxes-b');
+        boxesA.innerHTML = '';
+        boxesB.innerHTML = '';
+
+        for (let i = 1; i <= maxSets; i++) {
+            boxesA.innerHTML += `<div class="set-box" id="box-a-s${i}"></div>`;
+            boxesB.innerHTML += `<div class="set-box" id="box-b-s${i}"></div>`;
+        }
 
         updateScoreUI();
     }
@@ -365,7 +384,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkSetWinner() {
         const curSet = state.sets[state.currentSetIndex];
-        const winThreshold = state.currentSetIndex === 2 ? 15 : 21; // 3rd set goes to 15
+        const maxSets = state.config.maxSets || 3;
+        const ptsNormal = state.config.ptsNormal || 21;
+        const ptsTiebreak = state.config.ptsTiebreak || 15;
+
+        let isTiebreak = (state.currentSetIndex === maxSets - 1);
+        const winThreshold = isTiebreak ? ptsTiebreak : ptsNormal;
 
         if ((curSet.scoreA >= winThreshold || curSet.scoreB >= winThreshold) &&
             Math.abs(curSet.scoreA - curSet.scoreB) >= 2) {
@@ -373,24 +397,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Set Won!
             const winner = curSet.scoreA > curSet.scoreB ? state.config.teamA : state.config.teamB;
 
-            // Allow tracking a 3rd set. If set index is 2, match is truly over.
-            if (state.currentSetIndex < 2) {
-                // Check if someone won 2 sets already
-                let winsA = 0; let winsB = 0;
-                state.sets.forEach(s => {
+            // Calculate total sets won
+            let winsA = 0; let winsB = 0;
+            state.sets.forEach((s, idx) => {
+                const threshold = (idx === maxSets - 1) ? ptsTiebreak : ptsNormal;
+                if ((s.scoreA >= threshold || s.scoreB >= threshold) && Math.abs(s.scoreA - s.scoreB) >= 2) {
                     if (s.scoreA > s.scoreB) winsA++;
                     else if (s.scoreB > s.scoreA) winsB++;
-                });
-
-                if (winsA < 2 && winsB < 2) {
-                    alert(`¡${winner} ha ganado el Set ${state.currentSetIndex + 1}! Iniciando siguiente Set...`);
-                    state.sets.push({ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 });
-                    state.currentSetIndex++;
-                } else {
-                    alert(`¡${winner} ha ganado el partido! Puedes finalizarlo ahora.`);
                 }
-            } else {
+            });
+
+            // Target wins
+            const setsToWinMatch = Math.ceil(maxSets / 2);
+
+            if (winsA >= setsToWinMatch || winsB >= setsToWinMatch) {
                 alert(`¡${winner} ha ganado el partido! Puedes finalizarlo ahora.`);
+            } else if (state.currentSetIndex < maxSets - 1) { // Match isn't over and there are sets left
+                alert(`¡${winner} ha ganado el Set ${state.currentSetIndex + 1}! Iniciando siguiente Set...`);
+                state.sets.push({ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 });
+                state.currentSetIndex++;
             }
         }
     }
@@ -418,20 +443,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update sets visual tracker
         let winsA = 0; let winsB = 0;
+        const maxSets = state.config.maxSets || 3;
+        const ptsNormal = state.config.ptsNormal || 21;
+        const ptsTiebreak = state.config.ptsTiebreak || 15;
+
         state.sets.forEach((s, i) => {
             if (s.scoreA === 0 && s.scoreB === 0) return; // Unplayed
 
-            const winThreshold = i === 2 ? 15 : 21;
+            const winThreshold = i === (maxSets - 1) ? ptsTiebreak : ptsNormal;
             if ((s.scoreA >= winThreshold || s.scoreB >= winThreshold) && Math.abs(s.scoreA - s.scoreB) >= 2) {
-                if (s.scoreA > s.scoreB) { winsA++; document.getElementById(`box-a-s${i + 1}`).classList.add('won-a'); }
-                else { winsB++; document.getElementById(`box-b-s${i + 1}`).classList.add('won-b'); }
+                if (s.scoreA > s.scoreB) {
+                    winsA++;
+                    const boxA = document.getElementById(`box-a-s${i + 1}`);
+                    if (boxA) boxA.classList.add('won-a');
+                } else {
+                    winsB++;
+                    const boxB = document.getElementById(`box-b-s${i + 1}`);
+                    if (boxB) boxB.classList.add('won-b');
+                }
             }
         });
-
-        if (state.currentSetIndex === 2) {
-            document.getElementById('box-a-s3').classList.remove('hidden');
-            document.getElementById('box-b-s3').classList.remove('hidden');
-        }
     }
 
     function saveState() {

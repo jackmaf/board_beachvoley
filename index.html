@@ -40,6 +40,29 @@
                         </div>
                     </div>
 
+                    <!-- REGLAS DE PARTIDO -->
+                    <div class="match-rules-config">
+                        <h3>Reglas del Partido</h3>
+                        <div class="rules-grid">
+                            <div class="rule-group">
+                                <label for="input-max-sets">Modalidad de Sets</label>
+                                <select id="input-max-sets">
+                                    <option value="1">A 1 solo Set</option>
+                                    <option value="3" selected>Al Mejor de 3 Sets</option>
+                                    <option value="5">Al Mejor de 5 Sets</option>
+                                </select>
+                            </div>
+                            <div class="rule-group">
+                                <label for="input-pts-normal">Pts. por Set</label>
+                                <input type="number" id="input-pts-normal" value="21" min="1" max="50">
+                            </div>
+                            <div class="rule-group">
+                                <label for="input-pts-tiebreak">Pts. Tiebreak</label>
+                                <input type="number" id="input-pts-tiebreak" value="15" min="1" max="50">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- SELECTOR DE TEMA -->
                     <div class="theme-selector">
                         <h3>Tema Visual</h3>
@@ -70,15 +93,11 @@
             <div class="sets-tracker" id="sets-tracker">
                 <span class="set-team" id="set-name-a">Eq. A</span>
                 <div class="set-boxes" id="set-boxes-a">
-                    <div class="set-box" id="box-a-s1"></div>
-                    <div class="set-box" id="box-a-s2"></div>
-                    <div class="set-box hidden" id="box-a-s3"></div>
+                    <!-- Generado desde JS -->
                 </div>
                 <span class="set-divider">|</span>
                 <div class="set-boxes" id="set-boxes-b">
-                    <div class="set-box" id="box-b-s1"></div>
-                    <div class="set-box" id="box-b-s2"></div>
-                    <div class="set-box hidden" id="box-b-s3"></div>
+                    <!-- Generado desde JS -->
                 </div>
                 <span class="set-team" id="set-name-b">Eq. B</span>
             </div>
