@@ -130,12 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Court interactions
-    mainCourt.addEventListener('click', (e) => {
+    const freeZone = document.getElementById('free-zone');
+    freeZone.addEventListener('click', (e) => {
         if (!playerMenu.classList.contains('hidden') && e.target.closest('#player-menu')) {
             return;
         }
 
         const rect = mainCourt.getBoundingClientRect();
+        // Allow calculating x and y outside [0, 100]
         const x = ((e.clientX - rect.left) / rect.width) * 100;
         const y = ((e.clientY - rect.top) / rect.height) * 100;
 
