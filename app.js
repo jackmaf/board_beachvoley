@@ -77,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentMarker = null;
 
+    // Timeline Animation state
+    let timelineInterval = null;
+    const btnPlayTimeline = document.getElementById('btn-play-timeline');
+
     // Theme initialization
     const savedTheme = localStorage.getItem('voley-theme') || 'classic';
     document.body.setAttribute('data-theme', savedTheme);
@@ -149,6 +153,51 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeFilters.maxTimePct === 100) timelineVal.innerText = "Todo el partido";
         else timelineVal.innerText = `Hasta el ${activeFilters.maxTimePct}%`;
         renderStatistics();
+    });
+
+    // --- TIMELINE ANIMATION LOGIC ---
+    btnPlayTimeline.addEventListener('click', () => {
+        if (timelineInterval) {
+            // Stop playing
+            clearInterval(timelineInterval);
+            timelineInterval = null;
+            btnPlayTimeline.innerHTML = '▶️ Play';
+            btnPlayTimeline.classList.remove('playing');
+        } else {
+            // Start playing
+            const slider = document.getElementById('filter-timeline');
+            if (parseInt(slider.value) >= 100) {
+                slider.value = 0;
+                activeFilters.maxTimePct = 0;
+                document.getElementById('timeline-val').innerText = '0%';
+                renderStatistics();
+            }
+
+            btnPlayTimeline.innerHTML = '⏸️ Pausa';
+            btnPlayTimeline.classList.add('playing');
+
+            timelineInterval = setInterval(() => {
+                let currentVal = parseInt(slider.value);
+                currentVal += 10;
+
+                if (currentVal >= 100) {
+                    currentVal = 100;
+                    clearInterval(timelineInterval);
+                    timelineInterval = null;
+                    btnPlayTimeline.innerHTML = '▶️ Play';
+                    btnPlayTimeline.classList.remove('playing');
+                }
+
+                slider.value = currentVal;
+                activeFilters.maxTimePct = currentVal;
+                document.getElementById('timeline-val').innerText = currentVal === 100 ? 'Todo el partido' : `Hasta el ${currentVal}%`;
+
+                // Force UI update on slider handle natively
+                slider.dispatchEvent(new Event('input', { bubbles: true }));
+
+                renderStatistics();
+            }, 800);
+        }
     });
 
     // Close Modal
@@ -332,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             setView('vista-estadisticas');
 
-            // Reset current state but keep viewing stats of the match just ended
+            // Reset current state
             state = {
                 config: null,
                 sets: [{ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 }],
