@@ -233,6 +233,59 @@ input[type="text"]:focus {
     color: var(--dark);
 }
 
+/* Sets Tracker */
+.sets-tracker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    background: var(--dark);
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 20px;
+    margin: -1rem auto 1rem;
+    width: fit-content;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.set-team {
+    font-weight: 700;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.set-boxes {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.set-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    transition: all 0.3s;
+}
+
+.set-box.won-a {
+    background: var(--team-a);
+    border-color: var(--team-a);
+}
+
+.set-box.won-b {
+    background: var(--team-b);
+    border-color: var(--team-b);
+}
+
+.set-box.hidden {
+    display: none;
+}
+
+.set-divider {
+    color: rgba(255, 255, 255, 0.3);
+    font-weight: 300;
+}
+
 /* Court */
 .court-container {
     position: relative;
@@ -467,6 +520,49 @@ input[type="text"]:focus {
     background: #ff6b81;
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+}
+
+/* Timeout Controls */
+.timeout-controls {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.timeout-btn {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    color: white;
+    transition: all 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timeout-btn.to-a {
+    background: var(--team-a);
+}
+
+.timeout-btn.to-b {
+    background: var(--team-b);
+}
+
+.timeout-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
+
+.timeout-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #555 !important;
 }
 
 /* Stats */
@@ -864,6 +960,25 @@ input[type="text"]:focus {
 .html2pdf__container .close-dashboard,
 .html2pdf__container .export-actions {
     display: none !important;
+}
+
+/* Fix for PDF clipping: force container to expand fully */
+.html2pdf__container {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    width: 800px !important;
+    max-width: 800px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.html2pdf__container .dashboard-content {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
 }
 
 /* Ensure background colors are printed by html2pdf */

@@ -2,9 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let state = {
         config: null,
-        scoreA: 0,
-        scoreB: 0,
-        points: [], // { equipo, jugadorId, tipoAccion, coordenadas: {x, y}, marcadorMomento, timestamp }
+        sets: [
+            { scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 } // index 0 = Set 1
+        ],
+        currentSetIndex: 0,
+        points: [], // { equipo, jugadorId, tipoAccion, coordenadas: {x, y}, marcadorMomento, timestamp, setNumber }
         currentPendingPoint: null,
         matchStartTime: null
     };
@@ -38,6 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnB2 = document.getElementById('btn-b2');
 
     const btnEndMatch = document.getElementById('btn-end-match');
+    const btnTimeoutA = document.getElementById('btn-timeout-a');
+    const btnTimeoutB = document.getElementById('btn-timeout-b');
+    const toCountA = document.getElementById('to-count-a');
+    const toCountB = document.getElementById('to-count-b');
 
     // Stats
     const uiFinalScore = document.getElementById('final-score');
@@ -161,8 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Reset match data if it's a new match start
         if (state.points.length === 0) {
-            state.scoreA = 0;
-            state.scoreB = 0;
+            state.sets = [{ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 }];
+            state.currentSetIndex = 0;
             state.matchStartTime = null;
         }
 
@@ -186,6 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btnA2.innerText = state.config.pA2;
         btnB1.innerText = state.config.pB1;
         btnB2.innerText = state.config.pB2;
+
+        // Timeout Buttons
+        document.getElementById('btn-timeout-a').innerHTML = `⏱️ T. ${state.config.teamA} <span id="to-count-a">(0/1)</span>`;
+        document.getElementById('btn-timeout-b').innerHTML = `⏱️ T. ${state.config.teamB} <span id="to-count-b">(0/1)</span>`;
+        document.getElementById('set-name-a').innerText = state.config.teamA;
+        document.getElementById('set-name-b').innerText = state.config.teamB;
 
         // Pre-fill config form if revisiting
         document.getElementById('input-team-a').value = state.config.teamA;
@@ -245,6 +257,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // Timeouts
+    btnTimeoutA.addEventListener('click', () => registerTimeout('A'));
+    btnTimeoutB.addEventListener('click', () => registerTimeout('B'));
+
+    function registerTimeout(team) {
+        if (!state.matchStartTime) state.matchStartTime = Date.now();
+        const curSet = state.sets[state.currentSetIndex];
+
+        if (team === 'A' && curSet.timeoutsA < 1) {
+            curSet.timeoutsA++;
+        } else if (team === 'B' && curSet.timeoutsB < 1) {
+            curSet.timeoutsB++;
+        } else {
+            return; // Ya se usó el tiempo libre de este set
+        }
+
+        // Add to log (fake coordinates since it's a timeout)
+        state.points.push({
+            pointNumber: state.points.length + 1,
+            equipo: team,
+            jugadorId: `Eq.${team}`,
+            tipoAccion: 'timeout',
+            coordenadas: { x: 50, y: 50 }, // middle of court conceptually
+            marcadorMomento: `${curSet.scoreA}-${curSet.scoreB}`,
+            timestamp: Date.now(),
+            setNumber: state.currentSetIndex + 1
+        });
+
+        saveState();
+        updateScoreUI();
+    }
+
     btnEndMatch.addEventListener('click', () => {
         if (confirm('¿Estás seguro de terminar el partido? Esto lo guardará en el historial.')) {
             let history = JSON.parse(localStorage.getItem('voley-history')) || [];
@@ -259,8 +303,8 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reset current state but keep viewing stats of the match just ended
             state = {
                 config: null,
-                scoreA: 0,
-                scoreB: 0,
+                sets: [{ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 }],
+                currentSetIndex: 0,
                 points: [],
                 currentPendingPoint: null,
                 matchStartTime: null
@@ -279,31 +323,63 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.currentPendingPoint) return;
 
         const actionType = document.querySelector('input[name="actionType"]:checked').value;
+        const curSet = state.sets[state.currentSetIndex];
 
-        // Determinar a qué equipo va el punto
-        // Si el jugador de A hace un punto, va para A. 
-        // Si el jugador de A hace un error, el punto va para B.
         let pointGoesTo = team;
         if (actionType === 'error') {
             pointGoesTo = team === 'A' ? 'B' : 'A';
         }
 
-        if (pointGoesTo === 'A') state.scoreA++;
-        else state.scoreB++;
+        if (pointGoesTo === 'A') curSet.scoreA++;
+        else curSet.scoreB++;
 
         state.points.push({
-            pointNumber: state.points.length + 1, // Chronological Tracking
-            equipo: team, // Quién ejecutó la acción
-            jugadorId: playerId, // A1, A2...
-            tipoAccion: actionType, // 'punto' o 'error'
+            pointNumber: state.points.length + 1,
+            equipo: team,
+            jugadorId: playerId,
+            tipoAccion: actionType,
             coordenadas: state.currentPendingPoint,
-            marcadorMomento: `${state.scoreA}-${state.scoreB}`,
-            timestamp: Date.now()
+            marcadorMomento: `${curSet.scoreA}-${curSet.scoreB}`,
+            timestamp: Date.now(),
+            setNumber: state.currentSetIndex + 1
         });
 
+        checkSetWinner();
         saveState();
         updateScoreUI();
         closePlayerMenu();
+    }
+
+    function checkSetWinner() {
+        const curSet = state.sets[state.currentSetIndex];
+        const winThreshold = state.currentSetIndex === 2 ? 15 : 21; // 3rd set goes to 15
+
+        if ((curSet.scoreA >= winThreshold || curSet.scoreB >= winThreshold) &&
+            Math.abs(curSet.scoreA - curSet.scoreB) >= 2) {
+
+            // Set Won!
+            const winner = curSet.scoreA > curSet.scoreB ? state.config.teamA : state.config.teamB;
+
+            // Allow tracking a 3rd set. If set index is 2, match is truly over.
+            if (state.currentSetIndex < 2) {
+                // Check if someone won 2 sets already
+                let winsA = 0; let winsB = 0;
+                state.sets.forEach(s => {
+                    if (s.scoreA > s.scoreB) winsA++;
+                    else if (s.scoreB > s.scoreA) winsB++;
+                });
+
+                if (winsA < 2 && winsB < 2) {
+                    alert(`¡${winner} ha ganado el Set ${state.currentSetIndex + 1}! Iniciando siguiente Set...`);
+                    state.sets.push({ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 });
+                    state.currentSetIndex++;
+                } else {
+                    alert(`¡${winner} ha ganado el partido! Puedes finalizarlo ahora.`);
+                }
+            } else {
+                alert(`¡${winner} ha ganado el partido! Puedes finalizarlo ahora.`);
+            }
+        }
     }
 
     function closePlayerMenu() {
@@ -313,8 +389,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateScoreUI() {
-        uiScoreA.innerText = state.scoreA;
-        uiScoreB.innerText = state.scoreB;
+        const curSet = state.sets[state.currentSetIndex];
+        uiScoreA.innerText = curSet.scoreA;
+        uiScoreB.innerText = curSet.scoreB;
+
+        // Update Timeout status
+        const btnTimeoutA = document.getElementById('btn-timeout-a');
+        const btnTimeoutB = document.getElementById('btn-timeout-b');
+
+        document.getElementById('to-count-a').innerText = `(${curSet.timeoutsA}/1)`;
+        document.getElementById('to-count-b').innerText = `(${curSet.timeoutsB}/1)`;
+
+        btnTimeoutA.disabled = curSet.timeoutsA >= 1;
+        btnTimeoutB.disabled = curSet.timeoutsB >= 1;
+
+        // Update sets visual tracker
+        let winsA = 0; let winsB = 0;
+        state.sets.forEach((s, i) => {
+            if (s.scoreA === 0 && s.scoreB === 0) return; // Unplayed
+
+            const winThreshold = i === 2 ? 15 : 21;
+            if ((s.scoreA >= winThreshold || s.scoreB >= winThreshold) && Math.abs(s.scoreA - s.scoreB) >= 2) {
+                if (s.scoreA > s.scoreB) { winsA++; document.getElementById(`box-a-s${i + 1}`).classList.add('won-a'); }
+                else { winsB++; document.getElementById(`box-b-s${i + 1}`).classList.add('won-b'); }
+            }
+        });
+
+        if (state.currentSetIndex === 2) {
+            document.getElementById('box-a-s3').classList.remove('hidden');
+            document.getElementById('box-b-s3').classList.remove('hidden');
+        }
     }
 
     function saveState() {
@@ -393,6 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Filter points
         let filteredPoints = pointsInTime.filter(p => {
+            if (p.tipoAccion === 'timeout') return false; // Ignore timeouts for heatmap and stats
             if (activeFilters.player !== 'all' && activeFilters.player !== p.jugadorId) return false;
             if (activeFilters.action !== 'all' && activeFilters.action !== p.tipoAccion) return false;
             return true;
@@ -480,61 +585,71 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '';
 
         allPointsInTime.forEach(p => {
-            if (p.jugadorId !== playerId) return;
+            // Include timeouts for the logged player/team if requested, but mainly filter by player logic
+            if (p.jugadorId !== playerId && !(p.tipoAccion === 'timeout' && p.equipo === myTeam)) return;
 
-            // Real court logic (0-100% width = 8m, 0-100% height = 16m total but half is 8m)
-            // On screen, court element is 1:2 ratio. So 100% X = 8m. 100% Y = 16m.
-            const realX = ((p.coordenadas.x / 100) * 8).toFixed(2);
-            const realY = ((p.coordenadas.y / 100) * 16).toFixed(2);
+            const isTimeout = (p.tipoAccion === 'timeout');
 
-            if (p.tipoAccion === 'punto') playerPts++;
-            else playerErrs++;
+            let realX = "-";
+            let realY = "-";
 
-            // Clutch Calculation: score diff <= 2
-            const scores = p.marcadorMomento.split('-');
-            const sA = parseInt(scores[0]);
-            const sB = parseInt(scores[1]);
-            const diff = Math.abs(sA - sB);
+            if (!isTimeout) {
+                // Real court logic (0-100% width = 8m, 0-100% height = 16m total but half is 8m)
+                realX = ((p.coordenadas.x / 100) * 8).toFixed(2);
+                realY = ((p.coordenadas.y / 100) * 16).toFixed(2);
 
-            if (p.tipoAccion === 'punto' && diff <= 2) {
-                clutchPoints++;
-            }
+                if (p.tipoAccion === 'punto') playerPts++;
+                else playerErrs++;
 
-            // Zones (only considering points, normally attacks/serves)
-            if (p.tipoAccion === 'punto') {
-                // If x < 50% it's left side of court, >= 50% is right side
-                if (p.coordenadas.x < 50) leftZoneAtks++;
-                else rightZoneAtks++;
+                // Clutch Calculation: score diff <= 2
+                const scores = p.marcadorMomento.split('-');
+                const sA = parseInt(scores[0]);
+                const sB = parseInt(scores[1]);
+                const diff = Math.abs(sA - sB);
 
-                // Personal Heatmap
-                const dot = document.createElement('div');
-                dot.classList.add('heat-dot');
-                dot.classList.add(myTeam === 'A' ? 'dot-a' : 'dot-b');
-                dot.style.left = `${p.coordenadas.x}%`;
-                dot.style.top = `${p.coordenadas.y}%`;
-                dashHeatmap.appendChild(dot);
+                if (p.tipoAccion === 'punto' && diff <= 2) {
+                    clutchPoints++;
+                }
+
+                // Zones (only considering points, normally attacks/serves)
+                if (p.tipoAccion === 'punto') {
+                    // If x < 50% it's left side of court, >= 50% is right side
+                    if (p.coordenadas.x < 50) leftZoneAtks++;
+                    else rightZoneAtks++;
+
+                    // Personal Heatmap
+                    const dot = document.createElement('div');
+                    dot.classList.add('heat-dot');
+                    dot.classList.add(myTeam === 'A' ? 'dot-a' : 'dot-b');
+                    dot.style.left = `${p.coordenadas.x}%`;
+                    dot.style.top = `${p.coordenadas.y}%`;
+                    dashHeatmap.appendChild(dot);
+                }
             }
 
             // Build detailed log
             const isPoint = p.tipoAccion === 'punto';
-            const actionLabel = isPoint ? 'Punto Ganador' : 'Error';
+            let actionLabel = isTimeout ? 'TIEMPO MUERTO' : (isPoint ? 'Punto Ganador' : 'Error');
 
             detailedLog.push({
                 punto_nro: p.pointNumber,
+                set_nro: p.setNumber || 1,
                 accion: actionLabel,
                 marcador: p.marcadorMomento,
-                x_metros: realX,
-                y_metros: realY
+                x_metros: String(realX),
+                y_metros: String(realY)
             });
 
             // Populate HTML Table for PDF
             const tr = document.createElement('tr');
+            if (isTimeout) tr.style.backgroundColor = 'rgba(0,0,0,0.05)';
+
             tr.innerHTML = `
-                <td>#${p.pointNumber}</td>
-                <td class="${isPoint ? 'log-pts' : 'log-err'}">${actionLabel}</td>
+                <td>#${p.pointNumber} (Set ${p.setNumber || 1})</td>
+                <td class="${isTimeout ? '' : (isPoint ? 'log-pts' : 'log-err')}">${actionLabel}</td>
                 <td>${p.marcadorMomento}</td>
-                <td>${realX}m</td>
-                <td>${realY}m</td>
+                <td>${realX !== "-" ? realX + 'm' : '-'}</td>
+                <td>${realY !== "-" ? realY + 'm' : '-'}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -603,10 +718,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tabla 2: Bitacora
         csvContent += "--- BITACORA DE ACCIONES (Orden Cronologico) ---\n";
-        csvContent += "Nro. Punto,Accion,Marcador,Coord X (m),Coord Y (m)\n";
+        csvContent += "Nro. Punto,Set,Accion,Marcador,Coord X (m),Coord Y (m)\n";
 
         d.bitacora_acciones.forEach(act => {
-            csvContent += `${act.punto_nro},${act.accion},${act.marcador},${act.x_metros},${act.y_metros}\n`;
+            csvContent += `${act.punto_nro},${act.set_nro},${act.accion},${act.marcador},${act.x_metros},${act.y_metros}\n`;
         });
 
         const encodedUri = encodeURI(csvContent);
@@ -633,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
             margin: 10,
             filename: `VoleyPlaya_Scouting_${currentDashData.playerName.replace(/\s+/g, '_')}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F6F6F6' },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#F6F6F6', windowWidth: 800, scrollY: 0 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 

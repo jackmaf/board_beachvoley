@@ -44,17 +44,34 @@
             </div>
         </section>
 
-        <!-- VISTA REGISTRO -->
-        <section id="vista-registro" class="view">
+        <!-- Vista Registro -->
+        <div id="vista-registro" class="view">
+            <!-- Sets Tracking UI -->
+            <div class="sets-tracker" id="sets-tracker">
+                <span class="set-team" id="set-name-a">Eq. A</span>
+                <div class="set-boxes" id="set-boxes-a">
+                    <div class="set-box" id="box-a-s1"></div>
+                    <div class="set-box" id="box-a-s2"></div>
+                    <div class="set-box hidden" id="box-a-s3"></div>
+                </div>
+                <span class="set-divider">|</span>
+                <div class="set-boxes" id="set-boxes-b">
+                    <div class="set-box" id="box-b-s1"></div>
+                    <div class="set-box" id="box-b-s2"></div>
+                    <div class="set-box hidden" id="box-b-s3"></div>
+                </div>
+                <span class="set-team" id="set-name-b">Eq. B</span>
+            </div>
+
             <div class="scoreboard">
                 <div class="team team-a">
-                    <span class="team-name" id="name-team-a">Equipo A</span>
-                    <span class="score" id="score-a">0</span>
+                    <h2 class="team-name" id="name-team-a">Equipo A</h2>
+                    <div class="score" id="score-a">0</div>
                 </div>
-                <div class="divider">:</div>
+                <div class="divider">-</div>
                 <div class="team team-b">
-                    <span class="score" id="score-b">0</span>
-                    <span class="team-name" id="name-team-b">Equipo B</span>
+                    <h2 class="team-name" id="name-team-b">Equipo B</h2>
+                    <div class="score" id="score-b">0</div>
                 </div>
             </div>
 
@@ -95,9 +112,18 @@
             </div>
 
             <div class="controls">
-                <button id="btn-end-match" class="danger-btn">Terminar y Guardar Partido</button>
+                <div class="action-buttons">
+                    <button class="danger-btn" id="btn-end-match">Finalizar y Guardar Partido</button>
+
+                    <div class="timeout-controls" id="timeout-controls">
+                        <button class="timeout-btn to-a" id="btn-timeout-a" title="Pedir Tiempo">⏱️ T. Eq.A <span
+                                id="to-count-a">(0/1)</span></button>
+                        <button class="timeout-btn to-b" id="btn-timeout-b" title="Pedir Tiempo">⏱️ T. Eq.B <span
+                                id="to-count-b">(0/1)</span></button>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
 
         <!-- VISTA ESTADISTICAS -->
         <section id="vista-estadisticas" class="view">
