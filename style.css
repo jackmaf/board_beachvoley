@@ -12,6 +12,53 @@
     --text-main: #333333;
     --glass-bg: rgba(255, 255, 255, 0.85);
     --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --btn-cancel-bg: #e0e0e0;
+    --btn-cancel-text: #333;
+}
+
+[data-theme="dark"] {
+    --primary: #FF7B54;
+    --secondary: #FFD56F;
+    --tertiary: #2C363F;
+    /* Darker tertiary */
+    --dark: #F6F6F6;
+    /* Inverse dark */
+    --light: #1A1E24;
+    /* Inverse light for backgrounds */
+    --sand: #1A1E24;
+    --sand-dark: #2C363F;
+    --court-line: rgba(255, 255, 255, 0.7);
+    --team-a: #FF6B6B;
+    --team-b: #6B9BFF;
+    --text-main: #EAEAEA;
+    --glass-bg: rgba(30, 35, 40, 0.85);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --btn-cancel-bg: #333;
+    --btn-cancel-text: #EAEAEA;
+}
+
+[data-theme="high-contrast"] {
+    --primary: #000000;
+    --secondary: #FFD56F;
+    --tertiary: #FFFFFF;
+    --dark: #000000;
+    --light: #FFFFFF;
+    --sand: #FFFFFF;
+    /* White background */
+    --sand-dark: #F0F0F0;
+    --court-line: #000000;
+    /* Solid black lines */
+    --team-a: #D00000;
+    /* Darker red */
+    --team-b: #0033CC;
+    /* Darker blue */
+    --text-main: #000000;
+    --glass-bg: rgba(255, 255, 255, 1);
+    /* Solid white, no glass */
+    --glass-shadow: none;
+    /* No shadow */
+    --btn-cancel-bg: #DDDDDD;
+    --btn-cancel-text: #000000;
 }
 
 * {
@@ -178,6 +225,64 @@ input[type="text"]:focus {
 .primary-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(255, 123, 84, 0.4);
+}
+
+/* Theme Selector */
+.theme-selector {
+    margin: 1.5rem 0 2rem;
+    text-align: center;
+}
+
+.theme-selector h3 {
+    font-size: 1.1rem;
+    color: var(--dark);
+    margin-bottom: 0.8rem;
+}
+
+.theme-options {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.theme-label {
+    cursor: pointer;
+}
+
+.theme-label input {
+    display: none;
+}
+
+.theme-btn {
+    display: inline-block;
+    padding: 0.8rem 1rem;
+    border-radius: 12px;
+    border: 2px solid #ddd;
+    font-weight: 700;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+    background: var(--light);
+    color: var(--text-main);
+}
+
+.theme-label input:checked+.theme-btn {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
+    background: var(--glass-bg);
+}
+
+.theme-btn.btn-dark {
+    background: #1A1E24;
+    color: #EAEAEA;
+    border-color: #333;
+}
+
+.theme-btn.btn-hc {
+    background: #FFFFFF;
+    color: #000;
+    border-color: #000;
+    border-width: 3px;
 }
 
 /* Scoreboard */

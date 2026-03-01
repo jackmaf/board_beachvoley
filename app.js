@@ -77,6 +77,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentMarker = null;
 
+    // Theme initialization
+    const savedTheme = localStorage.getItem('voley-theme') || 'classic';
+    document.body.setAttribute('data-theme', savedTheme);
+    const themeRadios = document.querySelectorAll('.theme-options input[name="appTheme"]');
+    themeRadios.forEach(r => {
+        if (r.value === savedTheme) r.checked = true;
+        r.addEventListener('change', (e) => {
+            const newTheme = e.target.value;
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('voley-theme', newTheme);
+        });
+    });
+
     // init load
     loadState();
 
@@ -740,6 +753,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const element = document.querySelector('.dashboard-content');
 
         // Temporarily change background so the PDF isn't transparent/dark
+        // And remove any dark-theme rules by temporarily overriding the body theme just for printing
+        const originalBodyTheme = document.body.getAttribute('data-theme');
+        if (originalBodyTheme === 'dark') {
+            document.body.setAttribute('data-theme', 'classic'); // Force light background for PDF
+        }
+
         const originalBg = element.style.background;
         element.style.background = '#F6F6F6'; // var(--light)
         element.classList.add('html2pdf__container'); // Apply print styles
@@ -758,12 +777,14 @@ document.addEventListener('DOMContentLoaded', () => {
             html2pdf().set(opt).from(element).save().then(() => {
                 element.style.background = originalBg;
                 element.classList.remove('html2pdf__container');
+                document.body.setAttribute('data-theme', originalBodyTheme); // Restore original theme
                 btnExportPdf.innerText = "📄 PDF";
             });
         } else {
             alert("La librería de PDF no pudo cargar. Comprueba tu conexión a internet.");
             element.style.background = originalBg;
             element.classList.remove('html2pdf__container');
+            document.body.setAttribute('data-theme', originalBodyTheme); // Restore
         }
     }
 });
