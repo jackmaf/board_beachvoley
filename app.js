@@ -775,12 +775,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ['A1', 'A2', 'B1', 'B2'].forEach(id => {
             const team = id.charAt(0);
-            const teamTotalPoints = team === 'A' ? tempScoreA : tempScoreB;
-
-            const stats = playerStats[id];
-
-            // Recompute stats natively from pointsInTime to ensure it matches the timeline regardless of visual filters
             const badgeClass = team === 'A' ? 'badge-a' : 'badge-b';
+            const stats = playerStats[id];
 
             const row = document.createElement('div');
             row.classList.add('player-stat-row');
@@ -799,6 +795,102 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             playersStatsContainer.appendChild(row);
         });
+
+        // Gamificación: Salón de la Fama
+        renderGamification(pointsBySet, statsState.config);
+    }
+
+    // GAMIFICATION: TOP PERFORMERS (SALÓN DE LA FAMA)
+    function renderGamification(pointsArray, configData) {
+        const container = document.getElementById('gamification-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        if (!pointsArray || pointsArray.length === 0) {
+            container.innerHTML = '<p style="color:#777; font-size: 0.9rem; grid-column: 1/-1;">Aún no hay jugadas registradas para el Salón de la Fama.</p>';
+            return;
+        }
+
+        const players = {
+            'A1': { id: 'A1', name: configData.pA1, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
+            'A2': { id: 'A2', name: configData.pA2, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
+            'B1': { id: 'B1', name: configData.pB1, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
+            'B2': { id: 'B2', name: configData.pB2, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } }
+        };
+
+        // Scan points
+        pointsArray.forEach(p => {
+            if (p.tipoAccion === 'timeout') return;
+            const pData = players[p.jugadorId];
+            if (!pData) return;
+
+            if (p.tipoAccion === 'punto') {
+                pData.pts++;
+                const skill = p.actionDetail || 'Ataque';
+                if (pData.skills[skill] !== undefined) pData.skills[skill]++;
+            } else if (p.tipoAccion === 'error') {
+                pData.errs++;
+            }
+        });
+
+        const pList = Object.values(players);
+
+        // Define Awards
+        const awards = [];
+
+        // 1. Top Scorer (Max Pts)
+        const topScorer = [...pList].sort((a, b) => b.pts - a.pts)[0];
+        if (topScorer && topScorer.pts > 0) {
+            awards.push({ emoji: '🔥', title: 'Máx. Anotador', winner: topScorer.name, value: `${topScorer.pts} pts` });
+        }
+
+        // 2. Most Errors
+        const mostErrs = [...pList].sort((a, b) => b.errs - a.errs)[0];
+        if (mostErrs && mostErrs.errs > 0) {
+            awards.push({ emoji: '☠️', title: 'Más Errores', winner: mostErrs.name, value: `${mostErrs.errs} errs`, isNegative: true });
+        }
+
+        // 3. Best Skills
+        const skillsToCheck = [
+            { key: 'Ataque', emoji: '🏐', title: 'Mejor Atacante' },
+            { key: 'Saque', emoji: '🎯', title: 'Mejor Sacador' },
+            { key: 'Bloqueo', emoji: '🧱', title: 'Muro del Bloqueo' },
+            { key: 'Antebrazos', emoji: '💪', title: 'Defensor Clave' },
+            { key: 'Toque', emoji: '🤏', title: 'Mago del Toque' },
+            { key: 'Dedos', emoji: '👐', title: 'Armador Fino' },
+            { key: 'Garrita', emoji: '🤜', title: 'Letal con Garrita' }
+        ];
+
+        skillsToCheck.forEach(sk => {
+            const best = [...pList].sort((a, b) => b.skills[sk.key] - a.skills[sk.key])[0];
+            if (best && best.skills[sk.key] > 0) {
+                awards.push({ emoji: sk.emoji, title: sk.title, winner: best.name, value: `${best.skills[sk.key]} pts` });
+            }
+        });
+
+        // Render Cards
+        if (awards.length === 0) {
+            container.innerHTML = '<p style="color:#777; font-size: 0.9rem; grid-column: 1/-1;">Partida sin acciones suficientes para premiar.</p>';
+            return;
+        }
+
+        awards.forEach(aw => {
+            const card = document.createElement('div');
+            card.style.background = aw.isNegative ? '#fff0f0' : 'var(--bg)';
+            card.style.border = aw.isNegative ? '1px solid #ffcccc' : '1px solid #ddd';
+            card.style.borderRadius = '8px';
+            card.style.padding = '0.8rem';
+            card.style.textAlign = 'center';
+            card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+
+            card.innerHTML = `
+                <div style="font-size: 1.8rem; margin-bottom: 0.2rem;">${aw.emoji}</div>
+                <div style="font-size: 0.75rem; font-weight: bold; color: ${aw.isNegative ? '#e84118' : 'var(--dark)'}; text-transform: uppercase;">${aw.title}</div>
+                <div style="font-size: 0.9rem; font-weight: bold; margin: 0.3rem 0; color: var(--text);">${aw.winner}</div>
+                <div style="font-size: 0.8rem; background: ${aw.isNegative ? '#ffe0e0' : '#e0e0e0'}; display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${aw.value}</div>
+            `;
+            container.appendChild(card);
+        });
     }
 
     // INDIVIDUAL PLAYER DASHBOARD METRICS
@@ -813,6 +905,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let clutchPoints = 0;
         let leftZoneAtks = 0;
         let rightZoneAtks = 0;
+
+        // Radar Skills Tracker
+        const skillCounts = { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 };
 
         const myTeam = playerId.charAt(0);
 
@@ -842,8 +937,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 realX = ((p.coordenadas.x / 100) * 8).toFixed(2);
                 realY = ((p.coordenadas.y / 100) * 16).toFixed(2);
 
-                if (p.tipoAccion === 'punto') playerPts++;
-                else playerErrs++;
+                if (p.tipoAccion === 'punto') {
+                    playerPts++;
+                    const sk = p.actionDetail || 'Ataque';
+                    if (skillCounts[sk] !== undefined) skillCounts[sk]++;
+                } else {
+                    playerErrs++;
+                }
 
                 // Clutch Calculation: score diff <= 2
                 const scores = p.marcadorMomento.split('-');
@@ -961,16 +1061,118 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let activeSetFilterText = activeFilters.set === 'all' ? 'All' : `Set_${activeFilters.set}`;
 
-        // Save data for exports
         currentDashData = {
             playerName, playerId, team: myTeam, nameTeamA, nameTeamB,
             playerPts, playerErrs, clutchPoints, efficiency, leftZoneAtks, rightZoneAtks, pctL, pctR,
             bitacora_acciones: detailedLog,
             activeSetFilterText,
-            bestMinute: bestMinText
+            bestMinute: bestMinText,
+            skills: skillCounts
         };
 
+        // Draw Player Profile Web (Hexagram/Heptagram)
+        drawRadarChart(skillCounts);
+
         playerDashboard.classList.remove('hidden');
+    }
+
+    // RADAR CHART DRAWING LOGIC (NATIVE CANVAS)
+    function drawRadarChart(skills) {
+        const canvas = document.getElementById('player-radar-chart');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width;
+        const H = canvas.height;
+        const CX = W / 2;
+        const CY = H / 2;
+        const R = Math.min(W, H) / 2 - 40; // max radius leaving margin for text
+
+        // Clear previous
+        ctx.clearRect(0, 0, W, H);
+
+        const labels = Object.keys(skills);
+        const values = Object.values(skills);
+        const N = labels.length;
+        const maxVal = Math.max(...values, 5); // Minimum scale of 5 to avoid tiny charts
+
+        // Draw Grid webs (3 layers)
+        ctx.strokeStyle = '#e0e0e0';
+        ctx.lineWidth = 1;
+        for (let level = 1; level <= 3; level++) {
+            const levelR = R * (level / 3);
+            ctx.beginPath();
+            for (let i = 0; i < N; i++) {
+                const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+                const x = CX + Math.cos(angle) * levelR;
+                const y = CY + Math.sin(angle) * levelR;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // Draw Axis lines & Labels
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#555';
+
+        for (let i = 0; i < N; i++) {
+            const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+            const px = CX + Math.cos(angle) * R;
+            const py = CY + Math.sin(angle) * R;
+
+            ctx.beginPath();
+            ctx.moveTo(CX, CY);
+            ctx.lineTo(px, py);
+            ctx.stroke();
+
+            // Labels
+            const tx = CX + Math.cos(angle) * (R + 25);
+            const ty = CY + Math.sin(angle) * (R + 25);
+            ctx.fillText(labels[i], tx, ty);
+
+            // Draw Value
+            ctx.font = 'bold 10px sans-serif';
+            ctx.fillStyle = 'var(--primary)';
+            ctx.fillText(values[i], tx, ty + 12);
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = '#555';
+        }
+
+        // Draw Player Data Polygon
+        ctx.beginPath();
+        for (let i = 0; i < N; i++) {
+            const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+            const rVal = (values[i] / maxVal) * R;
+            const x = CX + Math.cos(angle) * rVal;
+            const y = CY + Math.sin(angle) * rVal;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+        // Fill and Stroke Polygon
+        ctx.fillStyle = 'rgba(0, 83, 156, 0.4)'; // Primary color transparent
+        ctx.fill();
+        ctx.strokeStyle = 'var(--primary)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw Dots on vertices
+        for (let i = 0; i < N; i++) {
+            const angle = (Math.PI * 2 * i / N) - Math.PI / 2;
+            const rVal = (values[i] / maxVal) * R;
+            const x = CX + Math.cos(angle) * rVal;
+            const y = CY + Math.sin(angle) * rVal;
+
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.stroke();
+        }
     }
 
     // EXPORT FUNCTIONS
@@ -999,7 +1201,14 @@ document.addEventListener('DOMContentLoaded', () => {
             + `Errores,${d.playerErrs}\n`
             + `Puntos Clutch,${d.clutchPoints}\n`
             + `Ataques Zona Izquierda (%),${d.pctL.toFixed(1)}\n`
-            + `Ataques Zona Derecha (%),${d.pctR.toFixed(1)}\n\n`;
+            + `Ataques Zona Derecha (%),${d.pctR.toFixed(1)}\n`
+            + `Ataques Totales,${d.skills['Ataque'] || 0}\n`
+            + `Saques Totales,${d.skills['Saque'] || 0}\n`
+            + `Bloqueos Totales,${d.skills['Bloqueo'] || 0}\n`
+            + `Antebrazos Totales,${d.skills['Antebrazos'] || 0}\n`
+            + `Garritas Totales,${d.skills['Garrita'] || 0}\n`
+            + `Toques Totales,${d.skills['Toque'] || 0}\n`
+            + `Acomodo Dedos Totales,${d.skills['Dedos'] || 0}\n\n`;
 
         // Tabla 2: Bitacora
         csvContent += "--- BITACORA DE ACCIONES (Orden Cronologico) ---\n";
