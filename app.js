@@ -474,8 +474,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const dashHeatmap = document.getElementById('dash-heatmap-points');
         dashHeatmap.innerHTML = '';
 
+        // Track points for detailed log
+        let detailedLog = [];
+        const tbody = document.getElementById('dash-table-body');
+        tbody.innerHTML = '';
+
         allPointsInTime.forEach(p => {
             if (p.jugadorId !== playerId) return;
+
+            // Real court logic (0-100% width = 8m, 0-100% height = 16m total but half is 8m)
+            // On screen, court element is 1:2 ratio. So 100% X = 8m. 100% Y = 16m.
+            const realX = ((p.coordenadas.x / 100) * 8).toFixed(2);
+            const realY = ((p.coordenadas.y / 100) * 16).toFixed(2);
 
             if (p.tipoAccion === 'punto') playerPts++;
             else playerErrs++;
@@ -504,6 +514,29 @@ document.addEventListener('DOMContentLoaded', () => {
                 dot.style.top = `${p.coordenadas.y}%`;
                 dashHeatmap.appendChild(dot);
             }
+
+            // Build detailed log
+            const isPoint = p.tipoAccion === 'punto';
+            const actionLabel = isPoint ? 'Punto Ganador' : 'Error';
+
+            detailedLog.push({
+                punto_nro: p.pointNumber,
+                accion: actionLabel,
+                marcador: p.marcadorMomento,
+                x_metros: realX,
+                y_metros: realY
+            });
+
+            // Populate HTML Table for PDF
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>#${p.pointNumber}</td>
+                <td class="${isPoint ? 'log-pts' : 'log-err'}">${actionLabel}</td>
+                <td>${p.marcadorMomento}</td>
+                <td>${realX}m</td>
+                <td>${realY}m</td>
+            `;
+            tbody.appendChild(tr);
         });
 
         const totalActions = playerPts + playerErrs;
@@ -533,7 +566,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Save data for exports
         currentDashData = {
             playerName, playerId, team: myTeam, nameTeamA, nameTeamB,
-            playerPts, playerErrs, clutchPoints, efficiency, leftZoneAtks, rightZoneAtks, pctL, pctR
+            playerPts, playerErrs, clutchPoints, efficiency, leftZoneAtks, rightZoneAtks, pctL, pctR,
+            bitacora_acciones: detailedLog
         };
 
         playerDashboard.classList.remove('hidden');
@@ -554,7 +588,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function exportToCSV() {
         if (!currentDashData) return;
         const d = currentDashData;
-        const csvContent = "data:text/csv;charset=utf-8,"
+
+        // Tabla 1: Resumen
+        let csvContent = "data:text/csv;charset=utf-8,"
+            + "--- RESUMEN DEL JUGADOR ---\n"
             + "Metrica,Valor\n"
             + `Jugador,${d.playerName} (${d.playerId})\n`
             + `Eficiencia Neta (%),${d.efficiency.toFixed(1)}\n`
@@ -562,7 +599,15 @@ document.addEventListener('DOMContentLoaded', () => {
             + `Errores,${d.playerErrs}\n`
             + `Puntos Clutch,${d.clutchPoints}\n`
             + `Ataques Zona Izquierda (%),${d.pctL.toFixed(1)}\n`
-            + `Ataques Zona Derecha (%),${d.pctR.toFixed(1)}\n`;
+            + `Ataques Zona Derecha (%),${d.pctR.toFixed(1)}\n\n`;
+
+        // Tabla 2: Bitacora
+        csvContent += "--- BITACORA DE ACCIONES (Orden Cronologico) ---\n";
+        csvContent += "Nro. Punto,Accion,Marcador,Coord X (m),Coord Y (m)\n";
+
+        d.bitacora_acciones.forEach(act => {
+            csvContent += `${act.punto_nro},${act.accion},${act.marcador},${act.x_metros},${act.y_metros}\n`;
+        });
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");

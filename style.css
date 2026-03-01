@@ -989,3 +989,54 @@ input[type="text"]:focus {
     max-width: 140px;
     margin: 0 auto;
 }
+
+/* Dashboard Log Table */
+.dash-log-section {
+    margin-top: 2rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.dash-log-section h3 {
+    font-size: 1.1rem;
+    color: var(--dark);
+    margin-bottom: 1rem;
+    text-align: center;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.5rem;
+}
+
+.dash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.dash-table th {
+    background-color: var(--dark);
+    color: white;
+    padding: 0.6rem;
+    font-weight: 700;
+}
+
+.dash-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.dash-table tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.log-err {
+    color: #e84118;
+    font-weight: 700;
+}
+
+.log-pts {
+    color: #4cd137;
+    font-weight: 700;
+}
