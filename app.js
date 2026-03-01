@@ -1215,7 +1215,14 @@ document.addEventListener('DOMContentLoaded', () => {
         csvContent += "Nro. Punto,Set,Accion,Marcador,Coord X (m),Coord Y (m)\n";
 
         d.bitacora_acciones.forEach(act => {
-            csvContent += `${act.punto_nro},${act.set_nro},${act.accion},${act.marcador},${act.x_metros},${act.y_metros}\n`;
+            const pnum = act.punto_nro || '-';
+            const snum = act.set_nro || '1';
+            const ac = act.accion || '-';
+            const marc = act.marcador || '-';
+            const xm = act.x_metros || '-';
+            const ym = act.y_metros || '-';
+
+            csvContent += `${pnum},${snum},${ac},${marc},${xm},${ym}\n`;
         });
 
         const encodedUri = encodeURI(csvContent);

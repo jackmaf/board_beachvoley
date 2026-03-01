@@ -828,7 +828,9 @@ input[type="text"]:focus {
         grid-template-columns: 1fr 1fr;
     }
 
-    .heatmap-card {
+    .heatmap-card,
+    .gamification-card,
+    .filters-card {
         grid-column: 1 / -1;
     }
 }
