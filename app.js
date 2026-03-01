@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // DOM Elements - Config
     const configForm = document.getElementById('config-form');
+    const btnResetDb = document.getElementById('btn-reset-db');
 
     // DOM Elements - Registro
     const uiScoreA = document.getElementById('score-a');
@@ -295,6 +296,23 @@ document.addEventListener('DOMContentLoaded', () => {
     navEstadisticas.addEventListener('click', () => setView('vista-estadisticas'));
 
     // Form submit starts match
+    // --- RESET DATABASE LOGIC ---
+    btnResetDb?.addEventListener('click', () => {
+        const confirm1 = confirm("🚨 ATENCIÓN 🚨\n\nEstás a punto de borrar TODO el historial de partidos, jugadores y datos guardados en este dispositivo.\n\n¿Estás seguro de que deseas proceder?");
+        if (confirm1) {
+            const confirm2 = confirm("⚠️ ÚLTIMA ADVERTENCIA ⚠️\n\nEsta acción NO se puede deshacer. ¿Borrar absolutamente todo el progreso?");
+            if (confirm2) {
+                // Wipe local storage keys (keeping the theme intact if desired, but we wipe the gameplay data)
+                localStorage.removeItem('voley-currentMatch');
+                localStorage.removeItem('voley-lastMatch');
+                localStorage.removeItem('voley-history');
+
+                // Reload app to pristine state
+                window.location.reload();
+            }
+        }
+    });
+
     configForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
