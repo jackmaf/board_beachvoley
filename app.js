@@ -46,6 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const playersStatsContainer = document.getElementById('players-stats-container');
     const heatmapPoints = document.getElementById('heatmap-points');
 
+    // DOM Elements - Form controls
+    const filterPlayerBtns = document.querySelectorAll('#filter-players .filter-pill');
+    const filterActionBtns = document.querySelectorAll('#filter-actions .filter-pill');
+    const filterTimeline = document.getElementById('filter-timeline');
+    const timelineVal = document.getElementById('timeline-val');
+
+    // Modal
+    const playerDashboard = document.getElementById('player-dashboard');
+    const closeDashboardBtn = document.getElementById('close-dashboard');
+
+    // Filter state
+    let activeFilters = {
+        player: 'all', // 'all', 'A1', 'A2', 'B1', 'B2'
+        action: 'all', // 'all', 'punto', 'error'
+        maxTimePct: 100 // 0 to 100
+    };
+
     let currentMarker = null;
 
     // init load
@@ -69,9 +86,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (viewId === 'vista-estadisticas') {
+            resetFilters();
             renderStatistics();
         }
     }
+
+    // Filter Logic setup
+    function resetFilters() {
+        activeFilters = { player: 'all', action: 'all', maxTimePct: 100 };
+        document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+        document.querySelector('#filter-players [data-filter="all"]').classList.add('active');
+        document.querySelector('#filter-actions [data-filter="all"]').classList.add('active');
+        filterTimeline.value = 100;
+        timelineVal.innerText = "Todo el partido";
+    }
+
+    filterPlayerBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterPlayerBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilters.player = btn.getAttribute('data-filter');
+            renderStatistics();
+        });
+    });
+
+    filterActionBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterActionBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilters.action = btn.getAttribute('data-filter');
+            renderStatistics();
+        });
+    });
+
+    filterTimeline.addEventListener('input', (e) => {
+        activeFilters.maxTimePct = parseInt(e.target.value);
+        if (activeFilters.maxTimePct === 100) timelineVal.innerText = "Todo el partido";
+        else timelineVal.innerText = `Hasta el ${activeFilters.maxTimePct}%`;
+        renderStatistics();
+    });
+
+    // Close Modal
+    closeDashboardBtn.addEventListener('click', () => {
+        playerDashboard.classList.add('hidden');
+    });
 
     navConfig.addEventListener('click', () => setView('vista-configuracion'));
     navRegistro.addEventListener('click', () => setView('vista-registro'));
@@ -223,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else state.scoreB++;
 
         state.points.push({
+            pointNumber: state.points.length + 1, // Chronological Tracking
             equipo: team, // Quién ejecutó la acción
             jugadorId: playerId, // A1, A2...
             tipoAccion: actionType, // 'punto' o 'error'
@@ -287,12 +346,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const teamNameA = statsState.config.teamA;
         const teamNameB = statsState.config.teamB;
 
-        // Summary
-        uiFinalScore.innerText = `${teamNameA} ${statsState.scoreA} - ${statsState.scoreB} ${teamNameB}`;
-        uiTotalPoints.innerText = statsState.points.length;
+        // Summary ignores Action/Player filters, but respects Time filter
+        const lastIndexForTime = Math.floor((statsState.points.length * activeFilters.maxTimePct) / 100);
+        const pointsInTime = statsState.points.slice(0, lastIndexForTime);
 
-        const lastPointTime = statsState.points.length > 0 ? statsState.points[statsState.points.length - 1].timestamp : Date.now();
-        const diffMs = statsState.matchStartTime ? (lastPointTime - statsState.matchStartTime) : 0;
+        // Calculate score at the chosen time
+        let tempScoreA = 0; let tempScoreB = 0;
+        pointsInTime.forEach(p => {
+            let pointGoesTo = p.equipo;
+            if (p.tipoAccion === 'error') pointGoesTo = p.equipo === 'A' ? 'B' : 'A';
+            if (pointGoesTo === 'A') tempScoreA++; else tempScoreB++;
+        });
+
+        uiFinalScore.innerText = `${teamNameA} ${tempScoreA} - ${tempScoreB} ${teamNameB}`;
+        uiTotalPoints.innerText = pointsInTime.length;
+
+        const lastPointTime = pointsInTime.length > 0 ? pointsInTime[pointsInTime.length - 1].timestamp : (statsState.matchStartTime || Date.now());
+        const diffMs = statsState.matchStartTime ? Math.max(0, lastPointTime - statsState.matchStartTime) : 0;
 
         const totalSeconds = Math.floor(diffMs / 1000);
         const minutes = Math.floor(totalSeconds / 60);
@@ -310,8 +380,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         heatmapPoints.innerHTML = '';
 
-        statsState.points.forEach(p => {
-            // Aggregating Stats
+        // Filter points
+        let filteredPoints = pointsInTime.filter(p => {
+            if (activeFilters.player !== 'all' && activeFilters.player !== p.jugadorId) return false;
+            if (activeFilters.action !== 'all' && activeFilters.action !== p.tipoAccion) return false;
+            return true;
+        });
+
+        filteredPoints.forEach((p, displayIndex) => {
+            // Aggregating Stats (still compute for all players inside the time range, regardless of player filter for the table)
             if (playerStats[p.jugadorId]) {
                 if (p.tipoAccion === 'punto') playerStats[p.jugadorId].pts++;
                 else playerStats[p.jugadorId].errs++;
@@ -327,9 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.style.left = `${p.coordenadas.x}%`;
             dot.style.top = `${p.coordenadas.y}%`;
 
+            // Display chronological order number
+            dot.innerText = p.pointNumber; // Real chronological number logic added later in register
+
             const actionText = p.tipoAccion === 'punto' ? 'Punto' : 'Error';
             const pName = playerStats[p.jugadorId] ? playerStats[p.jugadorId].name : p.jugadorId;
-            dot.title = `${actionText} de ${pName} (${p.marcadorMomento})`;
+            dot.title = `(#${p.pointNumber}) ${actionText} de ${pName} (${p.marcadorMomento})`;
 
             heatmapPoints.appendChild(dot);
         });
@@ -338,16 +418,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ['A1', 'A2', 'B1', 'B2'].forEach(id => {
             const team = id.charAt(0);
-            const teamTotalPoints = team === 'A' ? statsState.scoreA : statsState.scoreB;
+            const teamTotalPoints = team === 'A' ? tempScoreA : tempScoreB;
 
             const stats = playerStats[id];
-            // Only count direct points for the percentage of total score
-            const pct = teamTotalPoints > 0 ? ((stats.pts / teamTotalPoints) * 100).toFixed(1) : 0;
 
+            // Recompute stats natively from pointsInTime to ensure it matches the timeline regardless of visual filters
             const badgeClass = team === 'A' ? 'badge-a' : 'badge-b';
 
             const row = document.createElement('div');
             row.classList.add('player-stat-row');
+            // Click to open Individual Dashboard
+            row.addEventListener('click', () => openPlayerDashboard(id, stats.name, pointsInTime, badgeClass, teamNameA, teamNameB));
+
             row.innerHTML = `
                 <div class="player-info">
                     <div class="player-badge ${badgeClass}">${id}</div>
@@ -360,5 +442,86 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             playersStatsContainer.appendChild(row);
         });
+    }
+
+    // INDIVIDUAL PLAYER DASHBOARD METRICS
+    function openPlayerDashboard(playerId, playerName, allPointsInTime, badgeClass, nameTeamA, nameTeamB) {
+        document.getElementById('dash-badge').innerText = playerId;
+        document.getElementById('dash-badge').className = `dash-badge ${badgeClass}`;
+        document.getElementById('dash-name').innerText = playerName;
+
+        // Extract player points
+        let playerPts = 0;
+        let playerErrs = 0;
+        let clutchPoints = 0;
+        let leftZoneAtks = 0;
+        let rightZoneAtks = 0;
+
+        const myTeam = playerId.charAt(0);
+
+        // Heatmap for dashboard
+        const dashHeatmap = document.getElementById('dash-heatmap-points');
+        dashHeatmap.innerHTML = '';
+
+        allPointsInTime.forEach(p => {
+            if (p.jugadorId !== playerId) return;
+
+            if (p.tipoAccion === 'punto') playerPts++;
+            else playerErrs++;
+
+            // Clutch Calculation: score diff <= 2
+            const scores = p.marcadorMomento.split('-');
+            const sA = parseInt(scores[0]);
+            const sB = parseInt(scores[1]);
+            const diff = Math.abs(sA - sB);
+
+            if (p.tipoAccion === 'punto' && diff <= 2) {
+                clutchPoints++;
+            }
+
+            // Zones (only considering points, normally attacks/serves)
+            if (p.tipoAccion === 'punto') {
+                // If x < 50% it's left side of court, >= 50% is right side
+                if (p.coordenadas.x < 50) leftZoneAtks++;
+                else rightZoneAtks++;
+
+                // Personal Heatmap
+                const dot = document.createElement('div');
+                dot.classList.add('heat-dot');
+                dot.classList.add(myTeam === 'A' ? 'dot-a' : 'dot-b');
+                dot.style.left = `${p.coordenadas.x}%`;
+                dot.style.top = `${p.coordenadas.y}%`;
+                dashHeatmap.appendChild(dot);
+            }
+        });
+
+        const totalActions = playerPts + playerErrs;
+
+        // Net Efficiency
+        let efficiency = 0;
+        if (totalActions > 0) {
+            efficiency = ((playerPts - playerErrs) / totalActions) * 100;
+        }
+        document.getElementById('dash-eff').innerText = `${efficiency.toFixed(1)}%`;
+        document.getElementById('dash-eff').style.color = efficiency < 0 ? '#e84118' : 'var(--primary)';
+
+        // Clutch
+        document.getElementById('dash-clutch').innerText = clutchPoints;
+
+        // Zones
+        const totalZone = leftZoneAtks + rightZoneAtks;
+        let pctL = 0, pctR = 0;
+        if (totalZone > 0) {
+            pctL = (leftZoneAtks / totalZone) * 100;
+            pctR = (rightZoneAtks / totalZone) * 100;
+        }
+
+        document.getElementById('dash-zone-l').style.width = `${pctL}%`;
+        document.getElementById('dash-zone-l-val').innerText = `${pctL.toFixed(0)}%`;
+
+        document.getElementById('dash-zone-r').style.width = `${pctR}%`;
+        document.getElementById('dash-zone-r-val').innerText = `${pctR.toFixed(0)}%`;
+
+        playerDashboard.classList.remove('hidden');
     }
 });

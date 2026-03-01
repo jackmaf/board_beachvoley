@@ -113,8 +113,41 @@
 
                 <div class="card players-card">
                     <h2>Desglose por Jugador</h2>
+                    <p
+                        style="font-size: 0.8rem; text-align: center; color: var(--text-light); margin-top: -10px; margin-bottom: 10px;">
+                        (Toca un jugador para ver su reporte analítico)</p>
                     <div class="players-stats-container" id="players-stats-container">
                         <!-- Generado por JS -->
+                    </div>
+                </div>
+
+                <!-- NUEVA SECCIÓN DE FILTROS -->
+                <div class="card filters-card">
+                    <h2>Filtros del Mapa de Calor</h2>
+
+                    <div class="filter-group">
+                        <label>Filtrar por Jugador:</label>
+                        <div class="pill-group" id="filter-players">
+                            <button class="filter-pill active" data-filter="all">Todos</button>
+                            <button class="filter-pill" data-filter="A1" id="f-a1">A1</button>
+                            <button class="filter-pill" data-filter="A2" id="f-a2">A2</button>
+                            <button class="filter-pill" data-filter="B1" id="f-b1">B1</button>
+                            <button class="filter-pill" data-filter="B2" id="f-b2">B2</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label>Tipo de Acción:</label>
+                        <div class="pill-group" id="filter-actions">
+                            <button class="filter-pill active" data-filter="all">Todas</button>
+                            <button class="filter-pill point-pill" data-filter="punto">Puntos</button>
+                            <button class="filter-pill error-pill" data-filter="error">Errores</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group timeline-group">
+                        <label>Línea de Tiempo (Evolución): <span id="timeline-val">Todo el partido</span></label>
+                        <input type="range" id="filter-timeline" min="0" max="100" value="100" class="timeline-slider">
                     </div>
                 </div>
 
@@ -140,6 +173,66 @@
             </div>
         </section>
     </main>
+
+    <!-- MODAL DASHBOARD INDIVIDUAL -->
+    <div id="player-dashboard" class="dashboard-modal hidden">
+        <div class="dashboard-content">
+            <button class="close-dashboard" id="close-dashboard">&times;</button>
+            <div class="dashboard-header">
+                <div class="dash-badge" id="dash-badge">A1</div>
+                <h2 id="dash-name">Nombre Jugador</h2>
+            </div>
+
+            <div class="dash-grid">
+                <!-- KPI Cards -->
+                <div class="dash-kpi">
+                    <span class="kpi-label">Eficiencia Neta</span>
+                    <strong class="kpi-value" id="dash-eff">0%</strong>
+                    <span class="kpi-sub">(Pts - Errores)</span>
+                </div>
+
+                <div class="dash-kpi">
+                    <span class="kpi-label">Puntos Clutch</span>
+                    <strong class="kpi-value highlight" id="dash-clutch">0</strong>
+                    <span class="kpi-sub">Dif. de marcador <= 2</span>
+                </div>
+
+                <div class="dash-kpi">
+                    <span class="kpi-label">Zonas de Ataque</span>
+                    <div class="zone-bars">
+                        <div class="zone-bar">
+                            <span class="z-lbl">Izquierda</span>
+                            <div class="z-track">
+                                <div class="z-fill" id="dash-zone-l" style="width: 0%"></div>
+                            </div>
+                            <span class="z-val" id="dash-zone-l-val">0%</span>
+                        </div>
+                        <div class="zone-bar">
+                            <span class="z-lbl">Derecha</span>
+                            <div class="z-track">
+                                <div class="z-fill" id="dash-zone-r" style="width: 0%"></div>
+                            </div>
+                            <span class="z-val" id="dash-zone-r-val">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Heatmap -->
+                <div class="dash-heatmap-box">
+                    <h3>Puntos Ganadores Exclusivos</h3>
+                    <div class="mini-court-wrapper">
+                        <div class="court dash-court">
+                            <div class="court-half half-a"></div>
+                            <div class="net"></div>
+                            <div class="line vertical-line"></div>
+                            <div class="court-half half-b"></div>
+                            <div id="dash-heatmap-points"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>

@@ -346,9 +346,11 @@ input[type="text"]:focus {
     padding: 1.5rem;
     border-radius: 16px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
-    z-index: 100; /* Ensure menu is above the court lines & markers */
+    z-index: 100;
+    /* Ensure menu is above the court lines & markers */
     width: 95%;
-    max-width: 350px; /* slightly smaller to fit mobile */
+    max-width: 350px;
+    /* slightly smaller to fit mobile */
     text-align: center;
     border: 1px solid rgba(255, 255, 255, 0.4);
 }
@@ -501,6 +503,79 @@ input[type="text"]:focus {
     padding-bottom: 0.5rem;
 }
 
+/* Filters Card */
+.filters-card {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+    border-left: 5px solid var(--tertiary);
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--dark);
+}
+
+.pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.filter-pill {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #555;
+}
+
+.filter-pill:hover {
+    border-color: var(--tertiary);
+    background: rgba(147, 228, 193, 0.1);
+}
+
+.filter-pill.active {
+    background: var(--dark);
+    border-color: var(--dark);
+    color: white;
+}
+
+.filter-pill.point-pill.active {
+    background: #4cd137;
+    border-color: #4cd137;
+}
+
+.filter-pill.error-pill.active {
+    background: #e84118;
+    border-color: #e84118;
+}
+
+.timeline-group {
+    flex: 100%;
+}
+
+.timeline-slider {
+    width: 100%;
+    margin-top: 0.5rem;
+    accent-color: var(--primary);
+}
+
 .summary-details {
     text-align: center;
 }
@@ -524,8 +599,15 @@ input[type="text"]:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.8rem 0;
+    padding: 0.8rem 1rem;
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+    border-radius: 8px;
+}
+
+.player-stat-row:hover {
+    background: rgba(0, 0, 0, 0.03);
 }
 
 .player-info {
@@ -623,19 +705,28 @@ input[type="text"]:focus {
 }
 
 .mini-court {
-    max-width: 160px; /* slightly smaller to compensate padding */
+    max-width: 160px;
+    /* slightly smaller to compensate padding */
     cursor: default;
     /* Remove overflow */
 }
 
 .heat-dot {
     position: absolute;
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
-    opacity: 0.85;
+    opacity: 0.9;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    color: white;
+    font-weight: 900;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+    cursor: help;
 }
 
 .dot-a {
@@ -649,4 +740,194 @@ input[type="text"]:focus {
 .heat-dot.is-error {
     border: 2px solid #000;
     z-index: 5;
+}
+
+/* Individual Dashboard Modal */
+.dashboard-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.dashboard-modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dashboard-content {
+    background: var(--light);
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    border-radius: 20px;
+    padding: 2rem;
+    position: relative;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.close-dashboard {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--dark);
+    cursor: pointer;
+}
+
+.dashboard-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 1rem;
+}
+
+.dash-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+#dash-name {
+    font-size: 1.5rem;
+    color: var(--dark);
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 600px) {
+    .dash-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .dash-heatmap-box,
+    .zone-bars {
+        grid-column: 1 / -1;
+    }
+}
+
+.dash-kpi {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.kpi-label {
+    font-size: 0.9rem;
+    color: #555;
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.kpi-value.highlight {
+    color: var(--team-b);
+}
+
+.kpi-sub {
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 0.5rem;
+}
+
+.zone-bars {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.zone-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.zone-bar:last-child {
+    margin-bottom: 0;
+}
+
+.z-lbl {
+    width: 70px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.z-track {
+    flex: 1;
+    height: 12px;
+    background: #eee;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.z-fill {
+    height: 100%;
+    background: var(--tertiary);
+    max-width: 100%;
+    transition: width 0.5s;
+}
+
+.z-val {
+    width: 40px;
+    text-align: right;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.dash-heatmap-box {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.dash-heatmap-box h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: var(--dark);
+}
+
+.dash-court {
+    max-width: 140px;
+    margin: 0 auto;
 }
