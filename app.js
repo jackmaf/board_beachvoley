@@ -781,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('div');
             row.classList.add('player-stat-row');
             // Click to open Individual Dashboard
-            row.addEventListener('click', () => openPlayerDashboard(id, stats.name, pointsInTime, badgeClass, teamNameA, teamNameB));
+            row.addEventListener('click', () => openPlayerDashboard(id, stats.name, pointsBySet, badgeClass, teamNameA, teamNameB));
 
             row.innerHTML = `
                 <div class="player-info">
@@ -924,10 +924,13 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '';
 
         allPointsInTime.forEach(p => {
-            // Include timeouts for the logged player/team if requested, but mainly filter by player logic
-            if (p.jugadorId !== playerId && !(p.tipoAccion === 'timeout' && p.equipo === myTeam)) return;
-
             const isTimeout = (p.tipoAccion === 'timeout');
+
+            // --- BARRERA DE SEGURIDAD ABSOLUTA ---
+            // Si es un tiempo muerto para el otro equipo, ignorar
+            if (isTimeout && p.equipo !== myTeam) return;
+            // Si es una jugada normal de otro jugador, ignorar
+            if (!isTimeout && p.jugadorId !== playerId) return;
 
             let realX = "-";
             let realY = "-";

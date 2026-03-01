@@ -828,6 +828,11 @@ input[type="text"]:focus {
         grid-template-columns: 1fr 1fr;
     }
 
+    .summary-card,
+    .players-card {
+        grid-column: span 1;
+    }
+
     .heatmap-card,
     .gamification-card,
     .filters-card {
