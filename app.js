@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnA2 = document.getElementById('btn-a2');
     const btnB1 = document.getElementById('btn-b1');
     const btnB2 = document.getElementById('btn-b2');
-
     const btnEndMatch = document.getElementById('btn-end-match');
+    const btnUndoAction = document.getElementById('btn-undo-action');
     const btnTimeoutA = document.getElementById('btn-timeout-a');
     const btnTimeoutB = document.getElementById('btn-timeout-b');
     const toCountA = document.getElementById('to-count-a');
@@ -525,6 +525,54 @@ document.addEventListener('DOMContentLoaded', () => {
             // Optional: reset config form
             configForm.reset();
         }
+    });
+    btnUndoAction?.addEventListener('click', () => {
+        if (state.points.length === 0) {
+            alert('No hay acciones o puntos para deshacer en este partido.');
+            return;
+        }
+
+        const confirmUndo = confirm('¿Deshacer la última acción? Esto no se puede revertir.');
+        if (!confirmUndo) return;
+
+        const lastAction = state.points.pop();
+
+        if (lastAction.tipoAccion === 'timeout') {
+            const targetSetIndex = lastAction.setNumber - 1;
+            if (state.sets[targetSetIndex]) {
+                if (lastAction.equipo === 'A') state.sets[targetSetIndex].timeoutsA = Math.max(0, state.sets[targetSetIndex].timeoutsA - 1);
+                if (lastAction.equipo === 'B') state.sets[targetSetIndex].timeoutsB = Math.max(0, state.sets[targetSetIndex].timeoutsB - 1);
+            }
+        } else {
+            // Find who scored the point
+            let pointScorer = lastAction.equipo;
+            if (lastAction.tipoAccion === 'error') {
+                pointScorer = lastAction.equipo === 'A' ? 'B' : 'A';
+            }
+
+            const targetSetIndex = lastAction.setNumber - 1;
+
+            // Rollback Set: If we had advanced to a new set but didn't register points, bring it back
+            if (state.currentSetIndex > targetSetIndex) {
+                state.sets.pop();
+                state.currentSetIndex = targetSetIndex;
+            }
+
+            const targetSet = state.sets[targetSetIndex];
+            if (pointScorer === 'A') {
+                targetSet.scoreA = Math.max(0, targetSet.scoreA - 1);
+            } else {
+                targetSet.scoreB = Math.max(0, targetSet.scoreB - 1);
+            }
+        }
+
+        if (currentMarker) {
+            currentMarker.remove();
+            currentMarker = null;
+        }
+
+        saveState();
+        updateScoreUI();
     });
 
     function registerPoint(team, playerId) {
