@@ -1524,7 +1524,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tr = document.createElement('tr');
                 if (isTimeout) tr.style.backgroundColor = 'rgba(0,0,0,0.05)';
 
-                const avatarImg = !isTimeout && playerName !== '-' ? `<img src="${getAvatarUrl(playerName)}" class="table-avatar" alt="${playerName}">` : '';
+                const borderClass = p.equipo === 'A' ? 'border-team-a' : 'border-team-b';
+                const avatarImg = !isTimeout && playerName !== '-' ? `<img src="${getAvatarUrl(playerName)}" class="table-avatar ${borderClass}" alt="${playerName}">` : '';
 
                 tr.innerHTML = `
                     <td>#${p.pointNumber} (Set ${p.setNumber || 1})</td>
