@@ -1532,6 +1532,15 @@ input[type="text"]:focus {
     display: block;
 }
 
+.table-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #f0f0f0;
+    vertical-align: middle;
+}
+
 /* --- SPINNER OVERLAY --- */
 .spinner-overlay {
     position: fixed;

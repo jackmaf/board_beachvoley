@@ -620,9 +620,21 @@ document.addEventListener('DOMContentLoaded', () => {
         updateScoreUI();
     }
 
-    // Avatar Generator Helper
+    // Avatar Generator Helper (Gender Heuristics)
     function getAvatarUrl(seed) {
-        return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4`;
+        if (!seed) return '';
+
+        // Extract first name and convert to lowercase
+        const firstName = seed.trim().split(' ')[0].toLowerCase();
+
+        // Simple heuristic: In Spanish, most female names end with 'a' (e.g. Ana, Laura, Maria)
+        if (firstName.endsWith('a')) {
+            // Use 'lorelei' collection which has feminine hairstyles and soft features
+            return `https://api.dicebear.com/7.x/lorelei/svg?seed=${encodeURIComponent(seed)}&backgroundColor=ffdfbf`;
+        } else {
+            // Use 'adventurer' collection which has a more masculine/neutral sporty look
+            return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4`;
+        }
     }
 
     function registerPoint(team, playerId) {
@@ -1381,17 +1393,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Tabla 2: Bitacora
         csvContent += "--- BITACORA DE ACCIONES (Orden Cronologico) ---\n";
-        csvContent += "Nro. Punto,Set,Accion,Marcador,Coord X (m),Coord Y (m)\n";
+        csvContent += "Nro. Punto,Set,Logo (Url),Accion,Marcador,Coord X (m),Coord Y (m)\n";
 
         d.bitacora_acciones.forEach(act => {
             const pnum = act.punto_nro || '-';
             const snum = act.set_nro || '1';
+            const logoUrl = getAvatarUrl(d.playerName);
             const ac = act.accion || '-';
             const marc = act.marcador || '-';
             const xm = act.x_metros || '-';
             const ym = act.y_metros || '-';
 
-            csvContent += `${pnum}, ${snum}, ${ac}, ${marc}, ${xm}, ${ym}\n`;
+            csvContent += `${pnum}, ${snum}, ${logoUrl}, ${ac}, ${marc}, ${xm}, ${ym}\n`;
         });
 
         const encodedUri = encodeURI(csvContent);
@@ -1472,8 +1485,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tr = document.createElement('tr');
                 if (isTimeout) tr.style.backgroundColor = 'rgba(0,0,0,0.05)';
 
+                const avatarImg = !isTimeout && playerName !== '-' ? `<img src="${getAvatarUrl(playerName)}" class="table-avatar" alt="${playerName}">` : '';
+
                 tr.innerHTML = `
                     <td>#${p.pointNumber} (Set ${p.setNumber || 1})</td>
+                    <td style="text-align: center;">${avatarImg}</td>
                     <td style="font-weight: bold;">${playerName}</td>
                     <td class="${isTimeout ? '' : (isPoint ? 'log-pts' : 'log-err')}">${actionLabel}</td>
                     <td>${p.marcadorMomento}</td>
