@@ -781,17 +781,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = document.createElement('div');
             row.classList.add('player-stat-row');
             row.innerHTML = `
-                <div class="player-info" style="flex: 1;">
-                    <div class="player-badge ${badgeClass}">${id}</div>
-                    <span class="player-name-txt">${stats.name}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="player-info">
+                        <div class="player-badge ${badgeClass}">${id}</div>
+                        <span class="player-name-txt">${stats.name}</span>
+                    </div>
+                    <div class="stat-values" style="text-align: right;">
+                        <div class="stat-pts">${stats.pts} <span style="font-size:0.8rem; font-weight:400; color:#555">Pts ganadores</span></div>
+                        <div class="stat-errs">${stats.errs} Errores</div>
+                    </div>
                 </div>
-                <div class="stat-values" style="flex: 1; text-align: center;">
-                    <div class="stat-pts">${stats.pts} <span style="font-size:0.8rem; font-weight:400; color:#555">Pts ganadores</span></div>
-                    <div class="stat-errs">${stats.errs} Errores</div>
-                </div>
-                <div class="player-actions" style="flex: 1.5; display: flex; flex-direction: column; gap: 0.5rem; justify-content: center;">
-                    <button class="btn-hepta" style="background: var(--dark); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">📊 Ver</button>
-                    <button class="btn-bita" style="background: var(--primary); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">📋 Filtrar</button>
+                <div class="player-actions" style="width: 100%; display: flex; flex-direction: row; gap: 0.5rem; justify-content: space-between; margin-top: 0.5rem;">
+                    <button class="btn-hepta" style="flex: 1; background: var(--dark); color: white; border: none; padding: 0.6rem 0.2rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">📊 Ver Detalle</button>
+                    <button class="btn-bita" style="flex: 1; background: var(--primary); color: white; border: none; padding: 0.6rem 0.2rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.2s;">📋 Filtrar Global</button>
                 </div>
             `;
 

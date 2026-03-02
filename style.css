@@ -74,6 +74,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-x: hidden;
 }
 
 /* Header & Nav */
@@ -843,8 +844,14 @@ input[type="text"]:focus {
 .card {
     background: var(--glass-bg);
     border-radius: 20px;
-    padding: 1.5rem;
+    padding: 1rem;
     box-shadow: var(--glass-shadow);
+}
+
+@media (min-width: 768px) {
+    .card {
+        padding: 1.5rem;
+    }
 }
 
 .card h2 {
@@ -1005,6 +1012,8 @@ input[type="text"]:focus {
     cursor: pointer;
     transition: background 0.2s;
     border-radius: 8px;
+    flex-wrap: wrap;
+    gap: 0.5rem;
 }
 
 .player-stat-row:hover {
@@ -1015,6 +1024,8 @@ input[type="text"]:focus {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex: 1;
+    min-width: 100px;
 }
 
 .player-badge {
@@ -1051,8 +1062,14 @@ input[type="text"]:focus {
 
 .stat-pts {
     font-weight: 900;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--dark);
+}
+
+@media (min-width: 768px) {
+    .stat-pts {
+        font-size: 1.2rem;
+    }
 }
 
 .stat-errs {
