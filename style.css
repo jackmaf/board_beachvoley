@@ -125,6 +125,27 @@ nav {
     background: rgba(255, 255, 255, 0.1);
 }
 
+/* Responsive Header */
+@media (max-width: 480px) {
+    .app-header {
+        padding: 0.8rem 0.5rem;
+    }
+
+    .app-header h1 {
+        font-size: 1.25rem;
+        margin-bottom: 0.8rem;
+    }
+
+    nav {
+        gap: 0.4rem;
+    }
+
+    .nav-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+    }
+}
+
 /* Views */
 .view {
     display: none;
