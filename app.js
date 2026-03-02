@@ -1142,6 +1142,32 @@ document.addEventListener('DOMContentLoaded', () => {
             skills: skillCounts
         };
 
+        // Fill Explicit Numeric Action Stats (for PDF clarity)
+        const skillsGrid = document.getElementById('dash-skills-grid');
+        if (skillsGrid) {
+            skillsGrid.innerHTML = '';
+            const skillIcons = {
+                'Ataque': '🏐', 'Saque': '🎯', 'Bloqueo': '🧱',
+                'Antebrazos': '💪', 'Garrita': '🤜', 'Toque': '🤏', 'Dedos': '👐'
+            };
+
+            Object.keys(skillCounts).forEach(sk => {
+                const count = skillCounts[sk];
+                const box = document.createElement('div');
+                box.style.background = 'rgba(0,0,0,0.03)';
+                box.style.padding = '0.8rem';
+                box.style.borderRadius = '8px';
+                box.style.boxShadow = '0 2px 4px rgba(0,0,0,0.02)';
+
+                box.innerHTML = `
+                    <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">${skillIcons[sk] || '⚡'}</div>
+                    <div style="font-weight: 700; color: var(--dark); font-size: 0.85rem; text-transform: uppercase;">${sk}</div>
+                    <div style="font-size: 1.2rem; font-weight: 900; color: var(--primary); margin-top: 0.2rem;">${count}</div>
+                `;
+                skillsGrid.appendChild(box);
+            });
+        }
+
         // Draw Player Profile Web (Hexagram/Heptagram)
         drawRadarChart(skillCounts);
 
