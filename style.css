@@ -1624,3 +1624,56 @@ input[type="text"]:focus {
         transform: rotate(360deg);
     }
 }
+
+/* --- RESPONSIVE ADJUSTMENTS FOR STATS VIEW ON MOBILE (< 600px) --- */
+@media (max-width: 600px) {
+
+    /* 1. Global Log Table (Bitácora) Overflow */
+    .global-log-card {
+        overflow-x: auto;
+        /* Allow horizontal scroll on the card itself */
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.5rem;
+    }
+
+    .dash-table {
+        min-width: 500px;
+        /* Force minimum width to trigger scroll instead of squishing */
+    }
+
+    /* Hide specific columns on mobile for clarity (X and Y coordinates) */
+    .dash-table th:nth-child(6),
+    .dash-table td:nth-child(6),
+    .dash-table th:nth-child(7),
+    .dash-table td:nth-child(7) {
+        display: none;
+    }
+
+    /* 2. Top Performers (Salón de la Fama) Overflow */
+    .gamification-container {
+        grid-template-columns: 1fr 1fr !important;
+        /* Force 2 columns instead of auto-fit squishing */
+    }
+
+    /* 3. Heatmap Adjustments to prevent pushing boundaries */
+    .heatmap-card {
+        overflow-x: hidden;
+        /* Prevent horizontal scroll on the card */
+    }
+
+    .mini-free-zone {
+        padding: 1rem;
+        /* Reduce padding to save space */
+    }
+
+    /* 4. Filters Adjustments */
+    .filter-group {
+        min-width: 100%;
+        /* Force filter groups to stack on very small screens */
+    }
+
+    .timeline-group>div {
+        flex-direction: column;
+        /* Stack min/max inputs */
+    }
+}
