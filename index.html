@@ -314,6 +314,26 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- NEW: GLOBAL BITACORA (Moved from Modal) -->
+                <div class="card global-log-card" id="global-log-section" style="margin-top: 1rem;">
+                    <h2>Bitácora Global del Partido</h2>
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th># Punto</th>
+                                <th>Jugador</th>
+                                <th>Acción</th>
+                                <th>Marcador</th>
+                                <th>X (m)</th>
+                                <th>Y (m)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="global-table-body">
+                            <!-- Llenado por JS dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
@@ -402,26 +422,9 @@
                 <canvas id="player-radar-chart" width="280" height="280" style="max-width: 100%;"></canvas>
             </div>
 
-            <!-- Detailed Log Table for PDF -->
-            <div class="dash-log-section" id="dash-log-section">
-                <h3>Bitácora de Acciones (Orden Cronológico)</h3>
-                <table class="dash-table">
-                    <thead>
-                        <tr>
-                            <th># Punto</th>
-                            <th>Acción</th>
-                            <th>Marcador</th>
-                            <th>X (m)</th>
-                            <th>Y (m)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dash-table-body">
-                        <!-- Llenado por JS -->
-                    </tbody>
-                </table>
-            </div>
-
         </div>
+
+    </div>
     </div>
 
     <!-- Html2Pdf Library -->

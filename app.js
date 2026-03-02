@@ -780,24 +780,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const row = document.createElement('div');
             row.classList.add('player-stat-row');
-            // Click to open Individual Dashboard
-            row.addEventListener('click', () => openPlayerDashboard(id, stats.name, pointsBySet, badgeClass, teamNameA, teamNameB));
-
             row.innerHTML = `
-                <div class="player-info">
+                <div class="player-info" style="flex: 1;">
                     <div class="player-badge ${badgeClass}">${id}</div>
                     <span class="player-name-txt">${stats.name}</span>
                 </div>
-                <div class="stat-values">
+                <div class="stat-values" style="flex: 1; text-align: center;">
                     <div class="stat-pts">${stats.pts} <span style="font-size:0.8rem; font-weight:400; color:#555">Pts ganadores</span></div>
                     <div class="stat-errs">${stats.errs} Errores</div>
                 </div>
+                <div class="player-actions" style="flex: 1.5; display: flex; flex-direction: column; gap: 0.5rem; justify-content: center;">
+                    <button class="btn-hepta" style="background: var(--dark); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">📊 Ver</button>
+                    <button class="btn-bita" style="background: var(--primary); color: white; border: none; padding: 0.5rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: background 0.2s;">📋 Filtrar</button>
+                </div>
             `;
+
+            // Event Listeners for explicitly separated UI buttons Actions
+            const btnHepta = row.querySelector('.btn-hepta');
+            const btnBita = row.querySelector('.btn-bita');
+
+            btnHepta.addEventListener('click', () => {
+                openPlayerDashboard(id, stats.name, pointsBySet, badgeClass, teamNameA, teamNameB);
+            });
+
+            btnBita.addEventListener('click', () => {
+                // Trigger the filter logic globally
+                const filterPill = document.querySelector(`#filter-players [data-filter="${id}"]`);
+                if (filterPill) filterPill.click();
+
+                // Scroll down smoothly to the Global Table
+                setTimeout(() => {
+                    const bitaEl = document.getElementById('global-log-section');
+                    if (bitaEl) bitaEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            });
+
             playersStatsContainer.appendChild(row);
         });
 
         // Gamificación: Salón de la Fama
         renderGamification(pointsBySet, statsState.config);
+
+        // Bitácora Global (New Relocated Function)
+        renderGlobalBitacora(filteredPoints, playerStats);
     }
 
     // GAMIFICATION: TOP PERFORMERS (SALÓN DE LA FAMA)
@@ -841,16 +866,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Top Scorer (Max Pts)
         const topScorer = [...pList].sort((a, b) => b.pts - a.pts)[0];
         if (topScorer && topScorer.pts > 0) {
-            awards.push({ emoji: '🔥', title: 'Máx. Anotador', winner: topScorer.name, value: `${topScorer.pts} pts` });
+            awards.push({ emoji: '🔥', title: 'Máx. Anotador', winner: topScorer.name, value: topScorer.pts + ' pts' });
         }
 
         // 2. Most Errors
         const mostErrs = [...pList].sort((a, b) => b.errs - a.errs)[0];
         if (mostErrs && mostErrs.errs > 0) {
-            awards.push({ emoji: '☠️', title: 'Más Errores', winner: mostErrs.name, value: `${mostErrs.errs} errs`, isNegative: true });
+            awards.push({ emoji: '☠️', title: 'Más Errores', winner: mostErrs.name, value: mostErrs.errs + ' errs', isNegative: true });
         }
 
-        // 3. Best Skills
         const skillsToCheck = [
             { key: 'Ataque', emoji: '🏐', title: 'Mejor Atacante' },
             { key: 'Saque', emoji: '🎯', title: 'Mejor Sacador' },
@@ -864,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
         skillsToCheck.forEach(sk => {
             const best = [...pList].sort((a, b) => b.skills[sk.key] - a.skills[sk.key])[0];
             if (best && best.skills[sk.key] > 0) {
-                awards.push({ emoji: sk.emoji, title: sk.title, winner: best.name, value: `${best.skills[sk.key]} pts` });
+                awards.push({ emoji: sk.emoji, title: sk.title, winner: best.name, value: best.skills[sk.key] + ' pts' });
             }
         });
 
@@ -883,11 +907,14 @@ document.addEventListener('DOMContentLoaded', () => {
             card.style.textAlign = 'center';
             card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
 
+            let cColor = aw.isNegative ? '#e84118' : 'var(--dark)';
+            let cBg = aw.isNegative ? '#ffe0e0' : '#e0e0e0';
+
             card.innerHTML = `
                 <div style="font-size: 1.8rem; margin-bottom: 0.2rem;">${aw.emoji}</div>
-                <div style="font-size: 0.75rem; font-weight: bold; color: ${aw.isNegative ? '#e84118' : 'var(--dark)'}; text-transform: uppercase;">${aw.title}</div>
+                <div style="font-size: 0.75rem; font-weight: bold; color: ${cColor}; text-transform: uppercase;">${aw.title}</div>
                 <div style="font-size: 0.9rem; font-weight: bold; margin: 0.3rem 0; color: var(--text);">${aw.winner}</div>
-                <div style="font-size: 0.8rem; background: ${aw.isNegative ? '#ffe0e0' : '#e0e0e0'}; display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${aw.value}</div>
+                <div style="font-size: 0.8rem; background: ${cBg}; display: inline-block; padding: 2px 6px; border-radius: 4px; font-weight: bold;">${aw.value}</div>
             `;
             container.appendChild(card);
         });
@@ -920,8 +947,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Track points for detailed log
         let detailedLog = [];
-        const tbody = document.getElementById('dash-table-body');
-        tbody.innerHTML = '';
 
         allPointsInTime.forEach(p => {
             const isTimeout = (p.tipoAccion === 'timeout');
@@ -983,7 +1008,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Build detailed log
             const isPoint = p.tipoAccion === 'punto';
-            let actionLabel = isTimeout ? 'TIEMPO MUERTO' : `${p.actionDetail || 'Acción'} (${isPoint ? 'Punto' : 'Error'})`;
+            let actionLabel = isTimeout ? 'TIEMPO MUERTO' : `${p.actionDetail || 'Acción'}(${isPoint ? 'Punto' : 'Error'})`;
 
             detailedLog.push({
                 punto_nro: p.pointNumber,
@@ -993,19 +1018,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 x_metros: String(realX),
                 y_metros: String(realY)
             });
-
-            // Populate HTML Table for PDF
-            const tr = document.createElement('tr');
-            if (isTimeout) tr.style.backgroundColor = 'rgba(0,0,0,0.05)';
-
-            tr.innerHTML = `
-                <td>#${p.pointNumber} (Set ${p.setNumber || 1})</td>
-                <td class="${isTimeout ? '' : (isPoint ? 'log-pts' : 'log-err')}">${actionLabel}</td>
-                <td>${p.marcadorMomento}</td>
-                <td>${realX !== "-" ? realX + 'm' : '-'}</td>
-                <td>${realY !== "-" ? realY + 'm' : '-'}</td>
-            `;
-            tbody.appendChild(tr);
         });
 
         const totalActions = playerPts + playerErrs;
@@ -1013,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- NEW METRIC: Plus/Minus (+/-) ---
         let plusMinusVal = playerPts - playerErrs;
         const pmEl = document.getElementById('dash-plus-minus');
-        pmEl.innerText = plusMinusVal > 0 ? `+${plusMinusVal}` : plusMinusVal;
+        pmEl.innerText = plusMinusVal > 0 ? `+ ${plusMinusVal}` : plusMinusVal;
 
         if (plusMinusVal > 0) {
             pmEl.style.color = 'var(--primary)'; // Green
@@ -1028,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalActions > 0) {
             efficiency = ((playerPts - playerErrs) / totalActions) * 100;
         }
-        document.getElementById('dash-eff').innerText = `${efficiency.toFixed(1)}%`;
+        document.getElementById('dash-eff').innerText = `${efficiency.toFixed(1)} % `;
         document.getElementById('dash-eff').style.color = efficiency < 0 ? '#e84118' : 'var(--primary)';
 
         // Calculate Best Minute string
@@ -1044,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (bestMinCount > 0) {
-            bestMinText = `${bestMinVal} (${bestMinCount} pts)`;
+            bestMinText = `${bestMinVal}(${bestMinCount} pts)`;
         }
         document.getElementById('dash-best-minute').innerText = bestMinText === "--" ? "Ninguno aún" : `Minuto ${bestMinText}`;
 
@@ -1205,20 +1217,20 @@ document.addEventListener('DOMContentLoaded', () => {
         let csvContent = "data:text/csv;charset=utf-8,"
             + "--- RESUMEN DEL JUGADOR ---\n"
             + "Metrica,Valor\n"
-            + `Jugador,${d.playerName} (${d.playerId})\n`
-            + `Eficiencia Neta (%),${d.efficiency.toFixed(1)}\n`
-            + `Puntos Ganadores,${d.playerPts}\n`
-            + `Errores,${d.playerErrs}\n`
-            + `Puntos Clutch,${d.clutchPoints}\n`
-            + `Ataques Zona Izquierda (%),${d.pctL.toFixed(1)}\n`
-            + `Ataques Zona Derecha (%),${d.pctR.toFixed(1)}\n`
-            + `Ataques Totales,${d.skills['Ataque'] || 0}\n`
-            + `Saques Totales,${d.skills['Saque'] || 0}\n`
-            + `Bloqueos Totales,${d.skills['Bloqueo'] || 0}\n`
-            + `Antebrazos Totales,${d.skills['Antebrazos'] || 0}\n`
-            + `Garritas Totales,${d.skills['Garrita'] || 0}\n`
-            + `Toques Totales,${d.skills['Toque'] || 0}\n`
-            + `Acomodo Dedos Totales,${d.skills['Dedos'] || 0}\n\n`;
+            + `Jugador, ${d.playerName}(${d.playerId}) \n`
+            + `Eficiencia Neta(%), ${d.efficiency.toFixed(1)}\n`
+            + `Puntos Ganadores, ${d.playerPts}\n`
+            + `Errores, ${d.playerErrs}\n`
+            + `Puntos Clutch, ${d.clutchPoints}\n`
+            + `Ataques Zona Izquierda(%), ${d.pctL.toFixed(1)}\n`
+            + `Ataques Zona Derecha(%), ${d.pctR.toFixed(1)}\n`
+            + `Ataques Totales, ${d.skills['Ataque'] || 0}\n`
+            + `Saques Totales, ${d.skills['Saque'] || 0}\n`
+            + `Bloqueos Totales, ${d.skills['Bloqueo'] || 0}\n`
+            + `Antebrazos Totales, ${d.skills['Antebrazos'] || 0}\n`
+            + `Garritas Totales, ${d.skills['Garrita'] || 0}\n`
+            + `Toques Totales, ${d.skills['Toque'] || 0}\n`
+            + `Acomodo Dedos Totales, ${d.skills['Dedos'] || 0}\n\n`;
 
         // Tabla 2: Bitacora
         csvContent += "--- BITACORA DE ACCIONES (Orden Cronologico) ---\n";
@@ -1232,7 +1244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const xm = act.x_metros || '-';
             const ym = act.y_metros || '-';
 
-            csvContent += `${pnum},${snum},${ac},${marc},${xm},${ym}\n`;
+            csvContent += `${pnum}, ${snum}, ${ac}, ${marc}, ${xm}, ${ym}\n`;
         });
 
         const encodedUri = encodeURI(csvContent);
@@ -1283,6 +1295,48 @@ document.addEventListener('DOMContentLoaded', () => {
             element.style.background = originalBg;
             element.classList.remove('html2pdf__container');
             document.body.setAttribute('data-theme', originalBodyTheme); // Restore
+        }
+    }
+    // BITÁCORA GLOBAL LOGIC
+    function renderGlobalBitacora(pointsArray, playerStatsObj) {
+        try {
+            const tbody = document.getElementById('global-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (!pointsArray || pointsArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #777;">Sin datos registrados.</td></tr>';
+                return;
+            }
+
+            pointsArray.forEach(p => {
+                const isTimeout = p.tipoAccion === 'timeout';
+                const isPoint = p.tipoAccion === 'punto';
+                const actionLabel = isTimeout ? 'TIEMPO MUERTO' : `${p.actionDetail || 'Acción'} (${isPoint ? 'Punto' : 'Error'})`;
+
+                let playerName = '-';
+                if (!isTimeout) {
+                    playerName = playerStatsObj && playerStatsObj[p.jugadorId] ? playerStatsObj[p.jugadorId].name : p.jugadorId;
+                }
+
+                const realX = p.coordenadas && p.coordenadas.realX !== undefined ? p.coordenadas.realX.toFixed(1) : "-";
+                const realY = p.coordenadas && p.coordenadas.realY !== undefined ? p.coordenadas.realY.toFixed(1) : "-";
+
+                const tr = document.createElement('tr');
+                if (isTimeout) tr.style.backgroundColor = 'rgba(0,0,0,0.05)';
+
+                tr.innerHTML = `
+                    <td>#${p.pointNumber} (Set ${p.setNumber || 1})</td>
+                    <td style="font-weight: bold;">${playerName}</td>
+                    <td class="${isTimeout ? '' : (isPoint ? 'log-pts' : 'log-err')}">${actionLabel}</td>
+                    <td>${p.marcadorMomento}</td>
+                    <td>${realX !== "-" ? realX + 'm' : '-'}</td>
+                    <td>${realY !== "-" ? realY + 'm' : '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (e) {
+            console.error("Error rendering Bitacora", e);
         }
     }
 });
