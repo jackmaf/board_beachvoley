@@ -392,9 +392,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function applyConfigToUI() {
         if (!state.config) return;
 
-        // Names in scoreboard
+        // Names and Logos in scoreboard
         nameTeamA.innerText = state.config.teamA;
         nameTeamB.innerText = state.config.teamB;
+
+        const logoA = document.getElementById('logo-team-a');
+        const logoB = document.getElementById('logo-team-b');
+
+        if (logoA) {
+            logoA.src = getTeamLogoUrl(state.config.teamA);
+            logoA.classList.remove('hidden');
+        }
+        if (logoB) {
+            logoB.src = getTeamLogoUrl(state.config.teamB);
+            logoB.classList.remove('hidden');
+        }
 
         // Update Name and Avatar in primary buttons
         const updatePlayerButton = (btnElement, name) => {
@@ -636,6 +648,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4`;
         }
     }
+    function getTeamLogoUrl(seed) {
+        if (!seed) return '';
+        // Use 'shapes' collection for teams (abstract geometric shapes)
+        return `https://api.dicebear.com/7.x/shapes/svg?seed=${encodeURIComponent(seed)}&backgroundColor=ffffff`;
+    }
 
     function registerPoint(team, playerId) {
         if (!state.currentPendingPoint) return;
@@ -826,9 +843,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pointGoesTo === 'A') tempScoreA++; else tempScoreB++;
         });
 
-        uiFinalScore.innerText = activeFilters.set !== 'all'
-            ? `${teamNameA} ${tempScoreA} - ${tempScoreB} ${teamNameB} (S${activeFilters.set})`
-            : `${teamNameA} ${tempScoreA} - ${tempScoreB} ${teamNameB}`;
+        const logoA = getTeamLogoUrl(teamNameA);
+        const logoB = getTeamLogoUrl(teamNameB);
+
+        const setLabel = activeFilters.set !== 'all' ? `<div style="font-size: 0.9rem; color: #777; margin-top:-5px;">(Set ${activeFilters.set})</div>` : '';
+
+        uiFinalScore.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; flex: 1;">
+                <img src="${logoA}" class="team-logo" style="width: 45px; height: 45px; margin: 0;" alt="${teamNameA}">
+                <span style="font-size: 0.9rem; font-weight: 700; color: var(--team-a); text-align: center;">${teamNameA}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center;">
+                <div style="font-size: 2.2rem; font-weight: 900; white-space: nowrap;">${tempScoreA} - ${tempScoreB}</div>
+                ${setLabel}
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; flex: 1;">
+                <img src="${logoB}" class="team-logo" style="width: 45px; height: 45px; margin: 0;" alt="${teamNameB}">
+                <span style="font-size: 0.9rem; font-weight: 700; color: var(--team-b); text-align: center;">${teamNameB}</span>
+            </div>
+        `;
 
         uiTotalPoints.innerText = pointsBySet.length;
 
