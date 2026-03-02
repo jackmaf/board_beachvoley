@@ -1093,10 +1093,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // INDIVIDUAL PLAYER DASHBOARD METRICS
     function openPlayerDashboard(playerId, playerName, allPointsInTime, badgeClass, nameTeamA, nameTeamB) {
-        document.getElementById('dash-badge').innerText = playerId;
-        document.getElementById('dash-badge').className = `dash-badge ${badgeClass}`;
         document.getElementById('dash-name').innerText = playerName;
-        document.getElementById('dash-avatar-img').src = getAvatarUrl(playerName);
+        const avatarImg = document.getElementById('dash-avatar-img');
+        avatarImg.src = getAvatarUrl(playerName);
+
+        const currentTeam = playerId.charAt(0);
+        const borderClass = currentTeam === 'A' ? 'border-team-a' : 'border-team-b';
+        avatarImg.className = `dash-avatar ${borderClass}`;
 
         // Extract player points
         let playerPts = 0;
