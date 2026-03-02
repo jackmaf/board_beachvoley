@@ -911,8 +911,9 @@ document.addEventListener('DOMContentLoaded', () => {
             row.classList.add('player-stat-row');
             row.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <div class="player-info">
+                    <div class="player-info" style="display: flex; align-items: center; gap: 0.5rem;">
                         <div class="player-badge ${badgeClass}">${id}</div>
+                        <img src="${getAvatarUrl(stats.name)}" class="table-avatar" style="width: 35px; height: 35px;" alt="${stats.name}">
                         <span class="player-name-txt">${stats.name}</span>
                     </div>
                     <div class="stat-values" style="text-align: right;">
