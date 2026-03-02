@@ -197,10 +197,22 @@
                     </div>
 
                     <div class="player-grid">
-                        <button class="player-btn team-a-btn" data-player="A1" data-team="A" id="btn-a1">A1</button>
-                        <button class="player-btn team-a-btn" data-player="A2" data-team="A" id="btn-a2">A2</button>
-                        <button class="player-btn team-b-btn" data-player="B1" data-team="B" id="btn-b1">B1</button>
-                        <button class="player-btn team-b-btn" data-player="B2" data-team="B" id="btn-b2">B2</button>
+                        <button class="player-btn team-a-btn" data-player="A1" data-team="A" id="btn-a1">
+                            <img src="" class="player-avatar" id="avatar-a1" alt="A1">
+                            <span>A1</span>
+                        </button>
+                        <button class="player-btn team-a-btn" data-player="A2" data-team="A" id="btn-a2">
+                            <img src="" class="player-avatar" id="avatar-a2" alt="A2">
+                            <span>A2</span>
+                        </button>
+                        <button class="player-btn team-b-btn" data-player="B1" data-team="B" id="btn-b1">
+                            <img src="" class="player-avatar" id="avatar-b1" alt="B1">
+                            <span>B1</span>
+                        </button>
+                        <button class="player-btn team-b-btn" data-player="B2" data-team="B" id="btn-b2">
+                            <img src="" class="player-avatar" id="avatar-b2" alt="B2">
+                            <span>B2</span>
+                        </button>
                     </div>
 
                     <button class="cancel-btn" id="cancel-point">Cancelar</button>
@@ -369,11 +381,13 @@
     <div id="player-dashboard" class="dashboard-modal hidden">
         <div class="dashboard-content">
             <button class="close-dashboard" id="close-dashboard">&times;</button>
-            <div class="dashboard-header">
-                <div class="dash-badge" id="dash-badge">A1</div>
-                <h2 id="dash-name">Nombre Jugador</h2>
+            <div class="dashboard-header"
+                style="text-align: center; justify-content: center; flex-direction: column; gap: 0.5rem; position: relative;">
+                <img src="" id="dash-avatar-img" class="dash-avatar" alt="Player Avatar">
+                <div class="dash-badge" id="dash-badge" style="margin: 0 auto;">A1</div>
+                <h2 id="dash-name" style="margin: 0;">Nombre Jugador</h2>
 
-                <div class="export-actions" id="export-actions">
+                <div class="export-actions" id="export-actions" style="position: absolute; top: 0; right: 0;">
                     <button class="export-btn pdf-btn" id="btn-export-pdf" title="Descargar como PDF">📄 PDF</button>
                     <button class="export-btn csv-btn" id="btn-export-csv" title="Descargar datos en CSV">📊
                         CSV</button>

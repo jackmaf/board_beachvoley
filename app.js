@@ -396,11 +396,19 @@ document.addEventListener('DOMContentLoaded', () => {
         nameTeamA.innerText = state.config.teamA;
         nameTeamB.innerText = state.config.teamB;
 
-        // Names in menu buttons
-        btnA1.innerText = state.config.pA1;
-        btnA2.innerText = state.config.pA2;
-        btnB1.innerText = state.config.pB1;
-        btnB2.innerText = state.config.pB2;
+        // Update Name and Avatar in primary buttons
+        const updatePlayerButton = (btnElement, name) => {
+            const span = btnElement.querySelector('span');
+            const img = btnElement.querySelector('img');
+            if (span) span.innerText = name;
+            else btnElement.innerText = name; // Fallback
+            if (img) img.src = getAvatarUrl(name);
+        };
+
+        updatePlayerButton(btnA1, state.config.pA1);
+        updatePlayerButton(btnA2, state.config.pA2);
+        updatePlayerButton(btnB1, state.config.pB1);
+        updatePlayerButton(btnB2, state.config.pB2);
 
         // Timeout Buttons
         document.getElementById('btn-timeout-a').innerHTML = `⏱️ T. ${state.config.teamA} <span id="to-count-a">(0/1)</span>`;
@@ -564,53 +572,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     btnUndoAction?.addEventListener('click', () => {
-        if (state.points.length === 0) {
-            alert('No hay acciones o puntos para deshacer en este partido.');
+        undoLastAction();
+    });
+
+    function undoLastAction() {
+        if (!state.points || state.points.length === 0) {
+            alert("No hay acciones para deshacer.");
             return;
         }
 
-        const confirmUndo = confirm('¿Deshacer la última acción? Esto no se puede revertir.');
+        const confirmUndo = confirm("¿Estás seguro de que quieres deshacer la última acción registrada?");
         if (!confirmUndo) return;
 
         const lastAction = state.points.pop();
 
+        // 1. If it was a Timeout, give it back
         if (lastAction.tipoAccion === 'timeout') {
-            const targetSetIndex = lastAction.setNumber - 1;
-            if (state.sets[targetSetIndex]) {
-                if (lastAction.equipo === 'A') state.sets[targetSetIndex].timeoutsA = Math.max(0, state.sets[targetSetIndex].timeoutsA - 1);
-                if (lastAction.equipo === 'B') state.sets[targetSetIndex].timeoutsB = Math.max(0, state.sets[targetSetIndex].timeoutsB - 1);
-            }
-        } else {
-            // Find who scored the point
-            let pointScorer = lastAction.equipo;
-            if (lastAction.tipoAccion === 'error') {
-                pointScorer = lastAction.equipo === 'A' ? 'B' : 'A';
-            }
-
-            const targetSetIndex = lastAction.setNumber - 1;
-
-            // Rollback Set: If we had advanced to a new set but didn't register points, bring it back
-            if (state.currentSetIndex > targetSetIndex) {
-                state.sets.pop();
-                state.currentSetIndex = targetSetIndex;
-            }
-
-            const targetSet = state.sets[targetSetIndex];
-            if (pointScorer === 'A') {
-                targetSet.scoreA = Math.max(0, targetSet.scoreA - 1);
-            } else {
-                targetSet.scoreB = Math.max(0, targetSet.scoreB - 1);
-            }
+            const curSet = state.sets[lastAction.setNumber - 1];
+            if (lastAction.equipo === 'A') curSet.timeoutsA = Math.max(0, curSet.timeoutsA - 1);
+            if (lastAction.equipo === 'B') curSet.timeoutsB = Math.max(0, curSet.timeoutsB - 1);
         }
+        // 2. If it was a point/error, subtract the point from the winning team
+        else {
+            // Did this point cause a set transition? (i.e. we are now in Set N, but the point belongs to Set N-1)
+            if (lastAction.setNumber < state.currentSetIndex + 1) {
+                // We need to jump back to the previous set and delete the newly created empty set
+                state.currentSetIndex = lastAction.setNumber - 1;
+                state.sets.pop(); // Remove the empty Set N
+            }
 
-        if (currentMarker) {
-            currentMarker.remove();
-            currentMarker = null;
+            const curSet = state.sets[state.currentSetIndex];
+
+            // Who got the point? (If A made a point -> A got it. If A made an error -> B got it)
+            const pointWentTo = lastAction.tipoAccion === 'punto' ? lastAction.equipo : (lastAction.equipo === 'A' ? 'B' : 'A');
+
+            if (pointWentTo === 'A') curSet.scoreA = Math.max(0, curSet.scoreA - 1);
+            if (pointWentTo === 'B') curSet.scoreB = Math.max(0, curSet.scoreB - 1);
+
+            // Remove marker from court if it's currently on screen
+            const markers = document.querySelectorAll('.point-marker');
+            if (markers.length > 0) {
+                markers[markers.length - 1].remove();
+            }
         }
 
         saveState();
         updateScoreUI();
-    });
+    }
+
+    // Avatar Generator Helper
+    function getAvatarUrl(seed) {
+        return `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4`;
+    }
 
     function registerPoint(team, playerId) {
         if (!state.currentPendingPoint) return;
@@ -1017,6 +1030,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let cBg = aw.isNegative ? '#ffe0e0' : '#e0e0e0';
 
             card.innerHTML = `
+                <img src="${getAvatarUrl(aw.winner)}" class="fame-avatar" alt="${aw.winner}">
                 <div style="font-size: 1.8rem; margin-bottom: 0.2rem;">${aw.emoji}</div>
                 <div style="font-size: 0.75rem; font-weight: bold; color: ${cColor}; text-transform: uppercase;">${aw.title}</div>
                 <div style="font-size: 0.9rem; font-weight: bold; margin: 0.3rem 0; color: var(--text);">${aw.winner}</div>
@@ -1031,6 +1045,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dash-badge').innerText = playerId;
         document.getElementById('dash-badge').className = `dash-badge ${badgeClass}`;
         document.getElementById('dash-name').innerText = playerName;
+        document.getElementById('dash-avatar-img').src = getAvatarUrl(playerName);
 
         // Extract player points
         let playerPts = 0;

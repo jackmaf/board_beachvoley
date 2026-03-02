@@ -1501,6 +1501,37 @@ input[type="text"]:focus {
     font-weight: 700;
 }
 
+/* --- AVATARS --- */
+.player-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    object-fit: cover;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dash-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    margin-bottom: 0.5rem;
+}
+
+.fame-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin: 0 auto 0.5rem auto;
+    border: 2px solid var(--primary);
+    background-color: #fff;
+    display: block;
+}
+
 /* --- SPINNER OVERLAY --- */
 .spinner-overlay {
     position: fixed;
