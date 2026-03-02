@@ -850,7 +850,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         uiFinalScore.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; flex: 1;">
-                <img src="${logoA}" class="team-logo" style="width: 45px; height: 45px; margin: 0;" alt="${teamNameA}">
+                <img src="${logoA}" class="team-logo border-team-a" style="width: 45px; height: 45px; margin: 0;" alt="${teamNameA}">
                 <span style="font-size: 0.9rem; font-weight: 700; color: var(--team-a); text-align: center;">${teamNameA}</span>
             </div>
             <div style="display: flex; flex-direction: column; align-items: center;">
@@ -858,7 +858,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${setLabel}
             </div>
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem; flex: 1;">
-                <img src="${logoB}" class="team-logo" style="width: 45px; height: 45px; margin: 0;" alt="${teamNameB}">
+                <img src="${logoB}" class="team-logo border-team-b" style="width: 45px; height: 45px; margin: 0;" alt="${teamNameB}">
                 <span style="font-size: 0.9rem; font-weight: 700; color: var(--team-b); text-align: center;">${teamNameB}</span>
             </div>
         `;
@@ -940,13 +940,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const badgeClass = team === 'A' ? 'badge-a' : 'badge-b';
             const stats = playerStats[id];
 
+            const borderClass = team === 'A' ? 'border-team-a' : 'border-team-b';
+
             const row = document.createElement('div');
             row.classList.add('player-stat-row');
             row.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <div class="player-info" style="display: flex; align-items: center; gap: 0.5rem;">
-                        <div class="player-badge ${badgeClass}">${id}</div>
-                        <img src="${getAvatarUrl(stats.name)}" class="table-avatar" style="width: 35px; height: 35px;" alt="${stats.name}">
+                        <img src="${getAvatarUrl(stats.name)}" class="table-avatar ${borderClass}" style="width: 35px; height: 35px;" alt="${stats.name}">
                         <span class="player-name-txt">${stats.name}</span>
                     </div>
                     <div class="stat-values" style="text-align: right;">
@@ -1002,10 +1003,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const players = {
-            'A1': { id: 'A1', name: configData.pA1, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
-            'A2': { id: 'A2', name: configData.pA2, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
-            'B1': { id: 'B1', name: configData.pB1, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
-            'B2': { id: 'B2', name: configData.pB2, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } }
+            'A1': { id: 'A1', team: 'a', name: configData.pA1, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
+            'A2': { id: 'A2', team: 'a', name: configData.pA2, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
+            'B1': { id: 'B1', team: 'b', name: configData.pB1, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } },
+            'B2': { id: 'B2', team: 'b', name: configData.pB2, pts: 0, errs: 0, skills: { 'Ataque': 0, 'Saque': 0, 'Bloqueo': 0, 'Antebrazos': 0, 'Garrita': 0, 'Toque': 0, 'Dedos': 0 } }
         };
 
         // Scan points
@@ -1031,13 +1032,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Top Scorer (Max Pts)
         const topScorer = [...pList].sort((a, b) => b.pts - a.pts)[0];
         if (topScorer && topScorer.pts > 0) {
-            awards.push({ emoji: '🔥', title: 'Máx. Anotador', winner: topScorer.name, value: topScorer.pts + ' pts' });
+            awards.push({ emoji: '🔥', title: 'Máx. Anotador', winner: topScorer.name, value: topScorer.pts + ' pts', team: topScorer.team });
         }
 
         // 2. Most Errors
         const mostErrs = [...pList].sort((a, b) => b.errs - a.errs)[0];
         if (mostErrs && mostErrs.errs > 0) {
-            awards.push({ emoji: '☠️', title: 'Más Errores', winner: mostErrs.name, value: mostErrs.errs + ' errs', isNegative: true });
+            awards.push({ emoji: '☠️', title: 'Más Errores', winner: mostErrs.name, value: mostErrs.errs + ' errs', team: mostErrs.team, isNegative: true });
         }
 
         const skillsToCheck = [
@@ -1053,7 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
         skillsToCheck.forEach(sk => {
             const best = [...pList].sort((a, b) => b.skills[sk.key] - a.skills[sk.key])[0];
             if (best && best.skills[sk.key] > 0) {
-                awards.push({ emoji: sk.emoji, title: sk.title, winner: best.name, value: best.skills[sk.key] + ' pts' });
+                awards.push({ emoji: sk.emoji, title: sk.title, winner: best.name, value: best.skills[sk.key] + ' pts', team: best.team });
             }
         });
 
@@ -1075,8 +1076,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let cColor = aw.isNegative ? '#e84118' : 'var(--dark)';
             let cBg = aw.isNegative ? '#ffe0e0' : '#e0e0e0';
 
+            // Negative awards like Most Errors shouldn't use team colors for the border, or maybe they can.
+            // Let's use the player's team color border to be consistent!
+            let borderColorClass = aw.team === 'a' ? 'border-team-a' : 'border-team-b';
+
             card.innerHTML = `
-                <img src="${getAvatarUrl(aw.winner)}" class="fame-avatar" alt="${aw.winner}">
+                <img src="${getAvatarUrl(aw.winner)}" class="fame-avatar ${borderColorClass}" alt="${aw.winner}">
                 <div style="font-size: 1.8rem; margin-bottom: 0.2rem;">${aw.emoji}</div>
                 <div style="font-size: 0.75rem; font-weight: bold; color: ${cColor}; text-transform: uppercase;">${aw.title}</div>
                 <div style="font-size: 0.9rem; font-weight: bold; margin: 0.3rem 0; color: var(--text);">${aw.winner}</div>

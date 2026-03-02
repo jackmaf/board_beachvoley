@@ -457,6 +457,8 @@ input[type="text"]:focus {
     background-color: white;
     margin-bottom: 0.2rem;
     transition: transform 0.3s ease;
+    border: 3px solid transparent;
+    /* Added default thick border */
 }
 
 .team-logo.hidden {
@@ -1548,6 +1550,14 @@ input[type="text"]:focus {
     display: block;
 }
 
+.border-team-a {
+    border-color: var(--team-a) !important;
+}
+
+.border-team-b {
+    border-color: var(--team-b) !important;
+}
+
 .table-avatar {
     width: 30px;
     height: 30px;
@@ -1555,6 +1565,8 @@ input[type="text"]:focus {
     object-fit: cover;
     background-color: #f0f0f0;
     vertical-align: middle;
+    border: 2px solid transparent;
+    /* Added default border */
 }
 
 /* --- SPINNER OVERLAY --- */
