@@ -279,11 +279,35 @@
                         </div>
                     </div>
 
+                    <div class="filter-group">
+                        <label>Detalle de Acción:</label>
+                        <div class="pill-group" id="filter-details">
+                            <button class="filter-pill active" data-filter="all">Todas</button>
+                            <button class="filter-pill" data-filter="Ataque">🏐 Ataque</button>
+                            <button class="filter-pill" data-filter="Saque">🎯 Saque</button>
+                            <button class="filter-pill" data-filter="Bloqueo">🧱 Bloqueo</button>
+                            <button class="filter-pill" data-filter="Antebrazos">💪 Antebrazos</button>
+                            <button class="filter-pill" data-filter="Garrita">🤜 Garrita</button>
+                            <button class="filter-pill" data-filter="Toque">🤏 Toque</button>
+                            <button class="filter-pill" data-filter="Dedos">👐 Dedos</button>
+                        </div>
+                    </div>
+
                     <div class="filter-group timeline-group" id="filter-sets-container">
                         <label>Filtrar por Set:</label>
                         <div class="pill-group" id="filter-sets">
                             <!-- JS generates set buttons dynamically -->
                             <button class="filter-pill active" data-filter="all">Todos los Sets</button>
+                        </div>
+                    </div>
+
+                    <div class="filter-group timeline-group">
+                        <label>Rango de Tiempo (Minutos - Usa 0 para ver todo):</label>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                            <input type="number" id="filter-time-min" placeholder="Minuto Inicial"
+                                style="flex: 1; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px;">
+                            <input type="number" id="filter-time-max" placeholder="Minuto Final"
+                                style="flex: 1; padding: 0.5rem; border: 2px solid #ddd; border-radius: 8px;">
                         </div>
                     </div>
 
@@ -432,8 +456,12 @@
             </div>
 
         </div>
-
     </div>
+
+    <!-- Spinner Overlay -->
+    <div id="loading-spinner" class="spinner-overlay hidden">
+        <div class="spinner"></div>
+        <div style="margin-top: 15px; color: white; font-weight: bold;">Filtrando Estadísticas...</div>
     </div>
 
     <!-- Html2Pdf Library -->

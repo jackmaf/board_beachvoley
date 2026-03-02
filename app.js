@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements - Form controls
     const filterPlayerBtns = document.querySelectorAll('#filter-players .filter-pill');
     const filterActionBtns = document.querySelectorAll('#filter-actions .filter-pill');
+    const filterDetailBtns = document.querySelectorAll('#filter-details .filter-pill');
+    const filterTimeMin = document.getElementById('filter-time-min');
+    const filterTimeMax = document.getElementById('filter-time-max');
     const filterTimeline = document.getElementById('filter-timeline');
     const timelineVal = document.getElementById('timeline-val');
 
@@ -81,7 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeFilters = {
         player: 'all', // 'all', 'A1', 'A2', 'B1', 'B2'
         action: 'all', // 'all', 'punto', 'error'
-        maxTimePct: 100 // 0 to 100
+        actionDetail: 'all', // 'all', 'Ataque', 'Saque', 'Bloqueo', etc.
+        maxTimePct: 100, // 0 to 100
+        minTime: 0, // In minutes
+        maxTime: Infinity // In minutes
     };
 
     // Keep track of current dashboard data for exports
@@ -172,10 +178,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Filter Logic setup
     function resetFilters() {
-        activeFilters = { player: 'all', action: 'all', maxTimePct: 100, set: 'all' };
+        activeFilters = { player: 'all', action: 'all', actionDetail: 'all', maxTimePct: 100, set: 'all', minTime: 0, maxTime: Infinity };
         document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
         document.querySelector('#filter-players [data-filter="all"]').classList.add('active');
         document.querySelector('#filter-actions [data-filter="all"]').classList.add('active');
+
+        const defaultDetailBtn = document.querySelector('#filter-details [data-filter="all"]');
+        if (defaultDetailBtn) defaultDetailBtn.classList.add('active');
+
+        if (filterTimeMin) filterTimeMin.value = '';
+        if (filterTimeMax) filterTimeMax.value = '';
 
         filterTimeline.value = 100;
         timelineVal.innerText = "Todo el partido";
@@ -230,6 +242,31 @@ document.addEventListener('DOMContentLoaded', () => {
             renderStatistics();
         });
     });
+
+    filterDetailBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterDetailBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeFilters.actionDetail = btn.getAttribute('data-filter');
+            renderStatistics();
+        });
+    });
+
+    if (filterTimeMin) {
+        filterTimeMin.addEventListener('input', (e) => {
+            const val = e.target.value;
+            activeFilters.minTime = val === '' ? 0 : parseFloat(val);
+            renderStatistics();
+        });
+    }
+
+    if (filterTimeMax) {
+        filterTimeMax.addEventListener('input', (e) => {
+            const val = e.target.value;
+            activeFilters.maxTime = val === '' ? Infinity : parseFloat(val);
+            renderStatistics();
+        });
+    }
 
     filterTimeline.addEventListener('input', (e) => {
         activeFilters.maxTimePct = parseInt(e.target.value);
@@ -715,6 +752,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderStatistics() {
+        const spinner = document.getElementById('loading-spinner');
+        if (spinner) spinner.classList.remove('hidden');
+
+        // setTimeout allows the browser to paint the spinner before locking thread
+        setTimeout(() => {
+            _executeRenderStatistics();
+            if (spinner) spinner.classList.add('hidden');
+        }, 50);
+    }
+
+    function _executeRenderStatistics() {
         let statsState = state;
         if (!statsState.config || statsState.points.length === 0) {
             const lastMatch = localStorage.getItem('voley-lastMatch');
@@ -787,8 +835,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Filter points for visuals
         let filteredPoints = pointsBySet.filter(p => {
             if (p.tipoAccion === 'timeout') return false; // Ignore timeouts for heatmap and stats
+
+            // Time range Filter (in minutes - 1-indexed for user friendly 'Minute 1')
+            const pointMinute = Math.floor((p.matchSecond || 0) / 60) + 1;
+            if (activeFilters.minTime > 0 && pointMinute < activeFilters.minTime) return false;
+            if (activeFilters.maxTime !== Infinity && pointMinute > activeFilters.maxTime) return false;
+
             if (activeFilters.player !== 'all' && activeFilters.player !== p.jugadorId) return false;
             if (activeFilters.action !== 'all' && activeFilters.action !== p.tipoAccion) return false;
+            if (activeFilters.actionDetail !== 'all' && activeFilters.actionDetail !== p.actionDetail) return false;
+
             return true;
         });
 
