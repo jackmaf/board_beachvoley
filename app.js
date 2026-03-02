@@ -737,8 +737,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateScoreUI() {
         const curSet = state.sets[state.currentSetIndex];
-        uiScoreA.innerText = curSet.scoreA;
-        uiScoreB.innerText = curSet.scoreB;
+
+        // Detectar si el puntaje cambió para animarlo
+        if (uiScoreA.innerText !== curSet.scoreA.toString()) {
+            uiScoreA.innerText = curSet.scoreA;
+            uiScoreA.classList.remove('bump');
+            void uiScoreA.offsetWidth; // Trigger reflow to restart animation
+            uiScoreA.classList.add('bump');
+        }
+
+        if (uiScoreB.innerText !== curSet.scoreB.toString()) {
+            uiScoreB.innerText = curSet.scoreB;
+            uiScoreB.classList.remove('bump');
+            void uiScoreB.offsetWidth;
+            uiScoreB.classList.add('bump');
+        }
 
         // Update Timeout status
         const btnTimeoutA = document.getElementById('btn-timeout-a');
@@ -1081,7 +1094,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let borderColorClass = aw.team === 'a' ? 'border-team-a' : 'border-team-b';
 
             card.innerHTML = `
-                <img src="${getAvatarUrl(aw.winner)}" class="fame-avatar ${borderColorClass}" alt="${aw.winner}">
+                <img src="${getAvatarUrl(aw.winner)}" class="fame-avatar pulse-avatar ${borderColorClass}" alt="${aw.winner}">
                 <div style="font-size: 1.8rem; margin-bottom: 0.2rem;">${aw.emoji}</div>
                 <div style="font-size: 0.75rem; font-weight: bold; color: ${cColor}; text-transform: uppercase;">${aw.title}</div>
                 <div style="font-size: 0.9rem; font-weight: bold; margin: 0.3rem 0; color: var(--text);">${aw.winner}</div>
