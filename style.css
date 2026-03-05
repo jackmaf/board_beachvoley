@@ -216,6 +216,9 @@ nav {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+    flex-wrap: wrap;
+    /* Permitir que los elementos salten de línea */
+    gap: 1rem;
 }
 
 .match-card-teams {
@@ -223,11 +226,34 @@ nav {
     flex-direction: column;
     gap: 0.3rem;
     font-weight: bold;
+    flex: 1 1 100%;
+    /* Toma todo el ancho disponible en la tarjeta */
 }
 
 .match-card-actions {
     display: flex;
     gap: 0.5rem;
+    width: 100%;
+    /* Pasa a la siguiente línea completa */
+    justify-content: space-between;
+    /* Espacia los botones equitativamente */
+}
+
+/* En caso de pantallas medianas o más grandes, devolvemos a layout horizontal */
+@media (min-width: 600px) {
+    .match-card {
+        flex-wrap: nowrap;
+    }
+
+    .match-card-teams {
+        flex: 1;
+        /* Ocupa el espacio que sobre */
+    }
+
+    .match-card-actions {
+        width: auto;
+        justify-content: flex-end;
+    }
 }
 
 @keyframes fadeIn {

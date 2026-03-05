@@ -1149,14 +1149,14 @@ document.addEventListener('DOMContentLoaded', () => {
                                <span style="font-size: 0.8rem; color: #888; font-style: italic;">Clasifica automáticamente</span>
                            </div>`;
             } else if (m.status === 'finalizado') {
-                btnHtml = `<div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end;">
-                       <span style="font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-right: 1rem;">${m.score}</span>
-                       <button class="secondary-btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--primary); color: var(--primary); background: transparent;" onclick="openManualScore('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Modificar Marcador</button>
+                btnHtml = `<div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end; width: 100%;">
+                       <span style="font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-right: 0.5rem;">Resultado: ${m.score}</span>
+                       <button class="secondary-btn" style="width: 100%; padding: 0.5rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--primary); color: var(--primary); background: transparent;" onclick="openManualScore('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Modificar Marcador</button>
                    </div>`;
             } else {
-                btnHtml = `<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                       <button class="primary-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 8px;" onclick="startTournamentMatch('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Pitar</button>
-                       <button class="secondary-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid var(--primary); color: var(--primary); background: transparent;" onclick="openManualScore('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Colocar Marcador</button>
+                btnHtml = `<div style="display: flex; gap: 0.5rem; width: 100%; justify-content: space-between;">
+                       <button class="primary-btn" style="flex: 1; text-align: center; padding: 0.5rem 0.2rem; font-size: 0.85rem; border-radius: 8px;" onclick="startTournamentMatch('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Pitar</button>
+                       <button class="secondary-btn" style="flex: 1; text-align: center; padding: 0.5rem 0.2rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--primary); color: var(--primary); background: transparent;" onclick="openManualScore('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Colocar Marcador</button>
                    </div>`;
             }
 
