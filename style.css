@@ -67,6 +67,11 @@
     padding: 0;
 }
 
+/* Global Utilities */
+.hidden {
+    display: none !important;
+}
+
 body {
     font-family: 'Outfit', sans-serif;
     background: linear-gradient(135deg, var(--sand), var(--tertiary));
@@ -94,35 +99,53 @@ body {
 }
 
 nav {
+    display: none;
+    /* old nav hidden if it exists anywhere else */
+}
+
+/* Bottom Nav */
+#bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--dark);
     display: flex;
-    justify-content: center;
-    gap: 1rem;
+    justify-content: space-around;
+    padding: 0.5rem 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
-.nav-btn {
+.bottom-nav-btn {
     background: transparent;
-    color: var(--light);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    padding: 0.5rem 1.5rem;
-    border-radius: 20px;
+    color: rgba(255, 255, 255, 0.5);
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-family: inherit;
+    font-weight: 500;
     cursor: pointer;
-    font-size: 1rem;
-    font-weight: 700;
     transition: all 0.3s ease;
+    padding: 0.5rem;
+    width: 20%;
 }
 
-.nav-btn.active,
-.nav-btn:hover:not(:disabled) {
-    background: var(--primary);
-    border-color: var(--primary);
+.bottom-nav-btn.active {
+    color: var(--primary);
     transform: translateY(-2px);
 }
 
-.nav-btn:disabled {
-    opacity: 0.4;
+.bottom-nav-btn:hover:not(:disabled) {
+    color: var(--light);
+}
+
+.bottom-nav-btn:disabled {
+    opacity: 0.3;
     cursor: not-allowed;
-    border-color: transparent;
-    background: rgba(255, 255, 255, 0.1);
 }
 
 /* Responsive Header */
@@ -133,16 +156,8 @@ nav {
 
     .app-header h1 {
         font-size: 1.25rem;
-        margin-bottom: 0.8rem;
-    }
-
-    nav {
-        gap: 0.4rem;
-    }
-
-    .nav-btn {
-        padding: 0.4rem 0.6rem;
-        font-size: 0.85rem;
+        margin-bottom: 0;
+        /* Nav removed from header */
     }
 }
 
@@ -152,12 +167,67 @@ nav {
     padding: 2rem 1rem;
     flex: 1;
     animation: fadeIn 0.4s ease-out;
+    width: 100%;
 }
 
 .active-view {
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+/* Tournaments */
+.tournament-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid var(--primary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.tournament-card:hover {
+    transform: translateY(-3px);
+}
+
+.tournament-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--dark);
+}
+
+.tournament-meta {
+    font-size: 0.9rem;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+}
+
+.match-card {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+.match-card-teams {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-weight: bold;
+}
+
+.match-card-actions {
+    display: flex;
+    gap: 0.5rem;
 }
 
 @keyframes fadeIn {
@@ -1131,6 +1201,100 @@ input[type="text"]:focus {
     gap: 0.5rem;
     flex: 1;
     min-width: 100px;
+}
+
+.timeline-badge {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.badge-a {
+    left: 10px;
+    background: var(--team-a-color);
+}
+
+.badge-b {
+    right: 10px;
+    background: var(--team-b-color);
+}
+
+/* --- TOURNAMENT BRACKET STYLES --- */
+.bracket-container {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    align-items: center;
+    padding: 1rem;
+    min-width: max-content;
+}
+
+.bracket-round {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    gap: 1rem;
+    position: relative;
+    height: 100%;
+}
+
+.bracket-match {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.5rem;
+    width: 200px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 2;
+}
+
+.bracket-team {
+    padding: 0.4rem;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.bracket-team:last-child {
+    border-bottom: none;
+}
+
+.bracket-team.winner {
+    font-weight: bold;
+    color: var(--primary);
+}
+
+/* Connectors */
+.bracket-round:not(:last-child) .bracket-match::after {
+    content: '';
+    position: absolute;
+    right: -1rem;
+    top: 50%;
+    width: 1rem;
+    border-bottom: 2px solid #ccc;
+    z-index: 1;
+}
+
+.bracket-round:not(:first-child) .bracket-match::before {
+    content: '';
+    position: absolute;
+    left: -1rem;
+    top: 50%;
+    width: 1rem;
+    border-bottom: 2px solid #ccc;
+    z-index: 1;
 }
 
 .player-badge {

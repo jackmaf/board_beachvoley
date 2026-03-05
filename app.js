@@ -22,15 +22,48 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval = null;
     let clockInterval = null;
 
-    // DOM Elements - Nav
+    // DOM Elements - Nav (Bottom Nav)
+    const navTorneos = document.getElementById('nav-torneos');
     const navConfig = document.getElementById('nav-config');
+    const navMarcadorVivo = document.getElementById('nav-marcador-vivo');
     const navRegistro = document.getElementById('nav-registro');
     const navEstadisticas = document.getElementById('nav-estadisticas');
 
     // DOM Elements - Views
+    const vistaTorneos = document.getElementById('vista-torneos');
     const vistaConfig = document.getElementById('vista-configuracion');
+    const vistaMarcadorVivo = document.getElementById('vista-marcador-vivo');
     const vistaRegistro = document.getElementById('vista-registro');
     const vistaEstadisticas = document.getElementById('vista-estadisticas');
+
+    // DOM Elements - Torneos
+    const btnCreateTournament = document.getElementById('btn-create-tournament');
+    const modalTournament = document.getElementById('modal-tournament');
+    const closeTournamentModal = document.getElementById('close-tournament-modal');
+    const formTournament = document.getElementById('form-tournament');
+    const tournamentsList = document.getElementById('tournaments-list');
+
+    const modalTournamentDetail = document.getElementById('modal-tournament-detail');
+    const closeTournamentDetail = document.getElementById('close-tournament-detail');
+    const tournamentMatches = document.getElementById('tournament-matches');
+
+    // DOM Elements - Manual Score
+    const modalManualScore = document.getElementById('modal-manual-score');
+    const closeManualScore = document.getElementById('close-manual-score');
+    const formManualScore = document.getElementById('form-manual-score');
+    const manualScoreMatchInfo = document.getElementById('manual-score-match-info');
+
+    // DOM Elements - Edit Team
+    const modalEditTeam = document.getElementById('modal-edit-team');
+    const closeEditTeam = document.getElementById('close-edit-team');
+    const formEditTeam = document.getElementById('form-edit-team');
+    const inputEditTeamName = document.getElementById('edit-team-name');
+    const inputEditTeamP1 = document.getElementById('edit-team-p1');
+    const inputEditTeamP2 = document.getElementById('edit-team-p2');
+    const btnClearTeam = document.getElementById('btn-clear-team');
+    const hiddenEditTId = document.getElementById('edit-t-id');
+    const hiddenEditMId = document.getElementById('edit-m-id');
+    const hiddenEditMSlot = document.getElementById('edit-m-slot');
 
     // DOM Elements - Config
     const configForm = document.getElementById('config-form');
@@ -150,22 +183,24 @@ document.addEventListener('DOMContentLoaded', () => {
     clockInterval = setInterval(updateBogotaClock, 1000);
     updateBogotaClock();
 
-    // Setup navigation load
-    loadState();
+    // Setup navigation load (Moved to end of file to ensure all methods are defined)
+    // loadState();
 
     // Setup navigation
     function setView(viewId) {
         // Update nav buttons
-        [navConfig, navRegistro, navEstadisticas].forEach(btn => btn.classList.remove('active'));
-        if (viewId === 'vista-configuracion') navConfig.classList.add('active');
-        if (viewId === 'vista-registro') navRegistro.classList.add('active');
-        if (viewId === 'vista-estadisticas') navEstadisticas.classList.add('active');
+        [navTorneos, navConfig, navMarcadorVivo, navRegistro, navEstadisticas].forEach(btn => btn?.classList.remove('active'));
+        if (viewId === 'vista-torneos') navTorneos?.classList.add('active');
+        if (viewId === 'vista-configuracion') navConfig?.classList.add('active');
+        if (viewId === 'vista-marcador-vivo') navMarcadorVivo?.classList.add('active');
+        if (viewId === 'vista-registro') navRegistro?.classList.add('active');
+        if (viewId === 'vista-estadisticas') navEstadisticas?.classList.add('active');
 
         // Show specific view
-        [vistaConfig, vistaRegistro, vistaEstadisticas].forEach(view => {
-            if (view.id === viewId) {
+        [vistaTorneos, vistaConfig, vistaMarcadorVivo, vistaRegistro, vistaEstadisticas].forEach(view => {
+            if (view && view.id === viewId) {
                 view.classList.add('active-view');
-            } else {
+            } else if (view) {
                 view.classList.remove('active-view');
             }
         });
@@ -173,6 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (viewId === 'vista-estadisticas') {
             resetFilters();
             renderStatistics();
+        } else if (viewId === 'vista-torneos') {
+            renderTournaments();
         }
     }
 
@@ -205,7 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const maxSets = state.config.maxSets || 3;
         // Solo mostrar selector si hay mas de 1 set
-        document.getElementById('filter-sets-container').style.display = maxSets > 1 ? 'flex' : 'none';
+        const filterSetsContainer = document.getElementById('filter-sets-container');
+        if (filterSetsContainer) {
+            filterSetsContainer.style.display = maxSets > 1 ? 'flex' : 'none';
+        }
 
         if (maxSets > 1) {
             for (let i = 1; i <= maxSets; i++) {
@@ -328,9 +368,14 @@ document.addEventListener('DOMContentLoaded', () => {
     btnExportJson.addEventListener('click', exportToJSON);
     btnExportPdf.addEventListener('click', exportToPDF);
 
-    navConfig.addEventListener('click', () => setView('vista-configuracion'));
-    navRegistro.addEventListener('click', () => setView('vista-registro'));
-    navEstadisticas.addEventListener('click', () => setView('vista-estadisticas'));
+    navTorneos?.addEventListener('click', () => setView('vista-torneos'));
+    navConfig?.addEventListener('click', () => setView('vista-configuracion'));
+    navMarcadorVivo?.addEventListener('click', () => setView('vista-marcador-vivo'));
+    navRegistro?.addEventListener('click', () => setView('vista-registro'));
+    navEstadisticas?.addEventListener('click', () => setView('vista-estadisticas'));
+
+    // Start in Torneos view if possible, else config
+    setView('vista-torneos');
 
     // Form submit starts match
     // --- RESET DATABASE LOGIC ---
@@ -386,7 +431,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         navRegistro.disabled = false;
         navEstadisticas.disabled = false;
-        setView('vista-registro');
+        navMarcadorVivo.disabled = false;
+
+        // Default to the correct view depending if it's tournament mode or regular mode
+        if (state.tournamentId) {
+            setView('vista-marcador-vivo');
+            updateLiveScoreboardUI();
+        } else {
+            setView('vista-registro');
+        }
     });
 
     function applyConfigToUI() {
@@ -554,35 +607,73 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnEndMatch.addEventListener('click', () => {
         if (confirm('¿Estás seguro de terminar el partido? Esto lo guardará en el historial.')) {
-            let history = JSON.parse(localStorage.getItem('voley-history')) || [];
-            if (state.points.length > 0) {
-                history.push(state);
-                localStorage.setItem('voley-history', JSON.stringify(history));
-                localStorage.setItem('voley-lastMatch', JSON.stringify(state));
-            }
-
-            setView('vista-estadisticas');
-
-            // Reset current state
-            state = {
-                config: null,
-                sets: [{ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 }],
-                currentSetIndex: 0,
-                points: [],
-                currentPendingPoint: null,
-                matchStartTime: null,
-                matchTimeSeconds: 0,
-                isTimerRunning: false
-            };
-            saveState();
-
-            navRegistro.disabled = true;
-            navEstadisticas.disabled = true;
-
-            // Optional: reset config form
-            configForm.reset();
+            finishMatch();
         }
     });
+
+    function finishMatch() {
+        let history = JSON.parse(localStorage.getItem('voley-history')) || [];
+        if (state.points.length > 0 || state.tournamentId) {
+            if (state.points.length > 0) history.push(state);
+            localStorage.setItem('voley-history', JSON.stringify(history));
+            localStorage.setItem('voley-lastMatch', JSON.stringify(state));
+
+            // If tournament match, update tournament data
+            if (state.tournamentId) {
+                let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+                let tIndex = tournaments.findIndex(t => t.id === state.tournamentId);
+                if (tIndex >= 0) {
+                    let matchIndex = tournaments[tIndex].matches.findIndex(m => m.id === state.tournamentMatchId);
+                    if (matchIndex >= 0) {
+                        tournaments[tIndex].matches[matchIndex].status = 'finalizado';
+
+                        // Calculate score
+                        let winsA = 0; let winsB = 0;
+
+                        state.sets.forEach((s) => {
+                            // If they actually played the set and someone won
+                            if (s.scoreA > s.scoreB) winsA++;
+                            else if (s.scoreB > s.scoreA) winsB++;
+                        });
+                        tournaments[tIndex].matches[matchIndex].score = `${winsA} - ${winsB}`;
+
+                        // Advance winner logic
+                        advanceTournamentWinner(tournaments[tIndex], state.tournamentMatchId, winsA, winsB);
+
+                        localStorage.setItem('voley-tournaments', JSON.stringify(tournaments));
+                    }
+                }
+            }
+        }
+
+        if (state.tournamentId) {
+            setView('vista-torneos');
+        } else {
+            setView('vista-estadisticas');
+        }
+
+        // Reset current state
+        state = {
+            config: null,
+            sets: [{ scoreA: 0, scoreB: 0, timeoutsA: 0, timeoutsB: 0 }],
+            currentSetIndex: 0,
+            points: [],
+            currentPendingPoint: null,
+            matchStartTime: null,
+            matchTimeSeconds: 0,
+            isTimerRunning: false,
+            tournamentId: null,
+            tournamentMatchId: null
+        };
+        saveState();
+
+        navRegistro.disabled = true;
+        navEstadisticas.disabled = true;
+        navMarcadorVivo.disabled = true;
+
+        // Optional: reset config form
+        configForm.reset();
+    }
     btnUndoAction?.addEventListener('click', () => {
         undoLastAction();
     });
@@ -798,13 +889,745 @@ document.addEventListener('DOMContentLoaded', () => {
             if (state.config) {
                 navRegistro.disabled = false;
                 navEstadisticas.disabled = false;
+                navMarcadorVivo.disabled = false;
                 applyConfigToUI();
-                setView('vista-registro'); // Jump to match if running
+                if (state.tournamentId) {
+                    setView('vista-marcador-vivo');
+                    updateLiveScoreboardUI();
+                } else {
+                    setView('vista-registro'); // Jump to match if running
+                }
             } else {
                 setView('vista-configuracion');
             }
         }
     }
+
+    // --- TOURNAMENTS LOGIC ---
+
+    let teamCounter = 0;
+    const btnAddTeam = document.getElementById('btn-add-team');
+    const tDynamicTeams = document.getElementById('t-dynamic-teams');
+
+    function createTeamRow() {
+        teamCounter++;
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; gap: 0.5rem; align-items: center; background: white; padding: 0.5rem; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);';
+        row.innerHTML = `
+            <div style="flex: 1;">
+                <input type="text" class="team-name" placeholder="Nombre de la Dupla (Opcional)" style="width: 100%; margin-bottom: 0.5rem; font-weight: bold; background: #f8f9fa;">
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" class="team-player-a" placeholder="Jugador 1" style="width: 100%;" required>
+                    <input type="text" class="team-player-b" placeholder="Jugador 2" style="width: 100%;" required>
+                </div>
+            </div>
+            <button type="button" class="danger-btn btn-remove-team" style="padding: 0.5rem; font-size: 1rem; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">&times;</button>
+        `;
+
+        row.querySelector('.btn-remove-team').addEventListener('click', () => {
+            if (tDynamicTeams.children.length > 2) {
+                row.remove();
+            } else {
+                alert('Debes tener al menos 2 duplas registradas.');
+            }
+        });
+
+        tDynamicTeams.appendChild(row);
+    }
+
+    btnAddTeam?.addEventListener('click', createTeamRow);
+
+    function initTournamentForm() {
+        tDynamicTeams.innerHTML = '';
+        teamCounter = 0;
+        createTeamRow(); // Dupla 1
+        createTeamRow(); // Dupla 2
+    }
+
+    btnCreateTournament?.addEventListener('click', () => {
+        initTournamentForm();
+        modalTournament.classList.remove('hidden');
+    });
+
+    closeTournamentModal?.addEventListener('click', () => modalTournament.classList.add('hidden'));
+    closeTournamentDetail?.addEventListener('click', () => modalTournamentDetail.classList.add('hidden'));
+
+    formTournament?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const tName = document.getElementById('t-name').value;
+        const tCategory = document.getElementById('t-category').value;
+        const tGender = document.getElementById('t-gender').value;
+        const tFormat = document.getElementById('t-format').value;
+
+        const tMaxSets = document.getElementById('t-max-sets').value;
+        const tPtsNormal = document.getElementById('t-pts-normal').value;
+        const tPtsTiebreak = document.getElementById('t-pts-tiebreak').value;
+
+        // Collect teams dynamically
+        let teams = [];
+        Array.from(tDynamicTeams.children).forEach(row => {
+            const tNameInput = row.querySelector('.team-name').value.trim();
+            const pa = row.querySelector('.team-player-a').value.trim();
+            const pb = row.querySelector('.team-player-b').value.trim();
+
+            if (pa && pb) {
+                const finalTeamName = tNameInput !== '' ? tNameInput : `${pa} / ${pb}`;
+                teams.push(finalTeamName);
+            }
+        });
+
+        if (teams.length < 2) {
+            alert("Debes ingresar al menos 2 duplas válidas para crear un torneo.");
+            return;
+        }
+
+        if (tFormat === 'Round Robin' && teams.length < 3) {
+            alert("Para Round Robin se recomiendan al menos 3 duplas.");
+        }
+
+        const newTournament = {
+            id: Date.now().toString(),
+            name: tName,
+            category: tCategory,
+            gender: tGender,
+            format: tFormat,
+            config_sets: {
+                maxSets: parseInt(tMaxSets) || 3,
+                ptsNormal: parseInt(tPtsNormal) || 21,
+                ptsTiebreak: parseInt(tPtsTiebreak) || 15
+            },
+            status: 'creado',
+            matches: [],
+            teams: teams
+        };
+
+        // Generate matches based on format
+        let matchIndex = 1;
+        if (tFormat === 'Round Robin') {
+            for (let i = 0; i < teams.length; i++) {
+                for (let j = i + 1; j < teams.length; j++) {
+                    newTournament.matches.push({
+                        id: `m_${Date.now()}_${matchIndex++}`,
+                        teamA: teams[i],
+                        teamB: teams[j],
+                        status: 'programado',
+                        score: '0 - 0'
+                    });
+                }
+            }
+        } else {
+            // Eliminación Directa Completa
+            // Generamos todas las rondas hasta la final
+            // Asumimos equipos <= 16. Padding con 'BYE' si no es potencia de 2.
+            let pow2 = Math.pow(2, Math.ceil(Math.log2(teams.length)));
+            if (pow2 < 2) pow2 = 2; // Minimum 2 teams
+
+            // Pad with BYE
+            while (teams.length < pow2) {
+                teams.push('BYE');
+            }
+
+            let totalMatches = pow2 - 1;
+            // Primero creamos el array vacío de partidos
+            for (let i = 0; i < totalMatches; i++) {
+                newTournament.matches.push({
+                    id: `m_${Date.now()}_${matchIndex++}`,
+                    teamA: 'TBD',
+                    teamB: 'TBD',
+                    status: 'programado',
+                    score: '0 - 0',
+                    nextMatchId: null,
+                    nextMatchSlot: null
+                });
+            }
+
+            // Asignar los equipos a la primera ronda
+            let currentRoundMatches = pow2 / 2;
+            for (let i = 0; i < currentRoundMatches; i++) {
+                newTournament.matches[i].teamA = teams[i * 2];
+                newTournament.matches[i].teamB = teams[i * 2 + 1];
+            }
+
+            // Unir partidos de rondas previas con las siguientes
+            let startPrev = 0;
+            let countPrev = currentRoundMatches;
+            let startNext = startPrev + countPrev;
+            let countNext = countPrev / 2;
+
+            while (countNext >= 1) {
+                for (let i = 0; i < countPrev; i++) {
+                    let parentMatchIndex = startNext + Math.floor(i / 2);
+                    newTournament.matches[startPrev + i].nextMatchId = newTournament.matches[parentMatchIndex].id;
+                    newTournament.matches[startPrev + i].nextMatchSlot = (i % 2 === 0) ? 'teamA' : 'teamB';
+                }
+                startPrev = startNext;
+                countPrev = countNext;
+                startNext = startPrev + countPrev;
+                countNext = countPrev / 2;
+            }
+        }
+
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        tournaments.push(newTournament);
+        localStorage.setItem('voley-tournaments', JSON.stringify(tournaments));
+
+        modalTournament.classList.add('hidden');
+        formTournament.reset();
+        renderTournaments();
+    });
+
+    function renderTournaments() {
+        if (!tournamentsList) return;
+        tournamentsList.innerHTML = '';
+        const tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+
+        if (tournaments.length === 0) {
+            tournamentsList.innerHTML = '<p style="text-align:center; color:#666;">No hay torneos creados aún.</p>';
+            return;
+        }
+
+        tournaments.forEach(t => {
+            const card = document.createElement('div');
+            card.className = 'tournament-card';
+            card.innerHTML = `
+                <div class="tournament-title">${t.name}</div>
+                <div class="tournament-meta">
+                    <span>${t.category} | ${t.gender === 'M' ? 'Masculino' : t.gender === 'F' ? 'Femenino' : 'Mixto'}</span>
+                    <span style="background: var(--light); padding: 2px 6px; border-radius: 4px; font-weight: bold; color: var(--dark);">${t.format}</span>
+                </div>
+            `;
+            card.addEventListener('click', () => showTournamentDetail(t));
+            tournamentsList.appendChild(card);
+        });
+    }
+
+    function showTournamentDetail(t) {
+        document.getElementById('detail-t-name').innerText = t.name;
+        document.getElementById('detail-t-info').innerText = `${t.category} - ${t.gender === 'M' ? 'Masculino' : t.gender === 'F' ? 'Femenino' : 'Mixto'}`;
+
+        const btnDeleteT = document.getElementById('btn-delete-tournament');
+        if (!btnDeleteT) {
+            const headerBox = document.querySelector('#modal-tournament-detail h2').parentNode;
+            const delBtn = document.createElement('button');
+            delBtn.id = 'btn-delete-tournament';
+            delBtn.className = 'danger-btn';
+            delBtn.style.cssText = 'padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.9rem; margin-top: 1rem; margin-bottom: 1rem; width: 100%;';
+            delBtn.innerText = 'Eliminar Torneo';
+
+            const refNode = document.getElementById('detail-t-tabs') || document.getElementById('tournament-matches');
+            if (refNode && refNode.parentNode === headerBox) {
+                headerBox.insertBefore(delBtn, refNode);
+            } else {
+                headerBox.appendChild(delBtn);
+            }
+        }
+
+        const freshBtnDeleteT = document.getElementById('btn-delete-tournament');
+        freshBtnDeleteT.onclick = () => {
+            if (confirm(`¿Estás seguro de que quieres eliminar el torneo "${t.name}"? Esta acción no se puede deshacer.`)) {
+                let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+                tournaments = tournaments.filter(tr => tr.id !== t.id);
+                localStorage.setItem('voley-tournaments', JSON.stringify(tournaments));
+                modalTournamentDetail.classList.add('hidden');
+                renderTournaments();
+            }
+        };
+
+        tournamentMatches.innerHTML = '';
+        t.matches.forEach((m, idx) => {
+            const matchCard = document.createElement('div');
+            matchCard.className = 'match-card';
+
+            let btnHtml = '';
+
+            if (m.teamA === 'TBD' || m.teamB === 'TBD') {
+                btnHtml = `<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                               <span style="font-size: 0.8rem; color: #888; font-style: italic;">A la espera de rivales</span>
+                           </div>`;
+            } else if (m.teamA === 'BYE' || m.teamB === 'BYE') {
+                btnHtml = `<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                               <span style="font-size: 0.8rem; color: #888; font-style: italic;">Clasifica automáticamente</span>
+                           </div>`;
+            } else if (m.status === 'finalizado') {
+                btnHtml = `<div style="display: flex; gap: 0.5rem; align-items: center; justify-content: flex-end;">
+                       <span style="font-weight: bold; font-size: 1.2rem; color: var(--primary); margin-right: 1rem;">${m.score}</span>
+                       <button class="secondary-btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--primary); color: var(--primary); background: transparent;" onclick="openManualScore('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Modificar Marcador</button>
+                   </div>`;
+            } else {
+                btnHtml = `<div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                       <button class="primary-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 8px;" onclick="startTournamentMatch('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Pitar</button>
+                       <button class="secondary-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem; border-radius: 8px; border: 1px solid var(--primary); color: var(--primary); background: transparent;" onclick="openManualScore('${t.id}', '${m.id}', '${m.teamA}', '${m.teamB}')">Colocar Marcador</button>
+                   </div>`;
+            }
+
+            const getTeamHtml = (teamName, slot) => {
+                const p1 = m[`${slot}_p1`] || '';
+                const p2 = m[`${slot}_p2`] || '';
+
+                let teamDisplay = `<span style="font-weight: 700; color: var(--text-dark);">${teamName}</span>`;
+                if (teamName === 'TBD') teamDisplay = `<span style="color: #999; font-style: italic;">Por Definir</span>`;
+                if (teamName === 'BYE') teamDisplay = `<span style="color: #999; font-weight: bold;">Libre (BYE)</span>`;
+
+                let playersDisplay = '';
+                if (p1 || p2) {
+                    playersDisplay = `<div style="font-size: 0.8rem; color: #666; margin-top: 2px;">
+                        <span title="Jugadores">👤 ${p1 || '?'} / ${p2 || '?'}</span>
+                    </div>`;
+                }
+
+                const emojis = ['🏐', '🏖️', '🌴', '☀️', '🏄', '🌊', '🩳', '🕶️', '🍉', '🥥', '🏆', '🥇', '💪', '🔥', '⚡'];
+                let teamEmoji = '🏐';
+                if (teamName !== 'TBD' && teamName !== 'BYE') {
+                    let hash = 0;
+                    for (let k = 0; k < teamName.length; k++) {
+                        hash = teamName.charCodeAt(k) + ((hash << 5) - hash);
+                    }
+                    teamEmoji = emojis[Math.abs(hash) % emojis.length];
+                }
+
+                return `<div style="display: flex; align-items: flex-start; gap: 0.5rem; justify-content: space-between; width: 100%; background: rgba(0,0,0,0.02); padding: 0.5rem; border-radius: 6px; margin-bottom: 0.3rem;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span style="font-size: 1rem;">${teamEmoji}</span>
+                                    ${teamDisplay}
+                                </div>
+                                ${playersDisplay}
+                            </div>
+                            <button onclick="editMatchTeam('${t.id}', '${m.id}', '${slot}', '${teamName}')" 
+                                    style="background: none; border: none; cursor: pointer; color: var(--primary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 5px;"
+                                    title="Editar dupla">Editar</button>
+                        </div>`;
+            };
+
+            matchCard.innerHTML = `
+                <div class="match-card-teams" style="border-left: 4px solid var(--primary); padding-left: 1rem;">
+                    <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 1px;">Partido ${idx + 1}</div>
+                    ${getTeamHtml(m.teamA, 'teamA')}
+                    <div style="display: flex; align-items: center; justify-content: center; margin: 0.4rem 0;">
+                        <span style="height: 1px; background: #eee; flex: 1;"></span>
+                        <span style="padding: 0 0.8rem; font-size: 0.7rem; font-weight: 800; color: #bbb; text-transform: uppercase;">VS</span>
+                        <span style="height: 1px; background: #eee; flex: 1;"></span>
+                    </div>
+                    ${getTeamHtml(m.teamB, 'teamB')}
+                </div>
+                <div class="match-card-actions" style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid rgba(0,0,0,0.05);">
+                    ${btnHtml}
+                </div>
+            `;
+            tournamentMatches.appendChild(matchCard);
+        });
+
+        // Toggle logic for Tabs (Fixture vs Bracket)
+        const tabFixture = document.getElementById('tab-fixture');
+        const tabBracket = document.getElementById('tab-bracket');
+        const viewFixture = document.getElementById('view-fixture');
+        const viewBracket = document.getElementById('view-bracket');
+
+        if (t.format === 'Eliminacion Directa') {
+            tabBracket.style.display = 'block';
+
+            tabFixture.onclick = () => {
+                tabFixture.classList.add('active');
+                tabBracket.classList.remove('active');
+                tabFixture.style.fontWeight = 'bold';
+                tabFixture.style.color = 'var(--primary)';
+                tabBracket.style.fontWeight = 'normal';
+                tabBracket.style.color = '#666';
+                viewFixture.classList.remove('hidden');
+                viewBracket.classList.add('hidden');
+            };
+
+            tabBracket.onclick = () => {
+                tabBracket.classList.add('active');
+                tabFixture.classList.remove('active');
+                tabBracket.style.fontWeight = 'bold';
+                tabBracket.style.color = 'var(--primary)';
+                tabFixture.style.fontWeight = 'normal';
+                tabFixture.style.color = '#666';
+                viewBracket.classList.remove('hidden');
+                viewFixture.classList.add('hidden');
+                renderVisualBracket(t);
+            };
+        } else {
+            // Hide Bracket tab for Round Robin
+            tabBracket.style.display = 'none';
+            viewFixture.classList.remove('hidden');
+            viewBracket.classList.add('hidden');
+        }
+
+        modalTournamentDetail.classList.remove('hidden');
+    }
+
+    function renderVisualBracket(t) {
+        const viewBracket = document.getElementById('view-bracket');
+        viewBracket.innerHTML = '';
+
+        if (t.matches.length === 0) return;
+
+        // Simple Single Elimination tree drawer
+        const container = document.createElement('div');
+        container.className = 'bracket-container';
+
+        // Calculate rounds based on total matches.
+        // A full single elimination tree has N matches = (2^R) - 1 where R is rounds.
+        // So R = Math.ceil(Math.log2(t.matches.length + 1))
+        let totalMatches = t.matches.length;
+        let roundsCount = Math.ceil(Math.log2(totalMatches + 1));
+
+        let matchIndex = 0;
+        let matchesInRound = Math.pow(2, roundsCount - 1); // Exact power of 2 for first round
+
+        for (let r = 0; r < roundsCount; r++) {
+            const roundDiv = document.createElement('div');
+            roundDiv.className = 'bracket-round';
+
+            for (let i = 0; i < matchesInRound; i++) {
+                const match = t.matches[matchIndex];
+
+                const matchBoxDiv = document.createElement('div');
+                matchBoxDiv.className = 'bracket-match';
+
+                if (match) {
+                    // Check who won
+                    let aWins = false;
+                    let bWins = false;
+                    if (match.status === 'finalizado') {
+                        const scoreP = match.score.split('-');
+                        if (scoreP.length === 2 && scoreP[0].trim() > scoreP[1].trim()) aWins = true;
+                        if (scoreP.length === 2 && scoreP[1].trim() > scoreP[0].trim()) bWins = true;
+                    }
+
+                    matchBoxDiv.innerHTML = `
+                        <div class="bracket-team ${aWins ? 'winner' : ''}">
+                            <span>${match.teamA || 'Ganador'}</span>
+                            <span style="color:#888;">${match.status === 'finalizado' ? match.score.split('-')[0].trim() : '-'}</span>
+                        </div>
+                        <div class="bracket-team ${bWins ? 'winner' : ''}">
+                            <span>${match.teamB || 'Ganador'}</span>
+                            <span style="color:#888;">${match.status === 'finalizado' ? match.score.split('-')[1].trim() : '-'}</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: #aaa; text-align: center; margin-top: 0.3rem;">Partido ${matchIndex + 1}</div>
+                    `;
+                    matchIndex++;
+                } else {
+                    // Empty placeholder match for future rounds
+                    matchBoxDiv.innerHTML = `
+                        <div class="bracket-team"><span>TBD</span><span>-</span></div>
+                        <div class="bracket-team"><span>TBD</span><span>-</span></div>
+                    `;
+                }
+
+                roundDiv.appendChild(matchBoxDiv);
+            }
+            container.appendChild(roundDiv);
+            matchesInRound = matchesInRound / 2;
+        }
+
+        viewBracket.appendChild(container);
+    }
+
+    window.openManualScore = function (tId, mId, tA, tB) {
+        modalTournamentDetail.classList.add('hidden');
+        document.getElementById('manual-t-id').value = tId;
+        document.getElementById('manual-m-id').value = mId;
+        manualScoreMatchInfo.innerText = `${tA} vs ${tB}`;
+        formManualScore.reset();
+        modalManualScore.classList.remove('hidden');
+    };
+
+    closeManualScore?.addEventListener('click', () => modalManualScore.classList.add('hidden'));
+
+    document.getElementById('btn-cancel-manual-score')?.addEventListener('click', () => {
+        modalManualScore.classList.add('hidden');
+        // Re-open tournament detail
+        const tId = document.getElementById('manual-t-id').value;
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        let t = tournaments.find(x => x.id === tId);
+        if (t) showTournamentDetail(t);
+        else modalTournamentDetail.classList.remove('hidden');
+    });
+
+    formManualScore?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const tId = document.getElementById('manual-t-id').value;
+        const mId = document.getElementById('manual-m-id').value;
+
+        let setsA = 0; let setsB = 0;
+
+        // Helper to evaluate a set
+        const evalSet = (ptsA, ptsB) => {
+            if (ptsA === '' || ptsB === '') return;
+            const a = parseInt(ptsA); const b = parseInt(ptsB);
+            if (a > b) setsA++; else if (b > a) setsB++;
+        };
+
+        evalSet(document.getElementById('manual-s1-a').value, document.getElementById('manual-s1-b').value);
+        evalSet(document.getElementById('manual-s2-a').value, document.getElementById('manual-s2-b').value);
+        evalSet(document.getElementById('manual-s3-a').value, document.getElementById('manual-s3-b').value);
+
+        if (setsA === setsB) {
+            alert('El partido no puede terminar en empate en Voley Playa. Revisa los sets.');
+            return;
+        }
+
+        const finalScore = `${setsA} - ${setsB}`;
+
+        // Save to tournament
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        let t = tournaments.find(x => x.id === tId);
+        if (t) {
+            let m = t.matches.find(x => x.id === mId);
+            if (m) {
+                m.status = 'finalizado';
+                m.score = finalScore;
+            }
+            // Advance winner logic
+            advanceTournamentWinner(t, mId, setsA, setsB);
+            localStorage.setItem('voley-tournaments', JSON.stringify(tournaments));
+        }
+
+        modalManualScore.classList.add('hidden');
+        if (t) showTournamentDetail(t);
+    });
+
+    // --- EDIT TEAM HANDLERS ---
+    closeEditTeam?.addEventListener('click', () => {
+        modalEditTeam.classList.add('hidden');
+        modalTournamentDetail.classList.remove('hidden');
+    });
+
+    formEditTeam?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const tId = hiddenEditTId.value;
+        const mId = hiddenEditMId.value;
+        const slot = hiddenEditMSlot.value;
+        const newName = inputEditTeamName.value.trim() || 'TBD';
+        const p1 = inputEditTeamP1.value.trim();
+        const p2 = inputEditTeamP2.value.trim();
+
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        let t = tournaments.find(x => x.id === tId);
+        if (t) {
+            let m = t.matches.find(x => x.id === mId);
+            if (m) {
+                m[slot] = newName;
+                m[`${slot}_p1`] = p1;
+                m[`${slot}_p2`] = p2;
+                localStorage.setItem('voley-tournaments', JSON.stringify(tournaments));
+                modalEditTeam.classList.add('hidden');
+                showTournamentDetail(t);
+            }
+        }
+    });
+
+    btnClearTeam?.addEventListener('click', () => {
+        const tId = hiddenEditTId.value;
+        const mId = hiddenEditMId.value;
+        const slot = hiddenEditMSlot.value;
+
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        let t = tournaments.find(x => x.id === tId);
+        if (t) {
+            let m = t.matches.find(x => x.id === mId);
+            if (m) {
+                m[slot] = 'TBD';
+                delete m[`${slot}_p1`];
+                delete m[`${slot}_p2`];
+                localStorage.setItem('voley-tournaments', JSON.stringify(tournaments));
+                modalEditTeam.classList.add('hidden');
+                showTournamentDetail(t);
+            }
+        }
+    });
+
+    window.startTournamentMatch = function (tId, mId, tA, tB) {
+        modalTournamentDetail.classList.add('hidden');
+
+        let pA1 = `${tA} 1`; let pA2 = `${tA} 2`;
+        let pB1 = `${tB} 1`; let pB2 = `${tB} 2`;
+
+        // Check if players were configured manually
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        let t = tournaments.find(x => x.id === tId);
+        if (t) {
+            let m = t.matches.find(x => x.id === mId);
+            if (m) {
+                if (m.teamA_p1) pA1 = m.teamA_p1;
+                if (m.teamA_p2) pA2 = m.teamA_p2;
+                if (m.teamB_p1) pB1 = m.teamB_p1;
+                if (m.teamB_p2) pB2 = m.teamB_p2;
+            }
+        }
+
+        // Pre-fill config form
+        document.getElementById('input-team-a').value = tA;
+        document.getElementById('input-team-b').value = tB;
+        document.getElementById('input-a1').value = pA1;
+        document.getElementById('input-a2').value = pA2;
+        document.getElementById('input-b1').value = pB1;
+        document.getElementById('input-b2').value = pB2;
+
+        // Use Tournament Config
+        if (t && t.config_sets) {
+            document.getElementById('input-max-sets').value = t.config_sets.maxSets || 3;
+            document.getElementById('input-pts-normal').value = t.config_sets.ptsNormal || 21;
+            document.getElementById('input-pts-tiebreak').value = t.config_sets.ptsTiebreak || 15;
+        }
+
+        // Also tag state with tournament info so we know to dispatch to Marcador Vivo
+        state.tournamentId = tId;
+        state.tournamentMatchId = mId;
+        saveState();
+
+        alert("Configura las reglas del partido para este choque y dale clic en 'Empezar Partido'. Se abrirá el marcador rápido.");
+        setView('vista-configuracion');
+    };
+
+    // --- FAST LIVE SCOREBOARD LOGIC ---
+    const btnLivePointA = document.getElementById('btn-live-point-a');
+    const btnLivePointB = document.getElementById('btn-live-point-b');
+    const btnLiveUndo = document.getElementById('btn-live-undo');
+    const btnLiveEnd = document.getElementById('btn-live-end');
+
+    btnLivePointA?.addEventListener('click', () => addLivePoint('A'));
+    btnLivePointB?.addEventListener('click', () => addLivePoint('B'));
+    btnLiveUndo?.addEventListener('click', () => undoLastAction());
+    btnLiveEnd?.addEventListener('click', () => {
+        if (confirm('¿Finalizar y guardar este partido del torneo?')) finishMatch();
+    });
+
+    function addLivePoint(team) {
+        const curSet = state.sets[state.currentSetIndex];
+
+        // Ensure we don't add point if match is already won
+        // Actually checkSetWinner stops us from continuing after the match is totally won.
+
+        if (team === 'A') curSet.scoreA++;
+        else curSet.scoreB++;
+
+        // Save a fast point record
+        state.points.push({
+            equipo: team,
+            jugadorId: `Fast_${team}`, // Generic ID for fast mode
+            tipoAccion: 'punto',
+            actionDetail: 'FastScore',
+            coordenadas: { x: 50, y: 50 },
+            marcadorMomento: `${curSet.scoreA}-${curSet.scoreB}`,
+            timestamp: Date.now(),
+            setNumber: state.currentSetIndex + 1,
+            matchSecond: state.matchTimeSeconds,
+            pointNumber: state.points.filter(p => p.tipoAccion !== 'timeout').length + 1
+        });
+
+        // Check Change of Sides
+        const totalPoints = curSet.scoreA + curSet.scoreB;
+        const maxSets = state.config.maxSets || 3;
+        const isTiebreak = state.currentSetIndex === maxSets - 1;
+        const sideChangeInterval = isTiebreak ? 5 : 7;
+
+        if (totalPoints > 0 && totalPoints % sideChangeInterval === 0 && !checkSetWinnerSilent()) {
+            showSideChangeAlert();
+        }
+
+        checkSetWinner();
+        saveState();
+        updateScoreUI();
+    }
+
+    function showSideChangeAlert() {
+        // Create an ephemeral alert with Beach Volleyball aesthetics
+        const alertBox = document.createElement('div');
+        alertBox.innerHTML = '🚨<br>¡Cambio de Lado!';
+        alertBox.style.cssText = `
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.95); color: white; padding: 2rem 3rem; border-radius: 20px;
+            font-size: 2.5rem; font-weight: 900; z-index: 9999;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); text-align: center;
+            border: 4px solid white; text-transform: uppercase; animation: popup 0.3s ease-out;
+        `;
+        document.body.appendChild(alertBox);
+        setTimeout(() => alertBox.remove(), 3000);
+    }
+
+    function checkSetWinnerSilent() {
+        if (!state.config) return false;
+        const curSet = state.sets[state.currentSetIndex];
+        const maxSets = state.config.maxSets || 3;
+        const ptsNormal = state.config.ptsNormal || 21;
+        const ptsTiebreak = state.config.ptsTiebreak || 15;
+        const winThreshold = (state.currentSetIndex === maxSets - 1) ? ptsTiebreak : ptsNormal;
+
+        return ((curSet.scoreA >= winThreshold || curSet.scoreB >= winThreshold) &&
+            Math.abs(curSet.scoreA - curSet.scoreB) >= 2);
+    }
+
+    window.updateLiveScoreboardUI = function () {
+        if (!state.config) return;
+
+        const curSet = state.sets[state.currentSetIndex];
+        const nameNodeA = document.getElementById('live-name-a');
+        const nameNodeB = document.getElementById('live-name-b');
+        const scoreNodeA = document.getElementById('live-score-a');
+        const scoreNodeB = document.getElementById('live-score-b');
+        const setNumNode = document.getElementById('live-set-number');
+        const tourneyNode = document.getElementById('live-tournament-name');
+        const servingA = document.getElementById('live-serving-a');
+        const servingB = document.getElementById('live-serving-b');
+
+        if (tourneyNode) {
+            let tName = 'Partido Amistoso';
+            if (state.tournamentId) {
+                let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+                let t = tournaments.find(t => t.id === state.tournamentId);
+                if (t) tName = `Torneo: ${t.name}`;
+            }
+            tourneyNode.innerText = tName;
+        }
+
+        if (setNumNode) setNumNode.innerText = state.currentSetIndex + 1;
+
+        if (nameNodeA) nameNodeA.innerText = state.config.teamA;
+        if (nameNodeB) nameNodeB.innerText = state.config.teamB;
+
+        if (scoreNodeA && scoreNodeA.innerText !== curSet.scoreA.toString()) {
+            scoreNodeA.innerText = curSet.scoreA;
+            scoreNodeA.classList.remove('bump');
+            void scoreNodeA.offsetWidth;
+            scoreNodeA.classList.add('bump');
+        }
+
+        if (scoreNodeB && scoreNodeB.innerText !== curSet.scoreB.toString()) {
+            scoreNodeB.innerText = curSet.scoreB;
+            scoreNodeB.classList.remove('bump');
+            void scoreNodeB.offsetWidth;
+            scoreNodeB.classList.add('bump');
+        }
+
+        // Serving indicator logic
+        if (state.points.length > 0) {
+            // Find last point
+            const pointsFiltered = state.points.filter(p => p.tipoAccion !== 'timeout');
+            if (pointsFiltered.length > 0) {
+                const lastLog = pointsFiltered[pointsFiltered.length - 1];
+                const pointGoesTo = lastLog.tipoAccion === 'punto' ? lastLog.equipo : (lastLog.equipo === 'A' ? 'B' : 'A');
+                if (servingA) servingA.style.display = (pointGoesTo === 'A') ? 'block' : 'none';
+                if (servingB) servingB.style.display = (pointGoesTo === 'B') ? 'block' : 'none';
+            }
+        } else {
+            if (servingA) servingA.style.display = 'block'; // A starts by default
+            if (servingB) servingB.style.display = 'none';
+        }
+    }
+
+    // Inject LiveScoreboard sync into updateScoreUI
+    const originalUpdateScoreUI = updateScoreUI;
+    updateScoreUI = function () {
+        originalUpdateScoreUI();
+        if (typeof window.updateLiveScoreboardUI === 'function') {
+            window.updateLiveScoreboardUI();
+        }
+    };
+
 
     function renderStatistics() {
         const spinner = document.getElementById('loading-spinner');
@@ -1558,4 +2381,46 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Error rendering Bitacora", e);
         }
     }
+
+    // Helper: Avanzar ganador en el bracket
+    window.advanceTournamentWinner = function (tournament, matchId, winsA, winsB) {
+        if (tournament.format !== 'Eliminacion Directa') return;
+
+        const m = tournament.matches.find(x => x.id === matchId);
+        if (!m || !m.nextMatchId) return; // Es la final, no avanza
+
+        const nextMatch = tournament.matches.find(x => x.id === m.nextMatchId);
+        if (!nextMatch) return;
+
+        const winner = (winsA > winsB) ? m.teamA : m.teamB;
+        if (m.nextMatchSlot === 'teamA') nextMatch.teamA = winner;
+        if (m.nextMatchSlot === 'teamB') nextMatch.teamB = winner;
+    };
+
+    window.editMatchTeam = function (tournamentId, matchId, slot, currentName) {
+        modalTournamentDetail.classList.add('hidden');
+        modalEditTeam.classList.remove('hidden');
+
+        hiddenEditTId.value = tournamentId;
+        hiddenEditMId.value = matchId;
+        hiddenEditMSlot.value = slot;
+
+        inputEditTeamName.value = (currentName === 'TBD' || currentName === 'BYE') ? '' : currentName;
+        inputEditTeamP1.value = '';
+        inputEditTeamP2.value = '';
+
+        // Try load existing player names if present
+        let tournaments = JSON.parse(localStorage.getItem('voley-tournaments')) || [];
+        let t = tournaments.find(x => x.id === tournamentId);
+        if (t) {
+            let m = t.matches.find(x => x.id === matchId);
+            if (m && m[`${slot}_p1`]) {
+                inputEditTeamP1.value = m[`${slot}_p1`];
+                inputEditTeamP2.value = m[`${slot}_p2`];
+            }
+        }
+    };
+
+    // Finally, load state now that all functions are defined
+    loadState();
 });
