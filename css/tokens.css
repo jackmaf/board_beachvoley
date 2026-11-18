@@ -1,0 +1,172 @@
+/* =========================================================================
+   TOKENS DE DISEÑO
+   -------------------------------------------------------------------------
+   Variables CSS con nombres SEMÁNTICOS (para qué se usan, no qué color son).
+   Los componentes nunca escriben colores "a mano": usan estos tokens, y cada
+   tema sólo redefine sus valores. Así el modo oscuro funciona en TODA la app
+   (antes muchas tarjetas tenían `background: white` fijo).
+
+   Temas: se activan con <body data-theme="classic | dark | high-contrast">.
+   ========================================================================= */
+
+:root {
+    /* --- Marca ------------------------------------------------------------ */
+    --color-primary: #FF7B54;
+    --color-primary-strong: #E8653F;
+    --color-primary-soft: rgba(255, 123, 84, 0.35);
+    --color-on-primary: #FFFFFF;
+    --color-secondary: #FFD56F;
+    --color-accent: #93E4C1;
+
+    /* --- Fondos y superficies -------------------------------------------- */
+    --color-bg-start: #F4E2D8;          /* Arena */
+    --color-bg-end: #93E4C1;            /* Mar */
+    --color-surface: #FFFFFF;           /* Tarjetas, celdas, inputs */
+    --color-surface-glass: rgba(255, 255, 255, 0.85);
+    --color-surface-soft: rgba(0, 0, 0, 0.03);
+    --color-surface-muted: #F0F0F0;
+    --color-panel: #F6F6F6;             /* Fondo de modales */
+    --color-strong: #2C363F;            /* Barras oscuras: cabecera, nav, tablas */
+    --color-on-strong: #FFFFFF;
+    --color-overlay: rgba(0, 0, 0, 0.7);
+
+    /* --- Texto -------------------------------------------------------------- */
+    --color-heading: #2C363F;
+    --color-text: #333333;
+    --color-text-muted: #666666;
+    --color-text-subtle: #999999;
+
+    /* --- Bordes --------------------------------------------------------------- */
+    --color-border: #DDDDDD;
+    --color-border-soft: #EEEEEE;
+
+    /* --- Equipos ---------------------------------------------------------- */
+    --color-team-a: #FF4B4B;
+    --color-team-a-shadow: #CC3A3A;
+    --color-team-b: #4B9BFF;
+    --color-team-b-shadow: #3A7ACC;
+
+    /* --- Estados ---------------------------------------------------------- */
+    --color-success: #27AE60;
+    --color-point: #4CD137;
+    --color-danger: #FF4757;
+    --color-error: #E84118;
+    --color-warning: #F39C12;
+    --color-info: #3498DB;
+
+    /* --- Cancha ----------------------------------------------------------- */
+    --color-court: #E3C5B5;
+    --color-court-line: #FFFFFF;
+    --color-net: #FFD700;
+
+    /* --- Sombras ---------------------------------------------------------- */
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.35);
+    --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    --shadow-primary: 0 4px 15px rgba(255, 123, 84, 0.3);
+
+    /* --- Forma y espaciado ------------------------------------------------ */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-pill: 999px;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.5rem;
+    --space-6: 2rem;
+
+    /* --- Tipografía y movimiento ------------------------------------------ */
+    --font-family: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    --transition-fast: 0.2s ease;
+    --transition-base: 0.3s ease;
+    --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* --- Layout ----------------------------------------------------------- */
+    --nav-height: 72px;
+    --content-narrow: 640px;
+    --content-wide: 860px;
+}
+
+/* =========================================================================
+   TEMA OSCURO
+   ========================================================================= */
+[data-theme="dark"] {
+    --color-primary-soft: rgba(255, 123, 84, 0.3);
+    --color-accent: #3B6E5C;
+
+    --color-bg-start: #14181D;
+    --color-bg-end: #232A31;
+    --color-surface: #22272E;
+    --color-surface-glass: rgba(30, 35, 40, 0.92);
+    --color-surface-soft: rgba(255, 255, 255, 0.04);
+    --color-surface-muted: #2C333B;
+    --color-panel: #1A1E24;
+    --color-strong: #0F1317;
+    --color-overlay: rgba(0, 0, 0, 0.8);
+
+    --color-heading: #F6F6F6;
+    --color-text: #EAEAEA;
+    --color-text-muted: #A8B0B8;
+    --color-text-subtle: #7D8790;
+
+    --color-border: #3A424B;
+    --color-border-soft: #2F363E;
+
+    --color-team-a: #FF6B6B;
+    --color-team-a-shadow: #C24E4E;
+    --color-team-b: #6B9BFF;
+    --color-team-b-shadow: #4D78CC;
+
+    --color-court: #3A3F46;
+    --color-court-line: rgba(255, 255, 255, 0.7);
+
+    --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* =========================================================================
+   TEMA ALTO CONTRASTE (lectura bajo sol directo)
+   ========================================================================= */
+[data-theme="high-contrast"] {
+    --color-primary: #000000;
+    --color-primary-strong: #000000;
+    --color-primary-soft: rgba(0, 0, 0, 0.25);
+    --color-on-primary: #FFFFFF;
+    --color-accent: #000000;
+
+    --color-bg-start: #FFFFFF;
+    --color-bg-end: #FFFFFF;
+    --color-surface: #FFFFFF;
+    --color-surface-glass: #FFFFFF;
+    --color-surface-soft: #F2F2F2;
+    --color-surface-muted: #E6E6E6;
+    --color-panel: #FFFFFF;
+    --color-strong: #000000;
+
+    --color-heading: #000000;
+    --color-text: #000000;
+    --color-text-muted: #222222;
+    --color-text-subtle: #444444;
+
+    --color-border: #000000;
+    --color-border-soft: #555555;
+
+    --color-team-a: #D00000;
+    --color-team-a-shadow: #800000;
+    --color-team-b: #0033CC;
+    --color-team-b-shadow: #001F7A;
+
+    --color-court: #F0F0F0;
+    --color-court-line: #000000;
+
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-glass: none;
+    --shadow-primary: none;
+}

@@ -1,0 +1,545 @@
+/* =========================================================================
+   PARTIDO
+   Configuración de equipos, registro táctico (Scout) y Marcador Vivo.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Bloques: team-forms / team-form (columnas de Equipo A y B en Config)
+   ------------------------------------------------------------------------- */
+.team-forms {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+@media (min-width: 600px) {
+    .team-forms {
+        flex-direction: row;
+    }
+}
+
+.team-form {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border-top: 5px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-soft);
+}
+
+.team-form--a {
+    border-top-color: var(--color-team-a);
+}
+
+.team-form--b {
+    border-top-color: var(--color-team-b);
+}
+
+.team-form__title {
+    color: var(--color-heading);
+    font-size: 1.2rem;
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: scout (contenedor de la vista de registro táctico)
+   ------------------------------------------------------------------------- */
+.scout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: 500px;
+}
+
+.scout__set-label {
+    color: var(--color-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: sets-tracker (cajitas de sets ganados)
+   ------------------------------------------------------------------------- */
+.sets-tracker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    max-width: 100%;
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-xl);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.sets-tracker__team {
+    overflow: hidden;
+    max-width: 110px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sets-tracker__boxes {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.sets-tracker__box {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    transition: all var(--transition-base);
+}
+
+.sets-tracker__box--won-a {
+    border-color: var(--color-team-a);
+    background: var(--color-team-a);
+}
+
+.sets-tracker__box--won-b {
+    border-color: var(--color-team-b);
+    background: var(--color-team-b);
+}
+
+.sets-tracker__divider {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: match-clock (hora real + cronómetro oficial)
+   ------------------------------------------------------------------------- */
+.match-clock {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.match-clock__real {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.match-clock__stopwatch {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.match-clock__time {
+    padding: 0.2rem 1rem;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-soft);
+    color: var(--color-heading);
+    font-family: var(--font-mono);
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.match-clock__controls {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.match-clock__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-surface-muted);
+    font-size: 1.2rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), background var(--transition-fast);
+}
+
+.match-clock__btn:hover:not(:disabled) {
+    background: var(--color-primary);
+    transform: scale(1.1);
+}
+
+.match-clock__btn--pause:hover:not(:disabled) {
+    background: var(--color-danger);
+}
+
+.match-clock__btn:disabled {
+    opacity: 0.4;
+    box-shadow: none;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: scoreboard (marcador de la vista Scout)
+   ------------------------------------------------------------------------- */
+.scoreboard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-5);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-glass);
+    box-shadow: var(--shadow-glass);
+    backdrop-filter: blur(10px);
+}
+
+.scoreboard__team {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.scoreboard__name {
+    max-width: 100%;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-align: center;
+    text-transform: uppercase;
+    word-break: break-word;
+}
+
+.scoreboard__team--a .scoreboard__name {
+    color: var(--color-team-a);
+}
+
+.scoreboard__team--b .scoreboard__name {
+    color: var(--color-team-b);
+}
+
+.scoreboard__score {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.scoreboard__score--bump {
+    animation: bump 0.4s var(--ease-bounce);
+}
+
+.scoreboard__serve {
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--color-secondary);
+    color: #2C363F;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.scoreboard__divider {
+    color: var(--color-heading);
+    font-size: 2.5rem;
+    font-weight: 900;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: action-menu (¿quién fue el responsable?)
+   ------------------------------------------------------------------------- */
+.action-menu {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 95%;
+    max-width: 360px;
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-glass);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    transform: translate(-50%, -50%);
+    backdrop-filter: blur(10px);
+    animation: menu-in 0.2s var(--ease-bounce);
+}
+
+@keyframes menu-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
+    }
+}
+
+.action-menu__title {
+    font-size: 1.15rem;
+}
+
+.action-menu__group {
+    display: flex;
+    gap: var(--space-2);
+}
+
+.action-menu__group--wrap {
+    flex-wrap: wrap;
+}
+
+.action-menu__players {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: player-btn (botón de jugador con avatar)
+   ------------------------------------------------------------------------- */
+.player-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+    padding: var(--space-3) var(--space-2);
+    border: none;
+    border-radius: 10px;
+    color: #FFFFFF;
+    font-size: 0.95rem;
+    font-weight: 700;
+    transition: transform var(--transition-fast);
+}
+
+.player-btn:active {
+    transform: scale(0.95) translateY(2px);
+}
+
+.player-btn--a {
+    background: var(--color-team-a);
+    box-shadow: 0 4px 0 var(--color-team-a-shadow);
+}
+
+.player-btn--b {
+    background: var(--color-team-b);
+    box-shadow: 0 4px 0 var(--color-team-b-shadow);
+}
+
+.player-btn__avatar {
+    width: 48px;
+    height: 48px;
+    border: 2px solid #FFFFFF;
+    border-radius: 50%;
+    background: #F0F0F0;
+}
+
+.player-btn__name {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: scout-controls / timeout-btn
+   ------------------------------------------------------------------------- */
+.scout-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    width: 100%;
+}
+
+.scout-controls__timeouts {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.timeout-btn {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3);
+    border: none;
+    border-radius: var(--radius-md);
+    color: #FFFFFF;
+    font-size: 0.9rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.timeout-btn:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+}
+
+.timeout-btn:disabled {
+    background: #555555;
+    opacity: 0.45;
+}
+
+.timeout-btn--a {
+    background: var(--color-team-a);
+}
+
+.timeout-btn--b {
+    background: var(--color-team-b);
+}
+
+.timeout-btn__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: live-board (Marcador Vivo tipo TV)
+   ------------------------------------------------------------------------- */
+.live-board {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 100%;
+    max-width: 600px;
+    min-height: 70vh;
+}
+
+.live-board__header {
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.live-board__tournament {
+    margin-bottom: var(--space-1);
+    color: var(--color-secondary);
+    font-size: 1.2rem;
+}
+
+.live-board__set {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.live-board__teams {
+    display: flex;
+    flex: 1;
+    gap: var(--space-4);
+}
+
+.live-board__team {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-4);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.live-board__team--a {
+    background: var(--color-team-a);
+}
+
+.live-board__team--b {
+    background: var(--color-team-b);
+}
+
+.live-board__serve {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+}
+
+.live-board__name {
+    font-size: 1.1rem;
+    text-align: center;
+    text-transform: uppercase;
+    word-break: break-word;
+}
+
+.live-board__score {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(4rem, 18vw, 7rem);
+    font-weight: 900;
+    line-height: 1;
+}
+
+.live-board__score--bump {
+    animation: bump 0.4s var(--ease-bounce);
+}
+
+.live-board__add {
+    padding: var(--space-5) var(--space-2);
+    border: 2px solid #FFFFFF;
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.2);
+    color: #FFFFFF;
+    font-size: 1.4rem;
+    font-weight: 700;
+    touch-action: manipulation;
+    transition: background var(--transition-fast), transform var(--transition-fast);
+}
+
+.live-board__add:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.live-board__add:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.live-board__add:disabled {
+    opacity: 0.5;
+}
+
+.live-board__controls {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.live-board__controls > .btn {
+    flex: 1;
+    padding: var(--space-4);
+    font-size: 1.15rem;
+}
+
+.live-board__hint {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Los atajos de teclado no tienen sentido en pantallas táctiles */
+@media (hover: none) {
+    .live-board__hint {
+        display: none;
+    }
+}

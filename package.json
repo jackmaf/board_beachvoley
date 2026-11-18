@@ -1,0 +1,12 @@
+{
+  "name": "voley-playa-scout",
+  "version": "2.0.0",
+  "description": "Scouting y estadísticas en tiempo real para voley playa 2 vs 2. App 100 % frontend, sin dependencias.",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

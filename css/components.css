@@ -1,0 +1,1006 @@
+/* =========================================================================
+   COMPONENTES REUTILIZABLES (BEM)
+   -------------------------------------------------------------------------
+   Convención BEM usada en todo el proyecto:
+     .bloque                → componente independiente      (.btn)
+     .bloque__elemento      → parte interna del bloque       (.modal__title)
+     .bloque--modificador   → variante o estado              (.btn--danger)
+   Reglas:
+     - Una clase = una responsabilidad. Nada de selectores por id ni por
+       etiqueta (salvo en base.css).
+     - Especificidad plana (1 clase) para que sobrescribir sea predecible.
+     - Los modificadores SIEMPRE acompañan a la clase base: class="btn btn--primary".
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Bloque: btn
+   Modificadores de estilo: --primary --danger --warning --outline --dashed
+                            --muted --dark
+   Modificadores de tamaño: --block --small --icon
+   Modificador de estado:   --pulse (llama la atención)
+   ------------------------------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 0.8rem 1.25rem;
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-muted);
+    color: var(--color-text);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    filter: brightness(1.05);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    box-shadow: none;
+}
+
+.btn--primary {
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+    box-shadow: var(--shadow-primary);
+}
+
+.btn--danger {
+    background: var(--color-danger);
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+}
+
+.btn--warning {
+    background: var(--color-warning);
+    color: #FFFFFF;
+}
+
+.btn--outline {
+    border-color: var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.btn--dashed {
+    border: 2px dashed var(--color-primary);
+    background: transparent;
+    color: var(--color-primary);
+}
+
+.btn--muted {
+    background: var(--color-surface-muted);
+    color: var(--color-text);
+}
+
+.btn--dark {
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+}
+
+.btn--block {
+    width: 100%;
+}
+
+.btn--small {
+    padding: 0.45rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+}
+
+.btn--icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    font-size: 1.2rem;
+}
+
+.btn--pulse {
+    animation: pulse-ring 1.5s infinite;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: card (tarjeta con efecto cristal)
+   Elementos: __title, __hint      Modificador: --narrow
+   ------------------------------------------------------------------------- */
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface-glass);
+    box-shadow: var(--shadow-glass);
+    backdrop-filter: blur(10px);
+    animation: fade-in-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Entrada escalonada de las tarjetas */
+.card:nth-child(2) { animation-delay: 0.05s; }
+.card:nth-child(3) { animation-delay: 0.1s; }
+.card:nth-child(4) { animation-delay: 0.15s; }
+.card:nth-child(5) { animation-delay: 0.2s; }
+.card:nth-child(n + 6) { animation-delay: 0.25s; }
+
+.card--narrow {
+    max-width: var(--content-narrow);
+}
+
+.card__title {
+    padding-bottom: var(--space-2);
+    border-bottom: 2px solid var(--color-accent);
+    color: var(--color-heading);
+    font-size: 1.2rem;
+}
+
+.card__hint {
+    margin-top: calc(var(--space-2) * -1);
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+@media (min-width: 768px) {
+    .card {
+        padding: var(--space-5);
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: panel (sección de fondo suave dentro de una tarjeta o modal)
+   ------------------------------------------------------------------------- */
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-soft);
+}
+
+.panel__title {
+    color: var(--color-heading);
+    font-size: 1rem;
+    text-align: center;
+}
+
+.panel__hint {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: form, form-field, rules-grid, button-row
+   ------------------------------------------------------------------------- */
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.form__hint {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    text-align: left;
+}
+
+.form-field__label {
+    color: var(--color-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.form-field__label--accent {
+    color: var(--color-primary);
+}
+
+.form-field__input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.form-field__input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-soft);
+}
+
+.form-field__input:user-invalid {
+    border-color: var(--color-error);
+}
+
+.form-field__input:disabled {
+    opacity: 0.6;
+}
+
+.rules-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+}
+
+@media (min-width: 600px) {
+    .rules-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.button-row > * {
+    flex: 1 1 140px;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: notice (aviso informativo dentro de una tarjeta)
+   ------------------------------------------------------------------------- */
+.notice {
+    padding: var(--space-3) var(--space-4);
+    border-left: 4px solid var(--color-info);
+    border-radius: var(--radius-sm);
+    background: rgba(52, 152, 219, 0.12);
+    font-size: 0.9rem;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: modal (sobre <dialog> nativo)
+   Elementos: __panel __close __title __subtitle __text __actions __footer
+   Modificadores: --wide --compact
+   ------------------------------------------------------------------------- */
+.modal {
+    width: calc(100% - 2rem);
+    max-width: 600px;
+    max-height: 92vh;
+    margin: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-text);
+    overflow: visible;
+}
+
+.modal::backdrop {
+    background: var(--color-overlay);
+    backdrop-filter: blur(4px);
+}
+
+.modal[open] {
+    animation: modal-in 0.25s var(--ease-bounce);
+}
+
+.modal--wide {
+    max-width: 760px;
+}
+
+.modal--compact {
+    max-width: 440px;
+}
+
+.modal__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-height: 92vh;
+    padding: var(--space-6) var(--space-5) var(--space-5);
+    overflow-x: hidden;
+    overflow-y: auto;
+    border-radius: var(--radius-xl);
+    background: var(--color-panel);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal__close {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-4);
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-heading);
+    font-size: 2rem;
+    line-height: 1;
+    transition: background var(--transition-fast);
+}
+
+.modal__close:hover {
+    background: var(--color-surface-soft);
+}
+
+.modal__title {
+    padding-right: var(--space-6); /* Espacio para el botón de cerrar */
+    color: var(--color-heading);
+    font-size: 1.4rem;
+}
+
+.modal__subtitle,
+.modal__text {
+    margin-top: calc(var(--space-3) * -1);
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.modal__text {
+    margin-top: 0;
+    color: var(--color-text);
+    font-size: 1rem;
+}
+
+.modal__actions {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.modal__actions > * {
+    flex: 1;
+}
+
+.modal__footer {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--color-border-soft);
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: tabs
+   ------------------------------------------------------------------------- */
+.tabs {
+    display: flex;
+    gap: var(--space-2);
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.tabs__tab {
+    margin-bottom: -1px;
+    padding: 0.6rem 0.8rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: var(--color-text-muted);
+    font-size: 1rem;
+}
+
+.tabs__tab--active {
+    border-bottom-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.tabs__panel--scroll {
+    overflow-x: auto;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: pill-group / pill (botones de filtro)
+   Modificadores: --active --point --error --team-a --team-b
+   ------------------------------------------------------------------------- */
+.pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.pill {
+    padding: 0.45rem 0.9rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+.pill:hover {
+    border-color: var(--color-accent);
+}
+
+.pill--active {
+    border-color: var(--color-strong);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+}
+
+.pill--point.pill--active {
+    border-color: var(--color-point);
+    background: var(--color-point);
+}
+
+.pill--error.pill--active {
+    border-color: var(--color-error);
+    background: var(--color-error);
+}
+
+.pill--team-a.pill--active {
+    border-color: var(--color-team-a);
+    background: var(--color-team-a);
+}
+
+.pill--team-b.pill--active {
+    border-color: var(--color-team-b);
+    background: var(--color-team-b);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: choice (radio con aspecto de botón)
+   Modificadores: --point --error --detail
+   ------------------------------------------------------------------------- */
+.choice {
+    flex: 1 1 auto;
+    min-width: 0;
+    cursor: pointer;
+}
+
+.choice__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.choice__label {
+    display: block;
+    padding: 0.7rem 0.5rem;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: center;
+    transition: all var(--transition-fast);
+}
+
+.choice__input:focus-visible + .choice__label {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.choice__input:checked + .choice__label {
+    border-color: var(--color-strong);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+}
+
+.choice--point .choice__input:checked + .choice__label {
+    border-color: var(--color-point);
+    background: var(--color-point);
+    color: #FFFFFF;
+}
+
+.choice--error .choice__input:checked + .choice__label {
+    border-color: var(--color-error);
+    background: var(--color-error);
+    color: #FFFFFF;
+}
+
+.choice--detail .choice__label {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.75rem;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: avatar
+   Tamaños: --sm --md --lg --xl --logo    Equipo: --team-a --team-b
+   Estado:  --pulse
+   ------------------------------------------------------------------------- */
+.avatar {
+    flex-shrink: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background-color: var(--color-surface-muted);
+    object-fit: cover;
+}
+
+.avatar--sm {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto;
+}
+
+.avatar--md {
+    width: 36px;
+    height: 36px;
+}
+
+.avatar--lg {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+    border-width: 3px;
+}
+
+.avatar--xl {
+    width: 84px;
+    height: 84px;
+    border-width: 3px;
+    box-shadow: var(--shadow-md);
+}
+
+.avatar--logo {
+    width: 45px;
+    height: 45px;
+    border-width: 3px;
+    border-radius: var(--radius-sm);
+    background-color: #FFFFFF;
+    box-shadow: var(--shadow-sm);
+}
+
+.avatar--team-a {
+    border-color: var(--color-team-a);
+}
+
+.avatar--team-b {
+    border-color: var(--color-team-b);
+}
+
+.avatar--pulse {
+    animation: pulse-ring 2s infinite var(--ease-bounce);
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: table-scroll / data-table
+   ------------------------------------------------------------------------- */
+.table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.data-table th {
+    padding: 0.6rem;
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.data-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.data-table tbody tr:nth-child(even) {
+    background: var(--color-surface-soft);
+}
+
+.data-table__row--timeout td {
+    background: var(--color-surface-muted);
+    font-style: italic;
+}
+
+.data-table__row--leader td {
+    background: var(--color-primary-soft);
+    font-weight: 700;
+}
+
+.data-table__cell--point {
+    color: var(--color-point);
+    font-weight: 700;
+}
+
+.data-table__cell--error {
+    color: var(--color-error);
+    font-weight: 700;
+}
+
+.data-table__cell--strong {
+    font-weight: 700;
+}
+
+.data-table__empty {
+    padding: var(--space-4);
+    color: var(--color-text-muted);
+}
+
+/* En móvil se ocultan las columnas secundarias (coordenadas en metros) */
+@media (max-width: 599px) {
+    .data-table__cell--optional {
+        display: none;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: empty-state
+   ------------------------------------------------------------------------- */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-6) var(--space-4);
+    text-align: center;
+}
+
+.empty-state__icon {
+    font-size: 2.5rem;
+}
+
+.empty-state__text {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: progress
+   ------------------------------------------------------------------------- */
+.progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.progress__track {
+    flex: 1;
+    height: 8px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-muted);
+}
+
+.progress__fill {
+    width: 0;
+    height: 100%;
+    background: var(--color-primary);
+    transition: width 0.5s ease;
+}
+
+.progress__label {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: kpi (indicador numérico)
+   Modificadores de valor: --accent --positive --negative --neutral
+   ------------------------------------------------------------------------- */
+.kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: var(--space-5) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.kpi__label {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.kpi__value {
+    color: var(--color-primary);
+    font-size: 2.4rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.kpi__value--accent {
+    color: var(--color-team-b);
+}
+
+.kpi__value--positive {
+    color: var(--color-success);
+}
+
+.kpi__value--negative {
+    color: var(--color-error);
+}
+
+.kpi__value--neutral {
+    color: var(--color-heading);
+}
+
+.kpi__sub {
+    color: var(--color-text-subtle);
+    font-size: 0.75rem;
+}
+
+.kpi__sub--badge {
+    align-self: center;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--color-surface-soft);
+    font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: zone-bar (barra horizontal de porcentaje)
+   ------------------------------------------------------------------------- */
+.zone-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.zone-bar__label {
+    width: 60px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.zone-bar__track {
+    flex: 1;
+    height: 12px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: var(--color-surface-muted);
+}
+
+.zone-bar__fill {
+    width: 0;
+    height: 100%;
+    background: var(--color-accent);
+    transition: width 0.5s ease;
+}
+
+.zone-bar__value {
+    width: 44px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-align: right;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: theme-picker (selector de tema visual)
+   ------------------------------------------------------------------------- */
+.theme-picker {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    text-align: center;
+}
+
+.theme-picker__title {
+    color: var(--color-heading);
+    font-size: 1.05rem;
+}
+
+.theme-picker__options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.theme-picker__option {
+    cursor: pointer;
+}
+
+.theme-picker__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.theme-picker__swatch {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border: 2px solid #DDDDDD;
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: box-shadow var(--transition-fast);
+}
+
+/* Las muestras usan colores fijos: representan cada tema, no el activo */
+.theme-picker__swatch--classic {
+    background: linear-gradient(135deg, #F4E2D8, #93E4C1);
+    color: #333333;
+}
+
+.theme-picker__swatch--dark {
+    border-color: #333333;
+    background: #1A1E24;
+    color: #EAEAEA;
+}
+
+.theme-picker__swatch--contrast {
+    border: 3px solid #000000;
+    background: #FFFFFF;
+    color: #000000;
+}
+
+.theme-picker__input:checked + .theme-picker__swatch {
+    box-shadow: 0 0 0 3px var(--color-primary);
+}
+
+.theme-picker__input:focus-visible + .theme-picker__swatch {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 4px;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques de feedback: toast-stack / toast, callout, spinner
+   ------------------------------------------------------------------------- */
+
+/* El contenedor es un `popover`: anulamos los estilos por defecto del navegador */
+.toast-stack {
+    position: fixed;
+    inset: auto auto calc(var(--nav-height) + var(--space-4)) 50%;
+    z-index: 4000;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    width: min(92vw, 420px);
+    margin: 0;
+    padding: 0;
+    overflow: visible;
+    border: none;
+    background: transparent;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: var(--space-3) var(--space-4);
+    border-left: 5px solid var(--color-info);
+    border-radius: var(--radius-md);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+    box-shadow: var(--shadow-lg);
+    font-size: 0.9rem;
+    font-weight: 500;
+    pointer-events: none; /* Informativo: nunca debe tapar botones de abajo */
+    animation: toast-in 0.25s var(--ease-bounce);
+}
+
+.toast--success {
+    border-left-color: var(--color-success);
+}
+
+.toast--error {
+    border-left-color: var(--color-error);
+}
+
+.toast--warning {
+    border-left-color: var(--color-warning);
+}
+
+.toast--leaving {
+    animation: toast-out 0.25s ease forwards;
+}
+
+.toast__icon {
+    flex-shrink: 0;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+@keyframes toast-out {
+    to {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+.callout {
+    position: fixed;
+    inset: 0;
+    z-index: 4500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    width: min(90vw, 460px);
+    height: fit-content;
+    margin: auto;
+    padding: var(--space-6) var(--space-5);
+    border: 4px solid #FFFFFF;
+    border-radius: var(--radius-xl);
+    background: rgba(231, 76, 60, 0.96);
+    color: #FFFFFF;
+    box-shadow: var(--shadow-lg);
+    text-align: center;
+    animation: callout-in 0.3s var(--ease-bounce);
+    pointer-events: none; /* Es informativo: no debe bloquear toques en la cancha */
+}
+
+.callout__icon {
+    font-size: 2.5rem;
+}
+
+.callout__title {
+    font-size: clamp(1.5rem, 6vw, 2.2rem);
+    font-weight: 900;
+    line-height: 1.1;
+    text-transform: uppercase;
+}
+
+@keyframes callout-in {
+    from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+}
+
+.spinner {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    background: var(--color-overlay);
+}
+
+.spinner__circle {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--color-warning);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.spinner__text {
+    color: #FFFFFF;
+    font-weight: 700;
+}

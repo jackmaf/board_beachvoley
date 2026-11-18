@@ -1,0 +1,497 @@
+/* =========================================================================
+   ESTADÍSTICAS Y DASHBOARD DE JUGADOR
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Bloque: stats (rejilla de tarjetas)
+   Elemento: __item   Modificador: __item--full (ocupa las dos columnas)
+   ------------------------------------------------------------------------- */
+.stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+    width: 100%;
+    max-width: var(--content-wide);
+}
+
+.stats__item {
+    min-width: 0; /* Evita que tablas anchas desborden la rejilla */
+}
+
+@media (min-width: 768px) {
+    .stats {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stats__item--full {
+        grid-column: 1 / -1;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: source-picker (selector del partido analizado)
+   ------------------------------------------------------------------------- */
+.source-picker {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.source-picker__label {
+    color: var(--color-heading);
+    font-weight: 700;
+}
+
+.source-picker__select {
+    flex: 1 1 240px;
+    width: auto;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: summary (resumen del partido)
+   ------------------------------------------------------------------------- */
+.summary {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    text-align: center;
+}
+
+.summary__score {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
+}
+
+.summary__team {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    min-width: 0;
+}
+
+.summary__team-name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.summary__team--a .summary__team-name {
+    color: var(--color-team-a);
+}
+
+.summary__team--b .summary__team-name {
+    color: var(--color-team-b);
+}
+
+.summary__result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.summary__points {
+    color: var(--color-heading);
+    font-size: 2.2rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.summary__sets {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.summary__meta {
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: player-stats / player-stat (desglose por jugador)
+   ------------------------------------------------------------------------- */
+.player-stats {
+    display: flex;
+    flex-direction: column;
+}
+
+.player-stat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-2);
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.player-stat:last-child {
+    border-bottom: none;
+}
+
+.player-stat__info {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 100px;
+}
+
+.player-stat__name {
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.player-stat__values {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.player-stat__pts {
+    color: var(--color-heading);
+    font-size: 1.1rem;
+    font-weight: 900;
+}
+
+.player-stat__unit {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+
+.player-stat__errs {
+    color: var(--color-error);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.player-stat__actions {
+    display: flex;
+    gap: var(--space-2);
+    width: 100%;
+}
+
+.player-stat__actions > .btn {
+    flex: 1;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: fame-grid / fame-card (Salón de la Fama)
+   ------------------------------------------------------------------------- */
+.fame-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+}
+
+@media (min-width: 600px) {
+    .fame-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+}
+
+.fame-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.fame-card--negative {
+    border-color: rgba(232, 65, 24, 0.35);
+    background: rgba(232, 65, 24, 0.06);
+}
+
+.fame-card__emoji {
+    font-size: 1.8rem;
+}
+
+.fame-card__title {
+    color: var(--color-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.fame-card--negative .fame-card__title {
+    color: var(--color-error);
+}
+
+.fame-card__winner {
+    font-size: 0.9rem;
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.fame-card__value {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--color-surface-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: filters (se combina con .card en el HTML: "mix" de BEM)
+   ------------------------------------------------------------------------- */
+.filters {
+    border-left: 5px solid var(--color-accent);
+}
+
+@media (min-width: 768px) {
+    .filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: var(--space-6);
+    }
+}
+
+.filters__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    grid-column: 1 / -1;
+}
+
+.filters__header .card__title {
+    flex: 1;
+}
+
+.filters__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.filters__group--full {
+    grid-column: 1 / -1;
+}
+
+.filters__label {
+    color: var(--color-heading);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.filters__range {
+    display: flex;
+    gap: var(--space-2);
+}
+
+@media (max-width: 420px) {
+    .filters__range {
+        flex-direction: column;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: timeline (línea de tiempo animada)
+   ------------------------------------------------------------------------- */
+.timeline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.timeline__play {
+    padding: var(--space-2) var(--space-4);
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--color-success);
+    color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.timeline__play:hover {
+    transform: translateY(-2px);
+}
+
+.timeline__play--playing {
+    background: #E67E22;
+    animation: pulse-ring 1.5s infinite;
+}
+
+.timeline__slider {
+    flex: 1;
+    accent-color: var(--color-primary);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: player-dash (contenido del modal del jugador)
+   Modificador: --printing (aplicado durante la exportación a PDF)
+   ------------------------------------------------------------------------- */
+.player-dash__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding-bottom: var(--space-4);
+    border-bottom: 2px solid var(--color-border);
+    text-align: center;
+}
+
+.player-dash__name {
+    color: var(--color-heading);
+    font-size: 1.5rem;
+}
+
+.player-dash__context {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.player-dash__exports {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.player-dash__kpis {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+}
+
+@media (min-width: 600px) {
+    .player-dash__kpis {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.player-dash__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.player-dash__section-title {
+    padding-bottom: var(--space-2);
+    border-bottom: 2px solid var(--color-border-soft);
+    color: var(--color-heading);
+    font-size: 1.05rem;
+    text-align: center;
+}
+
+.player-dash__best-minute {
+    color: var(--color-heading);
+    font-weight: 700;
+}
+
+.player-dash__best-minute strong {
+    color: var(--color-primary);
+}
+
+.player-dash__radar {
+    width: 300px;
+    height: 300px;
+    margin: 0 auto;
+}
+
+/* Durante la captura a PDF: sin límite de alto, sin scroll ni botones */
+.player-dash--printing {
+    width: 800px;
+    max-width: 800px;
+    max-height: none;
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.player-dash--printing .modal__close,
+.player-dash--printing .player-dash__exports {
+    display: none;
+}
+
+/* -------------------------------------------------------------------------
+   Bloques: skill-grid / skill-tile (puntos por gesto técnico)
+   ------------------------------------------------------------------------- */
+.skill-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: var(--space-3);
+}
+
+.skill-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-soft);
+}
+
+.skill-tile__icon {
+    font-size: 1.5rem;
+}
+
+.skill-tile__name {
+    color: var(--color-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.skill-tile__count {
+    color: var(--color-primary);
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: export-btn
+   ------------------------------------------------------------------------- */
+.export-btn {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #FFFFFF;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.export-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.export-btn:disabled {
+    opacity: 0.6;
+}
+
+.export-btn--pdf {
+    background: #E74C3C;
+}
+
+.export-btn--csv {
+    background: #27AE60;
+}
+
+.export-btn--json {
+    background: #F39C12;
+}

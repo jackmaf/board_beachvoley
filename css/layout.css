@@ -1,0 +1,121 @@
+/* =========================================================================
+   LAYOUT
+   Bloques estructurales de la aplicación: cabecera, contenedor principal,
+   vistas y barra de navegación inferior.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Bloque: app-header
+   ------------------------------------------------------------------------- */
+.app-header {
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+
+.app-header__title {
+    font-size: 1.25rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+@media (min-width: 600px) {
+    .app-header {
+        padding: var(--space-4);
+    }
+
+    .app-header__title {
+        font-size: 1.5rem;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: app-main (deja hueco para la barra inferior fija)
+   ------------------------------------------------------------------------- */
+.app-main {
+    flex: 1;
+    padding-bottom: calc(var(--nav-height) + var(--space-4));
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: view (cada pantalla de la SPA)
+   Modificador --active: la vista visible.
+   ------------------------------------------------------------------------- */
+.view {
+    display: none;
+    width: 100%;
+    padding: var(--space-5) var(--space-4);
+}
+
+.view--active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
+    animation: fade-in-up 0.4s ease-out;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: bottom-nav
+   Elementos: __item, __icon, __label
+   Modificador: __item--active
+   ------------------------------------------------------------------------- */
+.bottom-nav {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-around;
+    min-height: var(--nav-height);
+    padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
+    background: var(--color-strong);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.bottom-nav__item {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: var(--space-1);
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: color var(--transition-base), transform var(--transition-base);
+}
+
+.bottom-nav__icon {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.bottom-nav__item:hover:not(:disabled) {
+    color: var(--color-on-strong);
+}
+
+.bottom-nav__item:disabled {
+    opacity: 0.3;
+}
+
+.bottom-nav__item--active {
+    color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+[data-theme="high-contrast"] .bottom-nav__item--active {
+    color: var(--color-secondary);
+}
+
+@media (min-width: 600px) {
+    .bottom-nav__item {
+        font-size: 0.85rem;
+    }
+}

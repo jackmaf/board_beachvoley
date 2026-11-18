@@ -1,6 +1,6 @@
 # 🏐 Voley Playa Scout - Sistema de Estadísticas en Tiempo Real
 
-**Voley Playa Scout** es una aplicación web progresiva y ligera diseñada para entrenadores y analistas de voley playa (2 vs 2). Permite registrar cada punto del partido de forma táctil e interactiva, generando estadísticas automáticas y un mapa de calor para analizar el rendimiento de los jugadores.
+**Voley Playa Scout** es una aplicación web progresiva y ligera diseñada para entrenadores y analistas de voley playa (2 vs 2). Organiza torneos y permite registrar cada punto del partido de forma táctil e interactiva, generando estadísticas automáticas y un mapa de calor para analizar el rendimiento de los jugadores.
 
 ![Voley Playa Scout](https://img.shields.io/badge/Versi%C3%B3n-1.0-orange?style=for-the-badge)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
@@ -62,16 +62,38 @@ La aplicación utiliza un diseño **Glassmorphism** moderno con una paleta de co
 
 ## 📄 Estructura del Proyecto
 
-- `index.html`: Estructura semántica de las tres vistas (Config, Registro, Stats).
-- `style.css`: Sistema de diseño, animaciones y estilos de la cancha.
-- `app.js`: Lógica de estado, manejo de eventos y cálculos estadísticos.
+```
+index.html        Vistas, modales (<dialog>) y carga de scripts
+css/              Estilos con metodología BEM (tokens → base → layout → componentes → vistas)
+js/core/          Lógica pura y testeada: reglas, torneos, estadísticas
+js/services/      Persistencia (localStorage) y exportaciones
+js/state/         Store del partido en curso
+js/ui/            Router, diálogos, avisos y utilidades de DOM
+js/views/         Una vista por pantalla
+tests/            Tests unitarios (node:test)
+```
+
+La arquitectura completa, con diagramas, está en [CLAUDE.md](CLAUDE.md).
+
+### Tests
+
+```bash
+npm test   # Node 18 o superior, sin dependencias
+```
 
 ---
 
+## ✅ Hecho desde la v1
+- [x] Exportación a PDF, CSV y JSON.
+- [x] Registro de gesto técnico (7 gestos).
+- [x] Tiempos muertos y cronómetro oficial.
+- [x] Torneos (Round Robin con clasificación y Eliminación Directa con llaves).
+- [x] Historial de partidos y copia de seguridad.
+
 ## 💡 Futuras Mejoras (Roadmap)
-- [ ] Exportación de datos a PDF o Excel.
-- [ ] Registro de tipo de golpe (Saque, Remate, Bloqueo).
-- [ ] Cronómetro de tiempos muertos.
+- [ ] Avatares sin conexión (hoy dependen de DiceBear).
+- [ ] Comparativa entre partidos de un mismo jugador.
+- [ ] Instalable como PWA (funcionamiento offline).
 
 ---
 Desarrollado con ❤️ para la comunidad de Voley Playa.
