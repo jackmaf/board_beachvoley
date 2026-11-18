@@ -38,6 +38,9 @@
      * @property {number|null} matchStartTime Epoch del primer punto (legacy)
      * @property {string|null} tournamentId
      * @property {string|null} tournamentMatchId
+     *
+     * Cada rally de `points` guarda además `servingTeam` (quién sacó) y,
+     * opcionalmente, `reception: { playerId, grade }` (calidad 0-3).
      */
 
     /** Set vacío. */
@@ -129,16 +132,12 @@
     const countRallies = () => state.points.filter((p) => p.tipoAccion !== ACTION.TIMEOUT).length;
 
     /**
-     * ¿Qué equipo saca? En voley playa saca quien ganó el último punto.
-     * Al inicio se asume el equipo A.
+     * ¿Qué equipo saca el próximo rally? Saca quien ganó el rally anterior del
+     * set; al empezar cada set, quien corresponda por alternancia según el
+     * "Saque inicial" elegido en Config (ver rules.getServingTeam).
      */
-    function getServingTeam() {
-        for (let i = state.points.length - 1; i >= 0; i--) {
-            const winner = rules.getPointWinner(state.points[i]);
-            if (winner) return winner;
-        }
-        return 'A';
-    }
+    const getServingTeam = () =>
+        rules.getServingTeam(state.points, state.currentSetIndex, state.config?.firstServer || 'A');
 
     // ---------------------------------------------------------------------
     // Cronómetro oficial
@@ -193,7 +192,7 @@
         clearInterval(timerInterval);
         state = {
             ...createEmptyMatch(),
-            config: { ...config, ...rules.normalizeRules(config) },
+            config: { ...config, ...rules.normalizeRules(config), firstServer: config.firstServer === 'B' ? 'B' : 'A' },
             tournamentId: link.tournamentId || null,
             tournamentMatchId: link.tournamentMatchId || null
         };
@@ -203,7 +202,7 @@
     /** Cambia nombres o reglas sin perder lo jugado (p. ej. corregir un nombre). */
     function updateConfig(config) {
         if (!hasMatch()) return;
-        state.config = { ...state.config, ...config, ...rules.normalizeRules(config) };
+        state.config = { ...state.config, ...config, ...rules.normalizeRules(config), firstServer: config.firstServer === 'B' ? 'B' : 'A' };
         commit();
     }
 
@@ -252,7 +251,8 @@
 
         const set = getCurrentSet();
         const setIndex = state.currentSetIndex;
-        const point = { ...partialPoint };
+        // Quién sacó este rally: se calcula ANTES de sumar el punto
+        const point = { ...partialPoint, servingTeam: getServingTeam() };
         const pointWinner = rules.getPointWinner(point);
 
         if (pointWinner === 'A') set.scoreA++;
@@ -301,16 +301,20 @@
      * @param {'punto'|'error'} action.actionType
      * @param {string} action.actionDetail Gesto técnico.
      * @param {{x:number,y:number}} action.coords Posición en % de la cancha.
+     * @param {{playerId:string, grade:number}} [action.reception] Recepción del rally
+     *        (opcional): quién recibió el saque y con qué calidad (0-3).
      * @returns {PointOutcome}
      */
-    function registerAction({ team, playerId, actionType, actionDetail, coords }) {
-        return applyPoint({
+    function registerAction({ team, playerId, actionType, actionDetail, coords, reception }) {
+        const point = {
             equipo: team,
             jugadorId: playerId,
             tipoAccion: actionType,
             actionDetail,
             coordenadas: { x: coords.x, y: coords.y }
-        });
+        };
+        if (reception) point.reception = { playerId: reception.playerId, grade: reception.grade };
+        return applyPoint(point);
     }
 
     /**

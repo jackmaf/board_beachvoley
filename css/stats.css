@@ -505,3 +505,202 @@
 .export-btn--json {
     background: #F39C12;
 }
+
+/* -------------------------------------------------------------------------
+   Bloque: pro-stats (tarjeta "Indicadores profesionales")
+   ------------------------------------------------------------------------- */
+.pro-stats__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.pro-stats__tables {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+}
+
+@media (min-width: 768px) {
+    .pro-stats__tables {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.pro-stats__section {
+    min-width: 0;
+}
+
+.pro-stats__subtitle {
+    margin-bottom: var(--space-2);
+    color: var(--color-heading);
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.pro-stats__empty {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-soft);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+.pro-stats__grade-cell,
+.pro-stats__player-cell {
+    text-align: left;
+    white-space: nowrap;
+}
+
+.pro-stats__dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: var(--space-1);
+    border-radius: 50%;
+}
+
+.pro-stats__dot--a {
+    background: var(--color-team-a);
+}
+
+.pro-stats__dot--b {
+    background: var(--color-team-b);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: versus (comparativa A vs B con barras enfrentadas)
+   Cada fila: etiqueta arriba; debajo valor A | barra A ← centro → barra B | valor B
+   ------------------------------------------------------------------------- */
+.versus {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.versus__head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+    font-weight: 900;
+}
+
+.versus__team {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.versus__team--a {
+    color: var(--color-team-a);
+}
+
+.versus__team--b {
+    color: var(--color-team-b);
+    text-align: right;
+}
+
+.versus__row {
+    display: grid;
+    grid-template-areas:
+        'label label label label'
+        'value-a track-a track-b value-b';
+    grid-template-columns: minmax(70px, auto) 1fr 1fr minmax(70px, auto);
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+}
+
+.versus__label {
+    grid-area: label;
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.versus__value {
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.versus__value--a {
+    grid-area: value-a;
+}
+
+.versus__value--b {
+    grid-area: value-b;
+    text-align: right;
+}
+
+/* El equipo que gana la métrica se resalta con su color */
+.versus__value--lead.versus__value--a {
+    color: var(--color-team-a);
+    font-weight: 900;
+}
+
+.versus__value--lead.versus__value--b {
+    color: var(--color-team-b);
+    font-weight: 900;
+}
+
+.versus__sample {
+    color: var(--color-text-subtle);
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.versus__track {
+    display: flex;
+    height: 10px;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface-muted);
+}
+
+/* La barra de A crece desde el centro hacia la izquierda */
+.versus__track--a {
+    grid-area: track-a;
+    justify-content: flex-end;
+}
+
+.versus__track--b {
+    grid-area: track-b;
+}
+
+.versus__bar {
+    height: 100%;
+    transition: width 0.5s ease;
+}
+
+.versus__bar--a {
+    background: var(--color-team-a);
+}
+
+.versus__bar--b {
+    background: var(--color-team-b);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: grade-badge (nota de recepción 0-3 en tablas)
+   ------------------------------------------------------------------------- */
+.grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 900;
+}
+
+.grade-badge--g3 { background: var(--color-grade-3); }
+.grade-badge--g2 { background: var(--color-grade-2); }
+.grade-badge--g1 { background: var(--color-grade-1); }
+.grade-badge--g0 { background: var(--color-grade-0); }

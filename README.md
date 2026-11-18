@@ -10,7 +10,7 @@ todo desde el navegador y sin instalar nada.
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3 BEM](https://img.shields.io/badge/CSS3-BEM-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JS-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Tests](https://img.shields.io/badge/tests-24%20passing-2ea44f?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-29%20passing-2ea44f?style=for-the-badge)
 ![Dependencias](https://img.shields.io/badge/dependencias-0-blueviolet?style=for-the-badge)
 
 <img src="docs/screenshots/scout.png" alt="Registro táctico: menú para elegir jugador, tipo de acción y gesto técnico" width="520">
@@ -47,6 +47,7 @@ todo desde el navegador y sin instalar nada.
 - Cancha de **8 m × 16 m** con **zona libre** alrededor para marcar balones que caen fuera.
 - Por cada acción: **punto (winner)** o **error no forzado**, **jugador** y **gesto técnico** (Ataque, Saque, Bloqueo, Antebrazos, Garrita, Toque, Dedos).
 - Marcador automático (un error suma al rival), sets, tie-break, **tiempos muertos**, indicador de saque y avisos de **fin de set** y **cambio de lado**.
+- **Calidad de recepción (0-3)** opcional en cada rally: un toque sobre el receptor registra quién recibió y cómo.
 - **Cronómetro oficial** (arranca solo con el primer punto y sobrevive a recargas) y reloj de referencia de Bogotá.
 - **Deshacer** cualquier acción, incluso la que cerró un set.
 
@@ -57,6 +58,7 @@ todo desde el navegador y sin instalar nada.
 ### 📊 Estadísticas
 - Analiza el **partido en curso o cualquiera del historial**.
 - Resumen (marcador, sets, duración), desglose por jugador y **Salón de la Fama** con 9 premios.
+- **Indicadores profesionales**: **side-out %** (puntos ganados recibiendo), **break point %** (puntos ganados sacando), aces, errores de saque, **recepción media 0-3**, % de recepciones positivas, **side-out según la calidad de recepción** y ranking de receptores. Los partidos antiguos también los muestran: el saque se reconstruye a partir de la secuencia de puntos.
 - **Filtros** por jugador, tipo de acción, gesto, set y rango de minutos, además de una **línea de tiempo animada** que reproduce el partido.
 - **Mapa de calor** numerado (los errores llevan borde) y **bitácora** con coordenadas en metros.
 
@@ -113,8 +115,8 @@ npx serve .
 ## 📖 Guía de uso
 
 ### Partido amistoso
-1. **Config** → nombres de las duplas y los jugadores, y reglas (sets y puntos) → **Empezar partido**.
-2. **Scout** → toca la cancha donde cayó el balón → elige **Punto/Error**, el **gesto** y el **jugador**.
+1. **Config** → nombres de las duplas y los jugadores, reglas (sets y puntos) y **saque inicial** → **Empezar partido**.
+2. **Scout** → toca la cancha donde cayó el balón → elige **Punto/Error**, el **gesto**, opcionalmente la **recepción** (3·2·1·0 sobre quien recibió) y el **jugador** responsable.
 3. Al terminar → **Finalizar y guardar partido**: se abre **Stats** con ese partido.
 
 ### Partido de torneo
@@ -143,6 +145,8 @@ npx serve .
 | Puntos del tie-break (último set) | 15 | ✅ |
 | Ventaja mínima para cerrar un set | 2 puntos | — |
 | Tiempos muertos | 1 por equipo y set | — |
+| Saque | Saca quien gana el rally; el saque inicial se alterna en cada set | Saque inicial |
+| Calidad de recepción | 3 perfecta · 2 buena · 1 mala · 0 error/ace (positiva = 2-3) | — |
 | Cambio de lado | Cada 7 puntos (5 en tie-break) | — |
 | Clasificación Round Robin | Victoria 2 pts · derrota 1 pt | — |
 
@@ -216,8 +220,8 @@ board_beachvoley/
 npm test
 ```
 
-Ejecuta 24 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
-motor de reglas, la generación de llaves y los BYE, la clasificación, los filtros y los KPIs.
+Ejecuta 29 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
+motor de reglas y del saque, la generación de llaves y los BYE, la clasificación, los filtros, los KPIs y los indicadores profesionales (side-out, break point y recepción).
 
 ### Convenciones
 

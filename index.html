@@ -125,6 +125,14 @@
                                 <input class="form-field__input" type="number" id="input-pts-tiebreak" value="15"
                                     min="1" max="50" inputmode="numeric">
                             </div>
+                            <div class="form-field">
+                                <label class="form-field__label" for="input-first-server">Saque inicial</label>
+                                <!-- Necesario para calcular side-out y break point; se alterna en cada set -->
+                                <select class="form-field__input" id="input-first-server">
+                                    <option value="A" selected>Equipo A</option>
+                                    <option value="B">Equipo B</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -254,6 +262,16 @@
                         <div class="action-menu__group action-menu__group--wrap" id="action-detail-group"
                             role="radiogroup" aria-label="Gesto técnico"></div>
 
+                        <!-- Calidad de recepción (opcional): un toque = quién recibió + calidad 0-3 -->
+                        <div class="reception" id="reception-group">
+                            <p class="reception__title">
+                                Recepción de <strong id="reception-team">Eq. B</strong>
+                                <span class="reception__optional">(opcional)</span>
+                            </p>
+                            <div class="reception__rows" id="reception-rows"></div>
+                            <p class="reception__legend">3 perfecta · 2 buena · 1 mala · 0 error/ace</p>
+                        </div>
+
                         <div class="action-menu__players">
                             <button type="button" class="player-btn player-btn--a" data-player="A1" data-team="A">
                                 <img class="player-btn__avatar" src="" alt="">
@@ -360,6 +378,17 @@
                     <h2 class="card__title">Desglose por jugador</h2>
                     <p class="card__hint">Pulsa «Heptagrama» para abrir el reporte analítico del jugador.</p>
                     <div class="player-stats" id="players-stats-container"></div>
+                </div>
+
+                <div class="card stats__item stats__item--full pro-stats">
+                    <h2 class="card__title">📈 Indicadores profesionales</h2>
+                    <p class="card__hint">
+                        <strong>Side-out</strong>: % de puntos ganados recibiendo ·
+                        <strong>Break point</strong>: % de puntos ganados sacando ·
+                        <strong>Recepción</strong>: escala 0-3
+                    </p>
+                    <!-- Generado por stats-view.js → renderProIndicators() -->
+                    <div class="pro-stats__body" id="pro-indicators"></div>
                 </div>
 
                 <div class="card stats__item stats__item--full">
@@ -740,6 +769,12 @@
                 <p class="player-dash__best-minute">
                     👑 Minuto más productivo: <strong id="dash-best-minute">--</strong>
                 </p>
+            </section>
+
+            <section class="player-dash__section" aria-labelledby="dash-reception-title">
+                <h3 id="dash-reception-title" class="player-dash__section-title">Recepción (escala 0-3)</h3>
+                <!-- Generado por player-dashboard.js → renderReception() -->
+                <div id="dash-reception" class="player-dash__reception"></div>
             </section>
 
             <section class="player-dash__section" aria-labelledby="dash-heatmap-title">

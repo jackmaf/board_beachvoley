@@ -54,6 +54,12 @@
     --color-warning: #F39C12;
     --color-info: #3498DB;
 
+    /* --- Calidad de recepción (escala 0-3) -------------------------------- */
+    --color-grade-3: #27AE60;
+    --color-grade-2: #7FB800;
+    --color-grade-1: #F39C12;
+    --color-grade-0: #E84118;
+
     /* --- Cancha ----------------------------------------------------------- */
     --color-court: #E3C5B5;
     --color-court-line: #FFFFFF;

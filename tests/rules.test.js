@@ -66,3 +66,19 @@ test('evaluateManualResult valida el resultado manual', () => {
     assert.equal(rules.evaluateManualResult([{ a: 21, b: 18 }, { a: 21, b: 10 }, { a: 15, b: 3 }], BEST_OF_3).ok, false, 'set de más');
     assert.equal(rules.evaluateManualResult([{ a: 21, b: null }], BEST_OF_3).ok, false, 'set a medias');
 });
+
+test('el saque inicial se alterna en cada set', () => {
+    assert.equal(rules.getSetFirstServer(0, 'A'), 'A');
+    assert.equal(rules.getSetFirstServer(1, 'A'), 'B');
+    assert.equal(rules.getSetFirstServer(2, 'A'), 'A');
+    assert.equal(rules.getSetFirstServer(1, 'B'), 'A');
+});
+
+test('saca quien ganó el rally anterior del mismo set', () => {
+    const p = (setNumber, equipo, tipoAccion = 'punto') => ({ setNumber, equipo, tipoAccion });
+    assert.equal(rules.getServingTeam([], 0, 'B'), 'B', 'sin puntos: saque inicial');
+    assert.equal(rules.getServingTeam([p(1, 'A')], 0, 'B'), 'A');
+    assert.equal(rules.getServingTeam([p(1, 'A'), p(1, 'A', 'error')], 0), 'B', 'error de A → punto y saque para B');
+    assert.equal(rules.getServingTeam([p(1, 'A'), { setNumber: 1, equipo: 'B', tipoAccion: 'timeout' }], 0), 'A', 'el timeout no cambia el saque');
+    assert.equal(rules.getServingTeam([p(1, 'A')], 1, 'A'), 'B', 'set 2 empieza con el saque alternado');
+});

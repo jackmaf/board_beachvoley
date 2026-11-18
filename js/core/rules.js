@@ -139,6 +139,48 @@
         return total > 0 && total % every === 0 && !isSetFinished(set, setIndex, rules);
     }
 
+    // ---------------------------------------------------------------------
+    // Saque
+    // ---------------------------------------------------------------------
+
+    /**
+     * Equipo que saca el primer rally de un set.
+     * El saque inicial del partido se alterna en cada set (A, B, A…): en el
+     * reglamento, quien no sacó primero en el set 1 saca primero en el set 2.
+     * (El set decisivo se sortea en la realidad; aquí se mantiene la alternancia
+     * por simplicidad.)
+     *
+     * @param {number} setIndex 0-based.
+     * @param {'A'|'B'} [firstServer='A'] Quién sacó primero en el set 1.
+     * @returns {'A'|'B'}
+     */
+    function getSetFirstServer(setIndex, firstServer = 'A') {
+        const first = firstServer === 'B' ? 'B' : 'A';
+        return setIndex % 2 === 0 ? first : opponentOf(first);
+    }
+
+    /**
+     * Equipo que tiene el saque en el PRÓXIMO rally del set indicado.
+     * En voley playa saca quien ganó el rally anterior (rally point); si el
+     * set aún no tiene puntos, saca quien le corresponde por alternancia.
+     *
+     * @param {Array} points Bitácora completa del partido.
+     * @param {number} setIndex Set en juego (0-based).
+     * @param {'A'|'B'} [firstServer='A']
+     * @returns {'A'|'B'}
+     */
+    function getServingTeam(points, setIndex, firstServer = 'A') {
+        const setNumber = setIndex + 1;
+        for (let i = points.length - 1; i >= 0; i--) {
+            const pointSet = points[i].setNumber || 1;
+            if (pointSet < setNumber) break; // Ya pasamos al set anterior
+            if (pointSet > setNumber) continue;
+            const winner = getPointWinner(points[i]);
+            if (winner) return winner;
+        }
+        return getSetFirstServer(setIndex, firstServer);
+    }
+
     /**
      * Valida un resultado introducido a mano (pantalla "Colocar marcador").
      *
@@ -196,6 +238,8 @@
         countSetsWon,
         getMatchWinner,
         isSideChange,
+        getSetFirstServer,
+        getServingTeam,
         evaluateManualResult
     });
 

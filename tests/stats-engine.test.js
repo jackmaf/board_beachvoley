@@ -79,3 +79,61 @@ test('la bitácora calcula los metros desde las coordenadas', () => {
     assert.equal(row.yMeters, '12.0'); // 75 % de 16 m
     assert.equal(stats.toLogRow(points[2]).xMeters, '-', 'los tiempos muertos no tienen coordenadas');
 });
+
+// -------------------------------------------------------------------------
+// Indicadores profesionales
+// -------------------------------------------------------------------------
+
+test('withServingTeam reconstruye el saque en partidos antiguos', () => {
+    const legacy = [
+        point({ equipo: 'A', tipoAccion: 'punto', setNumber: 1 }),    // saca A (inicial) y gana A
+        point({ equipo: 'A', tipoAccion: 'error', setNumber: 1 }),    // saca A, gana B
+        point({ equipo: 'B', tipoAccion: 'timeout', setNumber: 1 }),
+        point({ equipo: 'B', tipoAccion: 'punto', setNumber: 1 }),    // saca B
+        point({ equipo: 'B', tipoAccion: 'punto', setNumber: 2 })     // set 2: saca B por alternancia
+    ];
+    const served = stats.withServingTeam(legacy, 'A');
+    assert.deepEqual(served.map((p) => p.servingTeam), ['A', 'A', undefined, 'B', 'B']);
+    assert.equal(stats.withServingTeam([point({ servingTeam: 'B' })], 'A')[0].servingTeam, 'B', 'respeta el dato grabado');
+});
+
+test('side-out, break point, aces y errores de saque', () => {
+    const rallies = [
+        point({ servingTeam: 'A', equipo: 'A', tipoAccion: 'punto', actionDetail: 'Saque' }), // ace de A → break A
+        point({ servingTeam: 'A', equipo: 'B', tipoAccion: 'punto' }),                        // side-out B
+        point({ servingTeam: 'B', equipo: 'B', tipoAccion: 'error', actionDetail: 'Saque' }), // error de saque B → side-out A
+        point({ servingTeam: 'A', equipo: 'A', tipoAccion: 'punto' })                         // break A
+    ];
+    const { teams } = stats.computeProIndicators(rallies);
+    assert.equal(teams.A.served, 3);
+    assert.equal(teams.A.breakWon, 2);
+    assert.ok(Math.abs(teams.A.breakPct - 66.67) < 0.01);
+    assert.equal(teams.A.sideOutPct, 100);
+    assert.equal(teams.B.sideOutPct, (1 / 3) * 100);
+    assert.equal(teams.B.breakPct, 0);
+    assert.equal(teams.A.aces, 1);
+    assert.equal(teams.B.serveErrors, 1);
+});
+
+test('calidad de recepción: media, positivas y side-out por calidad', () => {
+    const rallies = [
+        point({ servingTeam: 'B', equipo: 'A', reception: { playerId: 'A1', grade: 3 } }),                     // A recibe 3 y gana
+        point({ servingTeam: 'B', equipo: 'A', reception: { playerId: 'A1', grade: 2 } }),                     // A recibe 2 y gana
+        point({ servingTeam: 'B', equipo: 'A', tipoAccion: 'error', reception: { playerId: 'A2', grade: 1 } }), // A recibe 1 y pierde
+        point({ servingTeam: 'B', equipo: 'B', actionDetail: 'Saque', reception: { playerId: 'A2', grade: 0 } }) // ace sobre A2
+    ];
+    const pro = stats.computeProIndicators(rallies);
+    const rec = pro.teams.A.reception;
+    assert.equal(pro.hasReceptionData, true);
+    assert.equal(rec.count, 4);
+    assert.equal(rec.average, 1.5);
+    assert.equal(rec.positivePct, 50);
+    assert.equal(rec.perfectPct, 25);
+    assert.equal(pro.players.A1.average, 2.5);
+    assert.equal(pro.players.A2.sideOutPct, 0);
+    assert.equal(pro.byGrade.A[3].sideOutPct, 100);
+    assert.equal(pro.byGrade.A[1].sideOutPct, 0);
+    assert.equal(pro.teams.B.aces, 1);
+    assert.equal(pro.players.B1.count, 0);
+    assert.equal(pro.players.B1.average, null, 'sin muestra → null (se muestra "—")');
+});

@@ -142,7 +142,7 @@ flowchart TB
 |---|---|---|
 | **Módulos IIFE + namespace `VP`** | Todos los `js/*` | Encapsulan; funcionan con `file://` (los ES Modules no). Los de `core/` además exportan `module.exports` para Node. |
 | **Store + observador** | `match-store.js` | Única fuente de verdad; las vistas se suscriben a `'change'` / `'tick'` y se repintan. |
-| **Funciones puras** | `core/*` | Lógica de dominio aislada y cubierta por 24 tests. |
+| **Funciones puras** | `core/*` | Lógica de dominio aislada y cubierta por 29 tests. |
 | **Repositorio** | `storage.js` | Un solo punto de lectura/escritura, tolerante a JSON corrupto. |
 | **Delegación de eventos** | `dom.delegate` | Sustituye a los `onclick="fn('${nombre}')"` inline (rompían con apóstrofes y exigían globales). |
 | **Escapado de HTML** | `utils.escapeHtml` | Todo texto del usuario pasa por aquí antes de `innerHTML` (anti-XSS). |
@@ -239,6 +239,8 @@ erDiagram
         string jugadorId "A1..B2 | Eq.A | Fast_A"
         string tipoAccion "punto | error | timeout"
         string actionDetail
+        string servingTeam "quién sacó el rally"
+        object reception "playerId + grade 0-3 (opcional)"
         object coordenadas "% de la cancha"
         string marcadorMomento
         int setNumber
@@ -317,7 +319,26 @@ flowchart LR
     F --> G
 ```
 
-### 6.4 Pipeline de estadísticas
+### 6.4 Indicadores profesionales (side-out, break point, recepción)
+
+Cada rally guarda **quién sacó** (`servingTeam`, calculado por `rules.getServingTeam`: saca quien ganó el
+rally anterior; el primer rally de cada set lo saca el equipo que toca por alternancia según
+`config.firstServer`) y, opcionalmente, **la recepción** (`reception: { playerId, grade }`, escala 0-3).
+
+```mermaid
+flowchart LR
+    P["points[] completos"] --> W["withServingTeam<br/>(reconstruye el saque en partidos antiguos)"]
+    W --> F[filtros: tiempo y set]
+    F --> PRO["computeProIndicators"]
+    PRO --> SO["Side-out % = ganados recibiendo / recibidos"]
+    PRO --> BP["Break point % = ganados sacando / sacados"]
+    PRO --> REC["Recepción: media, % 2-3, % 3,<br/>side-out por calidad, receptores"]
+```
+
+`withServingTeam` debe aplicarse a la bitácora **completa** antes de filtrar, porque la reconstrucción
+necesita la secuencia entera. En partidos antiguos sin `firstServer` se asume que sacó primero el equipo A.
+
+### 6.5 Pipeline de estadísticas
 
 ```mermaid
 flowchart LR
@@ -359,7 +380,7 @@ flowchart LR
 ## 8. Cómo probar
 
 ```bash
-npm test          # 24 tests unitarios de js/core (reglas, torneos, estadísticas)
+npm test          # 29 tests unitarios de js/core (reglas, saque, torneos, estadísticas)
 ```
 
 Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless (Puppeteer, fuera del repo) con 56 comprobaciones: partidos completos, deshacer entre sets, filtros, dashboard y radar, torneos con BYE, resultado manual, Marcador Vivo con teclado, tema oscuro, móvil sin scroll horizontal, migración de datos v1, backup y descargas PDF/CSV/JSON.

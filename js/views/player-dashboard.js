@@ -9,7 +9,7 @@
     const VP = (root.VP = root.VP || {});
     const { byId, openModal } = VP.dom;
     const { getAvatarUrl } = VP.utils;
-    const { SKILLS } = VP.constants;
+    const { SKILLS, RECEPTION_GRADES } = VP.constants;
     const { toast } = VP.feedback;
 
     /** Datos del reporte abierto (los usan los botones de exportar). */
@@ -40,6 +40,40 @@
             dot.style.top = `${coords.y}%`;
             el.heatmap.appendChild(dot);
         });
+    }
+
+    /**
+     * Bloque de recepción: KPIs (recepciones, media, % positivas) y
+     * distribución por calidad 3·2·1·0 reutilizando el componente zone-bar.
+     * @param {Object} reception Resultado de statsEngine.computeProIndicators().players[id]
+     */
+    function renderReception(reception) {
+        if (!reception.count) {
+            el.reception.innerHTML = `
+                <p class="empty-state__text">
+                    Sin recepciones registradas. En Scout, marca 3·2·1·0 sobre este jugador cuando reciba.
+                </p>`;
+            return;
+        }
+        const pct = (v) => (v === null ? '—' : `${Math.round(v)}%`);
+        const bars = RECEPTION_GRADES.map((g) => {
+            const count = reception.grades[g.grade];
+            const share = (count / reception.count) * 100;
+            return `
+                <div class="zone-bar">
+                    <span class="zone-bar__label"><span class="grade-badge grade-badge--g${g.grade}">${g.grade}</span></span>
+                    <div class="zone-bar__track"><div class="zone-bar__fill zone-bar__fill--g${g.grade}" style="width:${share}%"></div></div>
+                    <span class="zone-bar__value">${count}</span>
+                </div>`;
+        }).join('');
+
+        el.reception.innerHTML = `
+            <div class="player-dash__kpis">
+                <div class="kpi"><span class="kpi__label">Recepciones</span><strong class="kpi__value kpi__value--neutral">${reception.count}</strong></div>
+                <div class="kpi"><span class="kpi__label">Media</span><strong class="kpi__value">${reception.average.toFixed(2)}</strong><span class="kpi__sub">sobre 3</span></div>
+                <div class="kpi"><span class="kpi__label">Positivas (2-3)</span><strong class="kpi__value kpi__value--accent">${pct(reception.positivePct)}</strong><span class="kpi__sub">Side-out tras recibir: ${pct(reception.sideOutPct)}</span></div>
+            </div>
+            ${bars}`;
     }
 
     function renderSkills(skills) {
@@ -147,13 +181,15 @@
     /**
      * Abre el dashboard de un jugador.
      * @param {Object} params
-     * @param {Array} params.points   Registros (filtrados por línea de tiempo y set).
+     * @param {Array} params.points   Registros con `servingTeam` (filtrados por línea de tiempo y set).
      * @param {string} params.playerId 'A1'…'B2'
      * @param {Object} params.config  Config del partido analizado.
      * @param {'all'|number} params.set Filtro de set activo.
      */
     function open({ points, playerId, config, set }) {
         const profile = VP.statsEngine.computePlayerProfile(points, playerId);
+        // La recepción la registra el rally (no la acción del jugador), por eso va aparte
+        const reception = VP.statsEngine.computeProIndicators(points).players[playerId];
         const playerName = config[`p${playerId}`] || playerId;
         const teamName = profile.team === 'A' ? config.teamA : config.teamB;
 
@@ -162,7 +198,8 @@
             playerId,
             teamName,
             setLabel: set === 'all' ? 'All' : `Set_${set}`,
-            profile
+            profile,
+            reception
         };
 
         // Cabecera
@@ -186,6 +223,7 @@
             ? `Minuto ${profile.bestMinute.minute} (${profile.bestMinute.count} pts)`
             : 'Ninguno aún';
 
+        renderReception(reception);
         renderHeatmap(profile.heatPoints, profile.team);
         renderSkills(profile.skills);
         openModal(el.dialog);
@@ -224,6 +262,7 @@
             zoneRValue: byId('dash-zone-r-val'),
             bestMinute: byId('dash-best-minute'),
             heatmap: byId('dash-heatmap-points'),
+            reception: byId('dash-reception'),
             skills: byId('dash-skills-grid'),
             radar: byId('player-radar-chart')
         };

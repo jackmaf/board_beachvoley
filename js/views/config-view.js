@@ -45,7 +45,15 @@
         config.maxSets = toInt(byId('input-max-sets').value, 3);
         config.ptsNormal = toInt(byId('input-pts-normal').value, 21);
         config.ptsTiebreak = toInt(byId('input-pts-tiebreak').value, 15);
+        config.firstServer = byId('input-first-server').value === 'B' ? 'B' : 'A';
         return config;
+    }
+
+    /** Las opciones de "Saque inicial" muestran el nombre real de cada dupla. */
+    function syncFirstServerLabels() {
+        const select = byId('input-first-server');
+        select.options[0].textContent = `🏐 ${byId('input-team-a').value.trim() || 'Equipo A'}`;
+        select.options[1].textContent = `🏐 ${byId('input-team-b').value.trim() || 'Equipo B'}`;
     }
 
     /** Rellena el formulario con una config (al volver a la vista o precargar un torneo). */
@@ -56,6 +64,8 @@
         byId('input-max-sets').value = config.maxSets || 3;
         byId('input-pts-normal').value = config.ptsNormal || 21;
         byId('input-pts-tiebreak').value = config.ptsTiebreak || 15;
+        byId('input-first-server').value = config.firstServer === 'B' ? 'B' : 'A';
+        syncFirstServerLabels();
     }
 
     /** Ajusta textos y botones según haya (o no) partido en curso. */
@@ -135,6 +145,7 @@
         if (!accepted) return;
         store.discard();
         byId('config-form').reset();
+        syncFirstServerLabels();
         render();
         toast('Partido descartado.', { type: 'info' });
     }
@@ -208,6 +219,8 @@
 
     function init() {
         byId('config-form').addEventListener('submit', handleSubmit);
+        byId('input-team-a').addEventListener('input', syncFirstServerLabels);
+        byId('input-team-b').addEventListener('input', syncFirstServerLabels);
         byId('btn-discard-match').addEventListener('click', handleDiscard);
 
         applyTheme(VP.storage.getTheme());

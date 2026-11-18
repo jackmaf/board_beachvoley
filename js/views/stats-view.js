@@ -12,7 +12,7 @@
     const VP = (root.VP = root.VP || {});
     const { byId, delegate, setActivePill } = VP.dom;
     const { escapeHtml, formatDuration, getAvatarUrl, getTeamLogoUrl, debounce, toInt, toMatchMinute } = VP.utils;
-    const { SKILLS, PLAYER_IDS, ACTION, SPINNER_THRESHOLD } = VP.constants;
+    const { SKILLS, PLAYER_IDS, ACTION, SPINNER_THRESHOLD, RECEPTION_GRADES } = VP.constants;
     const stats = VP.statsEngine;
     const store = VP.matchStore;
 
@@ -37,6 +37,13 @@
         const history = VP.storage.getHistory();
         return Number.isInteger(source) ? history[source] || null : null;
     }
+
+    /**
+     * Bitácora del partido con `servingTeam` en cada rally (los partidos
+     * antiguos lo reconstruyen). Se calcula sobre la bitácora COMPLETA,
+     * antes de aplicar filtros.
+     */
+    const getAnnotatedPoints = (match) => stats.withServingTeam(match.points, match.config?.firstServer);
 
     /** Etiqueta "A vs B · 2-1 · 12 nov 18:30" para el selector. */
     function describeMatch(match) {
@@ -178,6 +185,7 @@
         el.totalPoints.textContent = '0';
         el.players.innerHTML = '<p class="empty-state__text">Registra un partido en «Scout» para ver estadísticas.</p>';
         el.fame.innerHTML = '';
+        el.pro.innerHTML = '<p class="empty-state__text">Sin datos para calcular indicadores.</p>';
         el.heatmap.innerHTML = '';
         el.logBody.innerHTML = '<tr><td colspan="7" class="data-table__empty">Sin datos registrados.</td></tr>';
         el.timelineValue.textContent = 'Todo el partido';
@@ -307,6 +315,165 @@
             .join('');
     }
 
+    // ---------------------------------------------------------------------
+    // Indicadores profesionales
+    // ---------------------------------------------------------------------
+
+    const formatPct = (value) => (value === null ? '—' : `${Math.round(value)}%`);
+    const formatAvg = (value) => (value === null ? '—' : value.toFixed(2));
+
+    /**
+     * Fila comparativa A vs B con barras enfrentadas.
+     * @param {Object} row
+     * @param {string} row.label
+     * @param {number|null} row.a       Valor numérico de A (null = sin datos)
+     * @param {number|null} row.b
+     * @param {string} row.aText        Texto a mostrar para A (puede llevar HTML propio)
+     * @param {string} row.bText
+     * @param {number} row.max          Valor que corresponde a la barra llena
+     * @param {string} row.hint         Explicación (tooltip)
+     * @param {boolean} [row.lowerIsBetter] Para métricas negativas (errores)
+     */
+    function versusRow({ label, a, b, aText, bText, max, hint, lowerIsBetter = false }) {
+        const width = (v) => (v === null || !max ? 0 : Math.min(100, (v / max) * 100));
+        const comparable = a !== null && b !== null && a !== b;
+        const leader = !comparable ? null : (a > b) !== lowerIsBetter ? 'a' : 'b';
+        const value = (team, text) =>
+            `<span class="versus__value versus__value--${team} ${leader === team ? 'versus__value--lead' : ''}">${text}</span>`;
+        return `
+            <div class="versus__row" title="${escapeHtml(hint)}">
+                <span class="versus__label">${label}</span>
+                ${value('a', aText)}
+                <div class="versus__track versus__track--a"><div class="versus__bar versus__bar--a" style="width:${width(a)}%"></div></div>
+                <div class="versus__track versus__track--b"><div class="versus__bar versus__bar--b" style="width:${width(b)}%"></div></div>
+                ${value('b', bText)}
+            </div>`;
+    }
+
+    /** Tarjeta "Indicadores profesionales": side-out, break point, saque y recepción. */
+    function renderProIndicators(points, config) {
+        const pro = stats.computeProIndicators(points);
+        const { A, B } = pro.teams;
+        const sample = (won, total) => `<small class="versus__sample">${won}/${total}</small>`;
+        const maxCount = (x, y) => Math.max(x, y, 1);
+
+        const rows = [
+            versusRow({
+                label: 'Side-out', a: A.sideOutPct, b: B.sideOutPct, max: 100,
+                aText: `${formatPct(A.sideOutPct)} ${sample(A.sideOutWon, A.received)}`,
+                bText: `${formatPct(B.sideOutPct)} ${sample(B.sideOutWon, B.received)}`,
+                hint: 'Puntos ganados cuando el equipo RECIBÍA el saque / rallies recibiendo'
+            }),
+            versusRow({
+                label: 'Break point', a: A.breakPct, b: B.breakPct, max: 100,
+                aText: `${formatPct(A.breakPct)} ${sample(A.breakWon, A.served)}`,
+                bText: `${formatPct(B.breakPct)} ${sample(B.breakWon, B.served)}`,
+                hint: 'Puntos ganados cuando el equipo SACABA / rallies sacando'
+            }),
+            versusRow({
+                label: 'Recepción media (0-3)', a: A.reception.average, b: B.reception.average, max: 3,
+                aText: formatAvg(A.reception.average), bText: formatAvg(B.reception.average),
+                hint: 'Media de la calidad de recepción: 3 perfecta, 2 buena, 1 mala, 0 error'
+            }),
+            versusRow({
+                label: 'Recepción positiva (2-3)', a: A.reception.positivePct, b: B.reception.positivePct, max: 100,
+                aText: formatPct(A.reception.positivePct), bText: formatPct(B.reception.positivePct),
+                hint: '% de recepciones de calidad 2 o 3'
+            }),
+            versusRow({
+                label: 'Aces', a: A.aces, b: B.aces, max: maxCount(A.aces, B.aces),
+                aText: String(A.aces), bText: String(B.aces),
+                hint: 'Saques que terminaron directamente en punto'
+            }),
+            versusRow({
+                label: 'Errores de saque', a: A.serveErrors, b: B.serveErrors, max: maxCount(A.serveErrors, B.serveErrors),
+                aText: String(A.serveErrors), bText: String(B.serveErrors), lowerIsBetter: true,
+                hint: 'Saques fallados (regalan el punto al rival)'
+            })
+        ].join('');
+
+        const header = `
+            <div class="versus__head">
+                <span class="versus__team versus__team--a">${escapeHtml(config.teamA)}</span>
+                <span class="versus__team versus__team--b">${escapeHtml(config.teamB)}</span>
+            </div>`;
+
+        el.pro.innerHTML = `<div class="versus">${header}${rows}</div>${renderReceptionDetail(pro, config)}`;
+    }
+
+    /** Tablas de recepción: side-out por calidad y ranking de receptores. */
+    function renderReceptionDetail(pro, config) {
+        if (!pro.hasReceptionData) {
+            return `
+                <p class="pro-stats__empty">
+                    💡 Para ver la calidad de recepción, marca <strong>3 · 2 · 1 · 0</strong> sobre el receptor
+                    en el menú de Scout al registrar cada punto.
+                </p>`;
+        }
+
+        const cell = (g) => (g.rallies ? `${formatPct(g.sideOutPct)} <small class="versus__sample">(${g.rallies})</small>` : '—');
+        const byGradeRows = RECEPTION_GRADES.map(
+            (g) => `
+            <tr>
+                <td class="pro-stats__grade-cell"><span class="grade-badge grade-badge--g${g.grade}">${g.grade}</span> ${g.label}</td>
+                <td>${cell(pro.byGrade.A[g.grade])}</td>
+                <td>${cell(pro.byGrade.B[g.grade])}</td>
+            </tr>`
+        ).join('');
+
+        const receivers = PLAYER_IDS.filter((id) => pro.players[id].count > 0)
+            .sort((x, y) => pro.players[y].average - pro.players[x].average)
+            .map((id) => {
+                const r = pro.players[id];
+                return `
+                <tr>
+                    <td class="data-table__cell--strong pro-stats__player-cell">
+                        <span class="pro-stats__dot pro-stats__dot--${id.charAt(0).toLowerCase()}"></span>
+                        ${escapeHtml(config[`p${id}`] || id)}
+                    </td>
+                    <td>${r.count}</td>
+                    <td><strong>${formatAvg(r.average)}</strong></td>
+                    <td>${formatPct(r.positivePct)}</td>
+                    <td class="data-table__cell--optional">${formatPct(r.perfectPct)}</td>
+                    <td>${formatPct(r.sideOutPct)}</td>
+                </tr>`;
+            })
+            .join('');
+
+        return `
+            <div class="pro-stats__tables">
+                <section class="pro-stats__section">
+                    <h3 class="pro-stats__subtitle">Side-out según la calidad de recepción</h3>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead><tr>
+                                <th scope="col">Recepción</th>
+                                <th scope="col">${escapeHtml(config.teamA)}</th>
+                                <th scope="col">${escapeHtml(config.teamB)}</th>
+                            </tr></thead>
+                            <tbody>${byGradeRows}</tbody>
+                        </table>
+                    </div>
+                </section>
+                <section class="pro-stats__section">
+                    <h3 class="pro-stats__subtitle">Receptores</h3>
+                    <div class="table-scroll">
+                        <table class="data-table">
+                            <thead><tr>
+                                <th scope="col">Jugador</th>
+                                <th scope="col" title="Recepciones registradas">Rec.</th>
+                                <th scope="col" title="Media 0-3">Media</th>
+                                <th scope="col" title="% de recepciones 2-3">Posit.</th>
+                                <th scope="col" class="data-table__cell--optional" title="% de recepciones 3">Perf.</th>
+                                <th scope="col" title="% de rallies ganados tras su recepción">Side-out</th>
+                            </tr></thead>
+                            <tbody>${receivers}</tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>`;
+    }
+
     /** Calcula y pinta todas las secciones con los filtros actuales. */
     function draw() {
         const match = getSourceMatch();
@@ -315,7 +482,7 @@
             return;
         }
 
-        const { timeline, bySet, visible } = stats.selectPoints(match.points, filters);
+        const { timeline, bySet, visible } = stats.selectPoints(getAnnotatedPoints(match), filters);
         const totalsVisible = stats.computePlayerTotals(visible, match.config);
         const totalsBySet = stats.computePlayerTotals(bySet, match.config);
 
@@ -324,6 +491,7 @@
 
         renderSummary(match, bySet);
         renderPlayers(totalsVisible);
+        renderProIndicators(bySet, match.config);
         renderFame(stats.computeAwards(totalsBySet));
         renderHeatmap(visible, totalsBySet);
         renderLog(bySet, visible, totalsBySet, match.config);
@@ -365,6 +533,7 @@
             totalPoints: byId('total-points'),
             players: byId('players-stats-container'),
             fame: byId('gamification-container'),
+            pro: byId('pro-indicators'),
             heatmap: byId('heatmap-points'),
             logBody: byId('global-table-body'),
             logSection: byId('global-log-section'),
@@ -417,7 +586,7 @@
             if (!match) return;
 
             if (button.dataset.action === 'dashboard') {
-                const { bySet } = stats.selectPoints(match.points, filters);
+                const { bySet } = stats.selectPoints(getAnnotatedPoints(match), filters);
                 VP.views.playerDashboard.open({ points: bySet, playerId, config: match.config, set: filters.set });
             } else {
                 // "Bitácora": filtra por el jugador y baja hasta la tabla

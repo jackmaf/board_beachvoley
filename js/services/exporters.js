@@ -46,7 +46,22 @@
      * @property {string} teamName
      * @property {string} setLabel  'All' o 'Set_2'
      * @property {Object} profile   Resultado de statsEngine.computePlayerProfile
+     * @property {Object} reception Recepción del jugador (statsEngine.computeProIndicators)
      */
+
+    /** Filas de recepción para el CSV (vacías si no hay recepciones registradas). */
+    function receptionRows(reception) {
+        if (!reception || !reception.count) return [['Recepciones', 0]];
+        const pct = (v) => (v === null ? '-' : v.toFixed(1));
+        return [
+            ['Recepciones', reception.count],
+            ['Recepción media (0-3)', reception.average.toFixed(2)],
+            ['Recepciones positivas 2-3 (%)', pct(reception.positivePct)],
+            ['Recepciones perfectas 3 (%)', pct(reception.perfectPct)],
+            ['Side-out tras su recepción (%)', pct(reception.sideOutPct)],
+            ['Recepciones por calidad 3/2/1/0', [3, 2, 1, 0].map((g) => reception.grades[g]).join(' / ')]
+        ];
+    }
 
     /** Exporta el reporte completo del jugador en JSON. */
     function exportPlayerJson(report) {
@@ -55,6 +70,7 @@
             id: report.playerId,
             equipo: report.teamName,
             filtroSet: report.setLabel,
+            recepcion: report.reception,
             ...report.profile
         };
         downloadFile(`${reportBaseName(report)}.json`, JSON.stringify(payload, null, 2), 'application/json');
@@ -80,6 +96,7 @@
             ['Puntos zona derecha (%)', profile.zones.pctRight.toFixed(1)],
             ['Minuto más productivo', profile.bestMinute ? `${profile.bestMinute.minute} (${profile.bestMinute.count} pts)` : '-'],
             ...SKILLS.map((skill) => [`${skill.key} (puntos)`, profile.skills[skill.key] || 0]),
+            ...receptionRows(report.reception),
             [],
             ['--- BITÁCORA DE ACCIONES (orden cronológico) ---'],
             ['Nro. punto', 'Set', 'Avatar (URL)', 'Acción', 'Marcador', 'X (m)', 'Y (m)'],

@@ -77,6 +77,20 @@
     /** Gesto que se asume cuando un registro antiguo no trae `actionDetail`. */
     const DEFAULT_SKILL = 'Ataque';
 
+    /**
+     * Escala estándar de calidad de recepción en scouting de voley (0-3).
+     * Ordenada de mejor a peor, que es como se muestra en la interfaz.
+     */
+    const RECEPTION_GRADES = Object.freeze([
+        { grade: 3, label: 'Perfecta', hint: 'Pase ideal: permite cualquier ataque' },
+        { grade: 2, label: 'Buena', hint: 'Se puede atacar con opciones limitadas' },
+        { grade: 1, label: 'Mala', hint: 'Sólo ataque forzado o free ball' },
+        { grade: 0, label: 'Error', hint: 'Ace o recepción fallida' }
+    ]);
+
+    /** Calidad mínima para considerar una recepción "positiva" (2 y 3). */
+    const POSITIVE_RECEPTION_MIN = 2;
+
     /** Formatos de torneo soportados (el valor se guarda tal cual en localStorage). */
     const TOURNAMENT_FORMAT = Object.freeze({
         ROUND_ROBIN: 'Round Robin',
@@ -124,6 +138,8 @@
         ACTION,
         SKILLS,
         DEFAULT_SKILL,
+        RECEPTION_GRADES,
+        POSITIVE_RECEPTION_MIN,
         TOURNAMENT_FORMAT,
         FORMAT_LABEL,
         MATCH_STATUS,

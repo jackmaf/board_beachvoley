@@ -15,7 +15,7 @@
     const VP = (root.VP = root.VP || {});
     const { byId, qs, qsa, setTextWithBump } = VP.dom;
     const { escapeHtml, formatDuration, getAvatarUrl, getTeamLogoUrl } = VP.utils;
-    const { SKILLS, DEFAULT_SKILL, MAX_TIMEOUTS_PER_SET } = VP.constants;
+    const { SKILLS, DEFAULT_SKILL, MAX_TIMEOUTS_PER_SET, RECEPTION_GRADES } = VP.constants;
     const { toast } = VP.feedback;
     const store = VP.matchStore;
     const actions = VP.views.matchActions;
@@ -25,6 +25,8 @@
     /** Posición (en %) del toque pendiente de asignar a un jugador. */
     let pendingCoords = null;
     let pendingMarker = null;
+    /** Recepción elegida para el rally pendiente: { playerId, grade } o null. */
+    let pendingReception = null;
 
     // ---------------------------------------------------------------------
     // Pintado
@@ -40,6 +42,35 @@
                 <span class="choice__label">${skill.emoji} ${skill.key}</span>
             </label>`
         ).join('');
+    }
+
+    /**
+     * Fila de recepción del menú: los dos jugadores del equipo que RECIBE
+     * (el contrario al que saca) con botones 3·2·1·0. Un solo toque registra
+     * quién recibió y con qué calidad; tocar de nuevo lo deselecciona.
+     */
+    function renderReceptionChoices() {
+        const { config } = store.getState();
+        const receivingTeam = VP.rules.opponentOf(store.getServingTeam());
+        el.receptionTeam.textContent = store.getTeamName(receivingTeam);
+
+        el.receptionRows.innerHTML = [1, 2]
+            .map((n) => {
+                const playerId = `${receivingTeam}${n}`;
+                const name = escapeHtml(config[`p${playerId}`] || playerId);
+                const buttons = RECEPTION_GRADES.map((g) => {
+                    const isActive = pendingReception?.playerId === playerId && pendingReception.grade === g.grade;
+                    return `<button type="button" class="reception__grade reception__grade--g${g.grade} ${isActive ? 'reception__grade--active' : ''}"
+                        data-player="${playerId}" data-grade="${g.grade}" aria-pressed="${isActive}"
+                        title="${g.grade} · ${g.label}: ${g.hint}">${g.grade}</button>`;
+                }).join('');
+                return `
+                <div class="reception__row reception__row--${receivingTeam.toLowerCase()}">
+                    <span class="reception__player">${name}</span>
+                    <div class="reception__grades" role="group" aria-label="Calidad de recepción de ${name}">${buttons}</div>
+                </div>`;
+            })
+            .join('');
     }
 
     /** Reloj de Bogotá (hora oficial de referencia del proyecto). */
@@ -175,8 +206,10 @@
         pendingMarker.style.top = `${pendingCoords.y}%`;
         el.court.appendChild(pendingMarker);
 
-        // Cada punto nuevo empieza como "Punto (winner)"; el gesto se mantiene
+        // Cada punto nuevo empieza como "Punto (winner)" y sin recepción; el gesto se mantiene
         qs('input[name="actionType"][value="punto"]', el.menu).checked = true;
+        pendingReception = null;
+        renderReceptionChoices();
         el.menu.hidden = false;
         qs('.player-btn', el.menu).focus({ preventScroll: true });
     }
@@ -185,6 +218,7 @@
         pendingMarker?.remove();
         pendingMarker = null;
         pendingCoords = null;
+        pendingReception = null;
         el.menu.hidden = true;
     }
 
@@ -196,7 +230,8 @@
             playerId: button.dataset.player,
             actionType: qs('input[name="actionType"]:checked', el.menu).value,
             actionDetail: qs('input[name="actionDetail"]:checked', el.menu)?.value || DEFAULT_SKILL,
-            coords: pendingCoords
+            coords: pendingCoords,
+            reception: pendingReception
         });
         closeMenu();
         actions.announceOutcome(outcome);
@@ -222,6 +257,8 @@
             court: byId('main-court'),
             freeZone: byId('free-zone'),
             menu: byId('player-menu'),
+            receptionTeam: byId('reception-team'),
+            receptionRows: byId('reception-rows'),
             skillGroup: byId('action-detail-group'),
             nameA: byId('name-team-a'),
             nameB: byId('name-team-b'),
@@ -257,6 +294,12 @@
         el.freeZone.addEventListener('click', handleCourtClick);
         qsa('.player-btn', el.menu).forEach((button) => button.addEventListener('click', () => handlePlayerPick(button)));
         byId('cancel-point').addEventListener('click', closeMenu);
+        VP.dom.delegate(el.receptionRows, 'click', '.reception__grade', (_event, button) => {
+            const choice = { playerId: button.dataset.player, grade: Number(button.dataset.grade) };
+            const isSame = pendingReception?.playerId === choice.playerId && pendingReception.grade === choice.grade;
+            pendingReception = isSame ? null : choice;
+            renderReceptionChoices();
+        });
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape' && !el.menu.hidden) closeMenu();
         });

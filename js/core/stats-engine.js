@@ -19,8 +19,8 @@
     'use strict';
 
     const VP = (root.VP = root.VP || {});
-    const { ACTION, PLAYER_IDS, SKILLS, DEFAULT_SKILL } = VP.constants;
-    const { getPointWinner } = VP.rules;
+    const { ACTION, PLAYER_IDS, SKILLS, DEFAULT_SKILL, POSITIVE_RECEPTION_MIN } = VP.constants;
+    const { getPointWinner, getSetFirstServer, opponentOf } = VP.rules;
     const { toMatchMinute, percentToMeters } = VP.utils;
 
     /**
@@ -264,7 +264,132 @@
         };
     }
 
+    // =====================================================================
+    // INDICADORES PROFESIONALES: side-out, break point y recepción
+    // =====================================================================
+
+    /** Porcentaje seguro: `null` cuando no hay muestra (para mostrar "—"). */
+    const percent = (part, total) => (total ? (part / total) * 100 : null);
+
+    /**
+     * Garantiza que cada rally sepa qué equipo sacó (`servingTeam`).
+     *
+     * Los puntos nuevos ya lo traen grabado. Para partidos antiguos se
+     * reconstruye repitiendo la secuencia: el primer rally de cada set lo saca
+     * quien corresponde por alternancia y los siguientes, quien ganó el rally
+     * anterior. Así el historial previo también tiene side-out y break point.
+     *
+     * Debe llamarse con la bitácora COMPLETA (antes de filtrar), porque la
+     * reconstrucción necesita la secuencia entera.
+     *
+     * @param {Array} points
+     * @param {'A'|'B'} [firstServer='A'] Quién sacó primero en el set 1.
+     * @returns {Array} Misma lista; los registros sin `servingTeam` se copian completados.
+     */
+    function withServingTeam(points, firstServer = 'A') {
+        const lastWinnerBySet = {};
+        return (points || []).map((p) => {
+            if (isTimeout(p)) return p;
+            const set = p.setNumber || 1;
+            const servingTeam = p.servingTeam || lastWinnerBySet[set] || getSetFirstServer(set - 1, firstServer);
+            lastWinnerBySet[set] = getPointWinner(p);
+            return p.servingTeam ? p : { ...p, servingTeam };
+        });
+    }
+
+    /** Acumulador vacío de recepciones. `grades[g]` = nº de recepciones de calidad g. */
+    const emptyReception = () => ({ count: 0, sum: 0, grades: [0, 0, 0, 0], sideOutWon: 0 });
+
+    /** Convierte un acumulador de recepciones en métricas listas para mostrar. */
+    function summarizeReception(acc) {
+        const positive = acc.grades.slice(POSITIVE_RECEPTION_MIN).reduce((a, b) => a + b, 0);
+        return {
+            count: acc.count,
+            grades: acc.grades,
+            average: acc.count ? acc.sum / acc.count : null,      // Media en escala 0-3
+            positivePct: percent(positive, acc.count),            // % de recepciones 2-3
+            perfectPct: percent(acc.grades[3], acc.count),        // % de recepciones 3
+            sideOutPct: percent(acc.sideOutWon, acc.count)        // % de rallies ganados tras recibir
+        };
+    }
+
+    /**
+     * Indicadores profesionales de ambos equipos y de cada receptor.
+     *
+     *  - Side-out %:    rallies ganados RECIBIENDO / rallies en que el equipo recibió.
+     *  - Break point %: rallies ganados SACANDO / rallies en que el equipo sacó.
+     *  - Aces / errores de saque: acciones "Saque" del equipo que sacaba.
+     *  - Recepción: media 0-3, % positivas (2-3), % perfectas (3) y
+     *    side-out según la calidad con la que se recibió.
+     *
+     * @param {Array} points Registros con `servingTeam` (ver `withServingTeam`).
+     */
+    function computeProIndicators(points) {
+        const newTeam = () => ({ served: 0, breakWon: 0, received: 0, sideOutWon: 0, aces: 0, serveErrors: 0, reception: emptyReception() });
+        const teams = { A: newTeam(), B: newTeam() };
+        const players = Object.fromEntries(PLAYER_IDS.map((id) => [id, emptyReception()]));
+        // byGrade.A[3] = { rallies, won }: recepciones de calidad 3 del equipo A y cuántas acabaron en punto
+        const byGrade = {
+            A: [0, 1, 2, 3].map(() => ({ rallies: 0, won: 0 })),
+            B: [0, 1, 2, 3].map(() => ({ rallies: 0, won: 0 }))
+        };
+
+        points.forEach((p) => {
+            if (isTimeout(p) || !p.servingTeam) return;
+            const server = p.servingTeam;
+            const receiver = opponentOf(server);
+            const winner = getPointWinner(p);
+
+            teams[server].served++;
+            if (winner === server) teams[server].breakWon++;
+            teams[receiver].received++;
+            if (winner === receiver) teams[receiver].sideOutWon++;
+
+            if (p.actionDetail === 'Saque' && p.equipo === server) {
+                if (p.tipoAccion === ACTION.POINT) teams[server].aces++;
+                else if (p.tipoAccion === ACTION.ERROR) teams[server].serveErrors++;
+            }
+
+            const reception = p.reception;
+            if (!reception || !players[reception.playerId] || !(reception.grade in byGrade.A)) return;
+            const team = reception.playerId.charAt(0);
+            const won = winner === team;
+            [teams[team].reception, players[reception.playerId]].forEach((acc) => {
+                acc.count++;
+                acc.sum += reception.grade;
+                acc.grades[reception.grade]++;
+                if (won) acc.sideOutWon++;
+            });
+            byGrade[team][reception.grade].rallies++;
+            if (won) byGrade[team][reception.grade].won++;
+        });
+
+        const summarizeTeam = (t) => ({
+            served: t.served,
+            received: t.received,
+            breakWon: t.breakWon,
+            sideOutWon: t.sideOutWon,
+            breakPct: percent(t.breakWon, t.served),
+            sideOutPct: percent(t.sideOutWon, t.received),
+            aces: t.aces,
+            serveErrors: t.serveErrors,
+            reception: summarizeReception(t.reception)
+        });
+
+        return {
+            teams: { A: summarizeTeam(teams.A), B: summarizeTeam(teams.B) },
+            players: Object.fromEntries(Object.entries(players).map(([id, acc]) => [id, summarizeReception(acc)])),
+            byGrade: {
+                A: byGrade.A.map((g) => ({ ...g, sideOutPct: percent(g.won, g.rallies) })),
+                B: byGrade.B.map((g) => ({ ...g, sideOutPct: percent(g.won, g.rallies) }))
+            },
+            hasReceptionData: teams.A.reception.count + teams.B.reception.count > 0
+        };
+    }
+
     VP.statsEngine = Object.freeze({
+        withServingTeam,
+        computeProIndicators,
         createDefaultFilters,
         selectPoints,
         computeScore,
