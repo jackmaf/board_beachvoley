@@ -1,7 +1,7 @@
 /**
  * @file tournaments-view.js
  * @description Vista "Torneos": listado, creación, detalle (partidos,
- * clasificación y llaves), resultado manual y edición de duplas.
+ * clasificación y llaves), resultado manual y edición de duplas (con sus fotos).
  *
  * Esta vista sólo PINTA y RECOGE eventos. La lógica (generar llaves, avanzar
  * ganadores, BYE, clasificación) vive en `core/tournament-engine.js` y la
@@ -17,6 +17,8 @@
     const engine = VP.tournamentEngine;
     const storage = VP.storage;
     const { toast, confirm } = VP.feedback;
+    const picker = VP.photoPicker;
+    const { KIND: PHOTO_KIND } = VP.photos;
 
     /** Mínimo de duplas para crear un torneo. */
     const MIN_TEAMS = 2;
@@ -101,14 +103,18 @@
     // CREACIÓN DE TORNEO
     // =====================================================================
 
+    /** Campos de nombre de una fila y el tipo de foto que lleva cada uno. */
+    const ROW_PHOTO_FIELDS = { name: PHOTO_KIND.TEAM, p1: PHOTO_KIND.PLAYER, p2: PHOTO_KIND.PLAYER };
+
     /** Añade una fila de dupla clonando el <template id="tpl-team-row">. */
     function addTeamRow() {
         const fragment = byId('tpl-team-row').content.cloneNode(true);
+        const row = qs('.team-row', fragment);
         el.teamRows.appendChild(fragment);
+        Object.entries(ROW_PHOTO_FIELDS).forEach(([field, kind]) => picker.attach(qs(`[data-field="${field}"]`, row), kind));
         renumberTeamRows();
         // Enfocar el primer jugador de la nueva fila para agilizar la carga
-        const rows = qsa('.team-row', el.teamRows);
-        qs('[data-field="p1"]', rows[rows.length - 1])?.focus();
+        qs('[data-field="p1"]', row)?.focus();
     }
 
     /** Actualiza los números visibles y las etiquetas accesibles de cada fila. */
@@ -119,6 +125,7 @@
             qs('[data-field="name"]', row).setAttribute('aria-label', `Nombre de la dupla ${number}`);
             qs('[data-field="p1"]', row).setAttribute('aria-label', `Dupla ${number}, jugador 1`);
             qs('[data-field="p2"]', row).setAttribute('aria-label', `Dupla ${number}, jugador 2`);
+            Object.keys(ROW_PHOTO_FIELDS).forEach((field) => picker.setLabel(qs(`[data-field="${field}"]`, row)));
         });
     }
 
@@ -138,23 +145,39 @@
         byId('t-name').focus();
     }
 
-    /** Lee las duplas del formulario. Ignora filas sin los dos jugadores. */
-    function collectTeams() {
+    /**
+     * Lee las duplas del formulario. Ignora filas sin los dos jugadores.
+     * @returns {Array<{row:HTMLElement, team:{name:string, p1:string, p2:string}}>}
+     *   Se conserva la fila para guardar después sus fotos.
+     */
+    function collectTeamRows() {
         return qsa('.team-row', el.teamRows)
             .map((row) => {
                 const value = (field) => qs(`[data-field="${field}"]`, row).value.trim();
                 const p1 = value('p1');
                 const p2 = value('p2');
-                return { name: value('name') || `${p1} / ${p2}`, p1, p2 };
+                return { row, team: { name: value('name') || `${p1} / ${p2}`, p1, p2 } };
             })
-            .filter((team) => team.p1 && team.p2);
+            .filter(({ team }) => team.p1 && team.p2);
+    }
+
+    /** Guarda las fotos elegidas en cada fila con los nombres definitivos. */
+    function commitRowPhotos(entries) {
+        entries.forEach(({ row, team }) => {
+            const input = (field) => qs(`[data-field="${field}"]`, row);
+            // Si la dupla no tiene nombre, la foto queda con el generado («Pedro / Juan»)
+            picker.commit(input('name'), team.name);
+            picker.commit(input('p1'), team.p1);
+            picker.commit(input('p2'), team.p2);
+        });
     }
 
     function handleCreateSubmit(event) {
         event.preventDefault();
         if (!el.formTournament.reportValidity()) return;
 
-        const teams = collectTeams();
+        const entries = collectTeamRows();
+        const teams = entries.map((entry) => entry.team);
         const format = byId('t-format').value;
 
         const isKingOfCourt = format === TOURNAMENT_FORMAT.KING_OF_COURT;
@@ -195,6 +218,7 @@
         });
 
         storage.addTournament(tournament);
+        commitRowPhotos(entries);
         closeModal(el.modalCreate);
         renderList();
 
@@ -281,7 +305,9 @@
 
         return `
             <div class="match-card__team ${isWinner ? 'match-card__team--winner' : ''}">
-                <span aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>
+                ${!isPlaceholder && VP.photos.hasTeam(name)
+                    ? `<img class="avatar avatar--md" src="${escapeHtml(VP.photos.teamSrc(name))}" alt="">`
+                    : `<span aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>`}
                 <div class="match-card__team-info">
                     <span class="match-card__team-name ${isPlaceholder ? 'match-card__team-name--placeholder' : ''}">
                         ${escapeHtml(isPlaceholder ? placeholderText[name] : name)}
@@ -540,6 +566,7 @@
         byId('edit-team-name').value = engine.isRealTeam(team.name) ? team.name : '';
         byId('edit-team-p1').value = team.p1;
         byId('edit-team-p2').value = team.p2;
+        picker.refresh(byId('edit-team-name'), byId('edit-team-p1'), byId('edit-team-p2'));
         openModal(el.modalEditTeam);
         byId('edit-team-name').focus();
     }
@@ -550,6 +577,13 @@
         const team = clear
             ? { name, p1: '', p2: '' }
             : { name, p1: byId('edit-team-p1').value.trim(), p2: byId('edit-team-p2').value.trim() };
+
+        if (!clear) {
+            // «TBD» no es una dupla real: su foto no se guarda
+            picker.commit(byId('edit-team-name'), engine.isRealTeam(name) ? name : '');
+            picker.commit(byId('edit-team-p1'), team.p1);
+            picker.commit(byId('edit-team-p2'), team.p2);
+        }
 
         storage.updateTournament(context.tournamentId, (t) => engine.setMatchTeam(t, context.matchId, context.slot, team));
         closeModal(el.modalEditTeam);
@@ -611,6 +645,10 @@
             manualSets: byId('manual-sets'),
             modalEditTeam: byId('modal-edit-team')
         };
+
+        picker.attach(byId('edit-team-name'), PHOTO_KIND.TEAM);
+        picker.attach(byId('edit-team-p1'), PHOTO_KIND.PLAYER);
+        picker.attach(byId('edit-team-p2'), PHOTO_KIND.PLAYER);
 
         // Crear torneo
         byId('btn-create-tournament').addEventListener('click', openCreateModal);

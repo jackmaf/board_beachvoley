@@ -27,7 +27,8 @@
         LAST_MATCH: 'voley-lastMatch',       // Último partido finalizado
         HISTORY: 'voley-history',            // Array con todos los partidos finalizados
         TOURNAMENTS: 'voley-tournaments',    // Array de torneos
-        THEME: 'voley-theme'                 // Tema visual elegido
+        THEME: 'voley-theme',                // Tema visual elegido
+        PHOTOS: 'voley-photos'               // Fotos de jugadores y duplas (por nombre)
     });
 
     /** Reglas por defecto de un partido de voley playa (FIVB). */
@@ -137,6 +138,15 @@
     /** Cómo se llama el trono según la rama del torneo. */
     const THRONE_LABEL = Object.freeze({ F: 'Reina', M: 'Rey', X: 'Trono' });
 
+    /**
+     * Fotos subidas por el usuario (jugadores y duplas).
+     *  - size:         lado en px del cuadrado final. 256 px se ve nítido en el avatar
+     *                  más grande (84 px a 3x) y deja cada foto en ~15-25 KB.
+     *  - quality:      calidad JPEG. localStorage ronda los 5 MB, así que se prima el tamaño.
+     *  - maxFileBytes: archivos más grandes ni se intentan decodificar (memoria del móvil).
+     */
+    const PHOTO = Object.freeze({ size: 256, quality: 0.82, maxFileBytes: 25 * 1024 * 1024 });
+
     /** A partir de cuántos registros se muestra el spinner al recalcular estadísticas. */
     const SPINNER_THRESHOLD = 300;
 
@@ -162,6 +172,7 @@
         GENDER_LABEL,
         KOTC_DEFAULTS,
         THRONE_LABEL,
+        PHOTO,
         SPINNER_THRESHOLD
     });
 

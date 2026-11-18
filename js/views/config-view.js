@@ -1,7 +1,7 @@
 /**
  * @file config-view.js
- * @description Vista "Config": formulario del partido (equipos, jugadores y
- * reglas), tema visual, copia de seguridad y borrado total de datos.
+ * @description Vista "Config": formulario del partido (equipos, jugadores,
+ * sus fotos y reglas), tema visual, copia de seguridad y borrado total de datos.
  */
 (function (root) {
     'use strict';
@@ -11,6 +11,7 @@
     const { toInt } = VP.utils;
     const { toast, confirm } = VP.feedback;
     const store = VP.matchStore;
+    const picker = VP.photoPicker;
 
     /** IDs de los inputs del formulario y la clave de config que alimentan. */
     const FIELD_MAP = {
@@ -21,6 +22,20 @@
         'input-b1': 'pB1',
         'input-b2': 'pB2'
     };
+
+    /** Inputs de nombre como lista (para enganchar/refrescar/guardar sus fotos). */
+    const nameInputs = () => Object.keys(FIELD_MAP).map(byId);
+
+    /** Las claves `teamA`/`teamB` son duplas; el resto, jugadores. */
+    const photoKindOf = (key) => (key.startsWith('team') ? VP.photos.KIND.TEAM : VP.photos.KIND.PLAYER);
+
+    /**
+     * Guarda las fotos pendientes con los nombres definitivos del partido
+     * (incluidos los valores por defecto como «Equipo A»).
+     */
+    function commitPhotos(config) {
+        Object.entries(FIELD_MAP).forEach(([inputId, key]) => picker.commit(byId(inputId), config[key]));
+    }
 
     /** Valores por defecto si el usuario deja un nombre vacío. */
     const NAME_FALLBACK = { teamA: 'Equipo A', teamB: 'Equipo B', pA1: 'A1', pA2: 'A2', pB1: 'B1', pB2: 'B2' };
@@ -66,6 +81,7 @@
         byId('input-pts-tiebreak').value = config.ptsTiebreak || 15;
         byId('input-first-server').value = config.firstServer === 'B' ? 'B' : 'A';
         syncFirstServerLabels();
+        picker.refresh(...nameInputs());
     }
 
     /** Ajusta textos y botones según haya (o no) partido en curso. */
@@ -96,6 +112,8 @@
 
         const config = readForm();
         const link = pendingTournamentLink;
+        // Antes de start/updateConfig: así el marcador ya se pinta con las fotos nuevas
+        commitPhotos(config);
 
         if (store.hasPoints() && !link) {
             store.updateConfig(config);
@@ -146,6 +164,7 @@
         store.discard();
         byId('config-form').reset();
         syncFirstServerLabels();
+        picker.refresh(...nameInputs());
         render();
         toast('Partido descartado.', { type: 'info' });
     }
@@ -180,7 +199,7 @@
             const backup = await VP.exporters.readJsonFile(file);
             const accepted = await confirm({
                 title: 'Importar copia de seguridad',
-                message: 'Se reemplazarán TODOS los datos actuales (partidos, historial y torneos). ¿Continuar?',
+                message: 'Se reemplazarán TODOS los datos actuales (partidos, historial, torneos y fotos). ¿Continuar?',
                 confirmLabel: 'Importar',
                 danger: true
             });
@@ -191,8 +210,9 @@
                 toast(result.error, { type: 'error' });
                 return;
             }
+            if (result.warning) toast(result.warning, { type: 'warning' });
             toast('Datos importados. Recargando…', { type: 'success' });
-            setTimeout(() => window.location.reload(), 800);
+            setTimeout(() => window.location.reload(), result.warning ? 2500 : 800);
         } catch (error) {
             toast(error.message, { type: 'error' });
         }
@@ -201,7 +221,7 @@
     async function handleReset() {
         const first = await confirm({
             title: '🚨 Atención',
-            message: 'Vas a borrar TODO: partidos, historial y torneos guardados en este dispositivo.',
+            message: 'Vas a borrar TODO: partidos, historial, torneos y fotos guardados en este dispositivo.',
             confirmLabel: 'Sí, continuar',
             danger: true
         });
@@ -223,6 +243,7 @@
     // ---------------------------------------------------------------------
 
     function init() {
+        Object.entries(FIELD_MAP).forEach(([inputId, key]) => picker.attach(byId(inputId), photoKindOf(key)));
         byId('config-form').addEventListener('submit', handleSubmit);
         byId('input-team-a').addEventListener('input', syncFirstServerLabels);
         byId('input-team-b').addEventListener('input', syncFirstServerLabels);

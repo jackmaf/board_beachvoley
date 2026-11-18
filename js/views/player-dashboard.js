@@ -9,6 +9,7 @@
     const VP = (root.VP = root.VP || {});
     const { byId, openModal } = VP.dom;
     const { getAvatarUrl } = VP.utils;
+    const photos = VP.photos;
     const { SKILLS, RECEPTION_GRADES } = VP.constants;
     const { toast } = VP.feedback;
 
@@ -207,7 +208,8 @@
         };
 
         // Cabecera
-        el.avatar.src = getAvatarUrl(playerName);
+        // Data URL directo (no blob:) para que html2pdf incluya la foto en el PDF
+        el.avatar.src = photos.get(photos.KIND.PLAYER, playerName) || getAvatarUrl(playerName);
         el.avatar.alt = `Avatar de ${playerName}`;
         el.avatar.className = `avatar avatar--xl avatar--team-${profile.team.toLowerCase()}`;
         el.name.textContent = playerName;

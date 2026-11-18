@@ -11,7 +11,9 @@
 
     const VP = (root.VP = root.VP || {});
     const { byId, delegate, setActivePill } = VP.dom;
-    const { escapeHtml, formatDuration, getAvatarUrl, getTeamLogoUrl, debounce, toInt, toMatchMinute } = VP.utils;
+    const { escapeHtml, formatDuration, debounce, toInt, toMatchMinute } = VP.utils;
+    // Foto subida por el usuario o, si no hay, el avatar generado
+    const { playerSrc, teamSrc } = VP.photos;
     const { SKILLS, PLAYER_IDS, ACTION, SPINNER_THRESHOLD, RECEPTION_GRADES } = VP.constants;
     const stats = VP.statsEngine;
     const store = VP.matchStore;
@@ -199,7 +201,7 @@
 
         const teamHtml = (name, team) => `
             <div class="summary__team summary__team--${team}">
-                <img class="avatar avatar--logo avatar--team-${team}" src="${getTeamLogoUrl(name)}" alt="">
+                <img class="avatar avatar--logo avatar--team-${team}" src="${escapeHtml(teamSrc(name))}" alt="">
                 <span class="summary__team-name">${escapeHtml(name)}</span>
             </div>`;
 
@@ -225,7 +227,7 @@
             return `
             <div class="player-stat d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div class="player-stat__info d-flex align-items-center gap-2">
-                    <img class="avatar avatar--md avatar--team-${team}" src="${getAvatarUrl(p.name)}" alt="">
+                    <img class="avatar avatar--md avatar--team-${team}" src="${escapeHtml(playerSrc(p.name))}" alt="">
                     <span class="player-stat__name">${escapeHtml(p.name)}</span>
                 </div>
                 <div class="d-flex flex-column align-items-end">
@@ -251,7 +253,7 @@
             <div class="col">
             <div class="fame-card vstack gap-1 align-items-center ${award.isNegative ? 'fame-card--negative' : ''}">
                 <img class="avatar avatar--lg avatar--pulse avatar--team-${award.team.toLowerCase()}"
-                    src="${getAvatarUrl(award.winner)}" alt="">
+                    src="${escapeHtml(playerSrc(award.winner))}" alt="">
                 <span class="fame-card__emoji" aria-hidden="true">${award.emoji}</span>
                 <span class="fame-card__title">${escapeHtml(award.title)}</span>
                 <span class="fame-card__winner">${escapeHtml(award.winner)}</span>
@@ -302,7 +304,7 @@
                 const cellModifier = isTimeout ? '' : p.tipoAccion === ACTION.POINT ? 'text-success fw-bold' : 'text-danger fw-bold';
                 const avatar = isTimeout || !totals[p.jugadorId]
                     ? '—'
-                    : `<img class="avatar avatar--sm avatar--team-${row.team.toLowerCase()}" src="${getAvatarUrl(row.playerName)}" alt="">`;
+                    : `<img class="avatar avatar--sm avatar--team-${row.team.toLowerCase()}" src="${escapeHtml(playerSrc(row.playerName))}" alt="">`;
                 return `
                 <tr class="${isTimeout ? 'table-secondary fst-italic' : ''}">
                     <td>#${row.pointNumber ?? '-'} (Set ${row.setNumber})</td>

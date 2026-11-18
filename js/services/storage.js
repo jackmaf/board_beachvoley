@@ -17,8 +17,11 @@
     const VP = (root.VP = root.VP || {});
     const { STORAGE_KEYS } = VP.constants;
 
-    /** Versión del formato de copia de seguridad (por si cambia en el futuro). */
-    const BACKUP_VERSION = 1;
+    /**
+     * Versión del formato de copia de seguridad.
+     * v2 añade `data.photos`; las copias v1 (sin fotos) se siguen importando.
+     */
+    const BACKUP_VERSION = 2;
 
     /**
      * Lee y parsea una clave. Nunca lanza excepciones.
@@ -133,6 +136,30 @@
     }
 
     // ---------------------------------------------------------------------
+    // Fotos de jugadores y duplas
+    // ---------------------------------------------------------------------
+
+    /*
+     * Van en una clave PROPIA (y no dentro de cada partido o torneo) por dos motivos:
+     *  - Un jugador juega muchos partidos: guardar su foto en cada uno la
+     *    duplicaría en el historial y agotaría enseguida los ~5 MB de localStorage.
+     *  - Si la cuota se llena, falla sólo la foto, nunca el guardado del partido.
+     */
+
+    /** @returns {{players:Object<string,string>, teams:Object<string,string>}} nombre normalizado → data URL. */
+    function getPhotos() {
+        const photos = read(STORAGE_KEYS.PHOTOS, null);
+        const isMap = (value) => value && typeof value === 'object' && !Array.isArray(value);
+        return {
+            players: isMap(photos?.players) ? photos.players : {},
+            teams: isMap(photos?.teams) ? photos.teams : {}
+        };
+    }
+
+    /** @returns {boolean} `false` si no cupo (cuota de almacenamiento llena). */
+    const savePhotos = (photos) => write(STORAGE_KEYS.PHOTOS, photos);
+
+    // ---------------------------------------------------------------------
     // Preferencias
     // ---------------------------------------------------------------------
 
@@ -161,11 +188,17 @@
     // ---------------------------------------------------------------------
 
     /**
-     * Borra TODOS los datos de juego (partidos, historial y torneos).
+     * Borra TODOS los datos de juego (partidos, historial, torneos y fotos).
      * El tema visual se conserva porque es una preferencia, no un dato.
      */
     function clearAllData() {
-        [STORAGE_KEYS.CURRENT_MATCH, STORAGE_KEYS.LAST_MATCH, STORAGE_KEYS.HISTORY, STORAGE_KEYS.TOURNAMENTS].forEach(remove);
+        [
+            STORAGE_KEYS.CURRENT_MATCH,
+            STORAGE_KEYS.LAST_MATCH,
+            STORAGE_KEYS.HISTORY,
+            STORAGE_KEYS.TOURNAMENTS,
+            STORAGE_KEYS.PHOTOS
+        ].forEach(remove);
     }
 
     /** Objeto serializable con todos los datos de la app. */
@@ -178,20 +211,21 @@
                 currentMatch: getCurrentMatch(),
                 lastMatch: getLastMatch(),
                 history: getHistory(),
-                tournaments: getTournaments()
+                tournaments: getTournaments(),
+                photos: getPhotos()
             }
         };
     }
 
     /**
      * Restaura una copia de seguridad (reemplaza los datos actuales).
-     * @returns {{ok:true} | {ok:false, error:string}}
+     * @returns {{ok:true, warning?:string} | {ok:false, error:string}}
      */
     function importBackup(backup) {
         if (!backup || backup.app !== 'voley-playa-scout' || !backup.data) {
             return { ok: false, error: 'El archivo no es una copia de seguridad de Voley Playa Scout.' };
         }
-        const { currentMatch, lastMatch, history, tournaments } = backup.data;
+        const { currentMatch, lastMatch, history, tournaments, photos } = backup.data;
         if (!Array.isArray(history) || !Array.isArray(tournaments)) {
             return { ok: false, error: 'La copia de seguridad está incompleta o dañada.' };
         }
@@ -200,6 +234,10 @@
         if (lastMatch) saveLastMatch(lastMatch);
         write(STORAGE_KEYS.HISTORY, history);
         saveTournaments(tournaments);
+        // Las fotos van al final: si no caben, al menos los partidos ya están restaurados
+        if (photos && !savePhotos(photos)) {
+            return { ok: true, warning: 'Los datos se importaron, pero las fotos no cupieron en el almacenamiento.' };
+        }
         return { ok: true };
     }
 
@@ -215,6 +253,8 @@
         addTournament,
         updateTournament,
         deleteTournament,
+        getPhotos,
+        savePhotos,
         getTheme,
         saveTheme,
         clearAllData,

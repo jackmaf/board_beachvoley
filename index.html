@@ -123,6 +123,11 @@
                             </div>
                         </div>
 
+                        <p class="small text-body-secondary text-center mb-0">
+                            Toca 📷 junto a cada nombre para añadir su foto. Se guarda sólo en este dispositivo
+                            y se reutiliza en todos sus partidos y torneos.
+                        </p>
+
                         <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
                             aria-labelledby="rules-title">
                             <h3 id="rules-title" class="h6 fw-bold text-center">Reglas del partido</h3>
@@ -196,8 +201,8 @@
                         aria-labelledby="backup-title">
                         <h3 id="backup-title" class="h6 fw-bold text-center">Copia de seguridad</h3>
                         <p class="small text-body-secondary text-center">
-                            Los datos sólo se guardan en este navegador. Descarga una copia para no perderlos
-                            o para pasarlos a otro dispositivo.
+                            Los datos (también las fotos) sólo se guardan en este navegador. Descarga una copia
+                            para no perderlos o para pasarlos a otro dispositivo.
                         </p>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" id="btn-backup-export" class="btn btn-outline-primary flex-fill">
@@ -377,12 +382,14 @@
                 <div class="d-flex flex-grow-1 gap-3">
                     <div class="live-board__team live-board__team--a">
                         <span class="live-board__serve" id="live-serving-a" title="Tiene el saque" hidden>🏐</span>
+                        <img class="avatar avatar--logo live-board__photo" id="live-photo-a" alt="" hidden>
                         <h3 class="live-board__name" id="live-name-a">Equipo A</h3>
                         <output class="live-board__score" id="live-score-a" aria-live="polite">0</output>
                         <button type="button" class="live-board__add" id="btn-live-point-a">+1 Punto</button>
                     </div>
                     <div class="live-board__team live-board__team--b">
                         <span class="live-board__serve" id="live-serving-b" title="Tiene el saque" hidden>🏐</span>
+                        <img class="avatar avatar--logo live-board__photo" id="live-photo-b" alt="" hidden>
                         <h3 class="live-board__name" id="live-name-b">Equipo B</h3>
                         <output class="live-board__score" id="live-score-b" aria-live="polite">0</output>
                         <button type="button" class="live-board__add" id="btn-live-point-b">+1 Punto</button>
@@ -624,6 +631,7 @@
                     <div class="col-6">
                         <div class="kotc__side kotc__side--throne" id="kotc-throne">
                             <span class="kotc__side-label" id="kotc-throne-label">👑 Trono</span>
+                            <img class="avatar avatar--logo" id="kotc-throne-photo" alt="" hidden>
                             <strong class="kotc__team" id="kotc-throne-name">—</strong>
                             <span class="kotc__players" id="kotc-throne-players"></span>
                             <output class="kotc__points" id="kotc-throne-points" aria-live="polite">0</output>
@@ -632,6 +640,7 @@
                     <div class="col-6">
                         <div class="kotc__side kotc__side--challenger" id="kotc-challenger">
                             <span class="kotc__side-label">⚔️ Retador · saca</span>
+                            <img class="avatar avatar--logo" id="kotc-challenger-photo" alt="" hidden>
                             <strong class="kotc__team" id="kotc-challenger-name">—</strong>
                             <span class="kotc__players" id="kotc-challenger-players"></span>
                             <output class="kotc__points" id="kotc-challenger-points">0</output>
@@ -781,6 +790,7 @@
                     <h3 id="t-teams-title" class="h6 fw-bold text-center">Equipos (duplas)</h3>
                     <p class="small text-body-secondary text-center">
                         Agrega los jugadores de cada dupla. El nombre de la dupla es opcional.
+                        Toca 📷 para añadir una foto (se guarda sólo en este dispositivo).
                     </p>
                     <div id="t-dynamic-teams" class="vstack gap-2"></div>
                     <button type="button" id="btn-add-team" class="btn btn-outline-primary btn--dashed w-100">
@@ -849,16 +859,36 @@
             <span class="team-row__number" aria-hidden="true"></span>
             <div class="team-row__fields vstack gap-2">
                 <input type="text" class="form-control team-row__input team-row__input--name" data-field="name"
-                    maxlength="40" placeholder="Nombre de la dupla (opcional)">
-                <div class="d-flex gap-2">
-                    <input type="text" class="form-control team-row__input" data-field="p1" maxlength="40"
-                        placeholder="Jugador 1" required>
-                    <input type="text" class="form-control team-row__input" data-field="p2" maxlength="40"
-                        placeholder="Jugador 2" required>
+                    maxlength="40" placeholder="Dupla (opcional)">
+                <!-- En móvil un jugador por línea: cada uno lleva además su selector de foto -->
+                <div class="row g-2">
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control team-row__input" data-field="p1" maxlength="40"
+                            placeholder="Jugador 1" required>
+                    </div>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control team-row__input" data-field="p2" maxlength="40"
+                            placeholder="Jugador 2" required>
+                    </div>
                 </div>
             </div>
             <button type="button" class="btn btn-danger btn--icon flex-shrink-0 team-row__remove"
                 aria-label="Quitar dupla">&times;</button>
+        </div>
+    </template>
+
+    <!--
+        Selector de foto de un jugador o dupla. photo-picker.js lo clona delante de cada
+        input de nombre. `accept="image/*"` en el móvil ofrece galería o cámara.
+    -->
+    <template id="tpl-photo-picker">
+        <div class="photo-picker">
+            <label class="photo-picker__frame" title="Subir foto">
+                <img class="photo-picker__img" alt="" hidden>
+                <span class="photo-picker__placeholder" aria-hidden="true">📷</span>
+                <input type="file" class="photo-picker__file visually-hidden" accept="image/*">
+            </label>
+            <button type="button" class="photo-picker__remove" hidden>&times;</button>
         </div>
     </template>
 
@@ -1082,12 +1112,14 @@
 
     <!-- 2. Servicios y estado -->
     <script src="js/services/storage.js" defer></script>
+    <script src="js/services/photos.js" defer></script>
     <script src="js/services/exporters.js" defer></script>
     <script src="js/state/match-store.js" defer></script>
 
     <!-- 3. Utilidades de interfaz -->
     <script src="js/ui/dom.js" defer></script>
     <script src="js/ui/feedback.js" defer></script>
+    <script src="js/ui/photo-picker.js" defer></script>
     <script src="js/ui/router.js" defer></script>
 
     <!-- 4. Vistas (una por pantalla) -->

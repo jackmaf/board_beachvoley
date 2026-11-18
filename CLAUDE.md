@@ -13,6 +13,7 @@ Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 - **Scout táctico**: se toca la cancha donde cayó el balón y se elige jugador, punto/error y gesto técnico.
 - **Marcador Vivo**: marcador grande tipo TV, con atajos de teclado.
 - **Estadísticas**: partido en curso o cualquiera del historial, filtros, línea de tiempo animada, heatmap, Salón de la Fama, bitácora y dashboard por jugador (radar + PDF/CSV/JSON).
+- **Fotos**: cada jugador y dupla puede llevar una foto subida desde el móvil (galería o cámara), guardada en el dispositivo.
 - **Datos**: `localStorage` con copia de seguridad (exportar/importar).
 
 | Aspecto | Detalle |
@@ -54,12 +55,14 @@ voley playa/
 │   │   └── stats-engine.js    Filtros, marcador, totales, premios, perfil de jugador
 │   ├── services/
 │   │   ├── storage.js         ÚNICO acceso a localStorage + backup
+│   │   ├── photos.js          Fotos de jugadores/duplas: biblioteca por nombre, compresión, URLs
 │   │   └── exporters.js       Descargas PDF / CSV / JSON / backup
 │   ├── state/
 │   │   └── match-store.js     Store del partido en curso (patrón observador)
 │   ├── ui/
 │   │   ├── dom.js             Selectores, delegación de eventos, modales
 │   │   ├── feedback.js        toast, callout, confirm (Promise), spinner
+│   │   ├── photo-picker.js    Selector 📷 que se engancha a un input de nombre
 │   │   └── router.js          Navegación entre vistas
 │   ├── views/                 Una por pantalla: sólo pintan y escuchan eventos
 │   │   ├── match-actions.js   Deshacer / finalizar / anunciar (compartido Scout + Vivo)
@@ -195,6 +198,7 @@ stateDiagram-v2
 | `voley-history` | `Array` de partidos finalizados (lo lee el selector de Stats) |
 | `voley-tournaments` | `Array` de torneos |
 | `voley-theme` | `classic` · `dark` · `high-contrast` (texto plano) |
+| `voley-photos` | `{ players: {nombre→dataURL}, teams: {nombre→dataURL} }` (ver 5.3) |
 
 Los datos antiguos se **migran solos**: `match-store.load()` completa campos nuevos y `tournament-engine` deduce rondas y ganadores de torneos sin `round`/`winner`, y repara BYE atascados.
 
@@ -256,6 +260,20 @@ erDiagram
 ```
 
 **Regla clave:** `punto` suma al equipo del jugador; `error` suma al **rival** (`rules.getPointWinner`).
+
+### 5.3 Fotos de jugadores y duplas
+
+- Se suben desde los tres sitios donde se escriben nombres: formulario de Config, filas de dupla al
+  crear un torneo y modal «Editar dupla». `photo-picker.js` añade un círculo 📷 delante del input
+  (`<template id="tpl-photo-picker">`); `accept="image/*"` ofrece galería o cámara en el móvil.
+- Van **por nombre** (`utils.nameKey`: sin mayúsculas ni espacios sobrantes) en una clave propia
+  `voley-photos`, no dentro de partidos/torneos: no se duplican en el historial y, si la cuota se llena,
+  sólo falla la foto. Se recortan en cuadrado a 256 px JPEG (~20 KB) en `photos.processFile`.
+- La foto elegida queda pendiente hasta enviar el formulario (`photoPicker.commit`), con el nombre
+  definitivo (incluidos «Equipo A» o «Pedro / Juan» generados).
+- Para pintar: `VP.photos.playerSrc(name)` / `teamSrc(name)` devuelven la foto (como `blob:` corto)
+  o el avatar DiceBear de siempre. El dashboard usa el data URL para que salga en el PDF.
+- Entran en la copia de seguridad (v2) y en el borrado total.
 
 ---
 
@@ -447,6 +465,8 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 | Nuevo tema | Bloque `[data-theme="…"]` en `css/tokens.css` + opción en el `theme-picker` de `index.html`; si es oscuro, `data-bs-theme="dark"` en `applyTheme()` |
 | Nueva vista | `<section class="view">` + botón `bottom-nav__item[data-view]` + `VP.router.register()` en su archivo de vista |
 | Cambiar persistencia (p. ej. backend) | Sólo `js/services/storage.js` |
+| Mostrar la foto de un jugador/dupla en otra pantalla | `VP.photos.playerSrc(name)` / `teamSrc(name)` (con avatar generado de respaldo) |
+| Añadir foto a otro input de nombre | `VP.photoPicker.attach(input, VP.photos.KIND.PLAYER)` + `commit(input, nombreFinal)` al enviar |
 
 ---
 

@@ -74,6 +74,18 @@
         setTextWithBump(el[`${prefix}Points`], points ?? 0, 'kotc__points--bump');
     }
 
+    /**
+     * Fotos de trono y retador: sólo si alguna de las dos duplas tiene foto
+     * subida, y entonces las dos (logo generado de relleno) para no desalinear.
+     */
+    function renderSidePhotos(king, challenger) {
+        const show = [king, challenger].some((team) => team && VP.photos.hasTeam(team.name));
+        [[el.thronePhoto, king], [el.challengerPhoto, challenger]].forEach(([img, team]) => {
+            img.hidden = !show || !team;
+            if (!img.hidden) img.src = VP.photos.teamSrc(team.name);
+        });
+    }
+
     function renderQueue(state) {
         el.queue.innerHTML = state.queue
             .map((id, i) => {
@@ -155,6 +167,7 @@
 
         renderSide('throne', king, state.points[state.throne]);
         renderSide('challenger', challenger, challenger ? state.points[challenger.id] : 0);
+        renderSidePhotos(king, challenger);
 
         // Campeón y punto de oro
         const winner = engine.getTeam(state, state.winnerId);
@@ -289,9 +302,11 @@
             throneLabel: byId('kotc-throne-label'),
             throneName: byId('kotc-throne-name'),
             thronePlayers: byId('kotc-throne-players'),
+            thronePhoto: byId('kotc-throne-photo'),
             thronePoints: byId('kotc-throne-points'),
             challengerName: byId('kotc-challenger-name'),
             challengerPlayers: byId('kotc-challenger-players'),
+            challengerPhoto: byId('kotc-challenger-photo'),
             challengerPoints: byId('kotc-challenger-points'),
             btnThrone: byId('btn-kotc-throne'),
             btnChallenger: byId('btn-kotc-challenger'),
