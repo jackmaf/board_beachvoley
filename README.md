@@ -44,6 +44,14 @@ todo desde el navegador y sin instalar nada.
 - Campeón, barra de progreso, edición de duplas y carga manual del resultado con validación por sets.
 - Al «Pitar» un partido, la configuración (duplas, jugadores y reglas) se precarga sola.
 
+### 💰 Premios (opcional por torneo)
+- **Inscripción por jugador** (la dupla paga el doble) y casillas **«¿Pagó?»** jugador a jugador, al crear el torneo o después.
+- La **bolsa se calcula sobre lo pagado**, nunca sobre lo esperado; se muestran aparte lo **esperado** y lo **pendiente**.
+- **% para premios** y el resto para **administración**; reparto por puestos: *el ganador se lleva todo*, *Top 2*, *Top 3* o **personalizado**.
+- Montos **exactos en pesos colombianos** (sin redondear a miles y sin perder ni un peso en el reparto).
+- Ganadores asignados solos: clasificación en Round Robin y, en eliminación directa, los semifinalistas **comparten el 3.º-4.º**.
+- **Copiar resumen** para pegar en WhatsApp (bolsa, reparto y quién debe).
+
 ### 🎯 Scout táctico
 - Cancha de **8 m × 16 m** con **zona libre** alrededor para marcar balones que caen fuera.
 - Por cada acción: **punto (winner)** o **error no forzado**, **jugador** y **gesto técnico** (Ataque, Saque, Bloqueo, Antebrazos, Garrita, Toque, Dedos).
@@ -71,6 +79,7 @@ todo desde el navegador y sin instalar nada.
 ### 🧰 Datos, temas y accesibilidad
 - Todo se guarda en el navegador, con **copia de seguridad** para exportar e importar.
 - Tres temas: **Clásico**, **Oscuro** y **Alto contraste** (lectura bajo sol directo).
+- **Español / inglés** con el selector **ES · EN** de la cabecera (se recuerda la elección).
 - Diseño responsive pensado para el móvil a pie de pista, diálogos accesibles con teclado y avisos que no bloquean la pantalla.
 
 ---
@@ -121,7 +130,8 @@ npx serve .
 3. Al terminar → **Finalizar y guardar partido**: se abre **Stats** con ese partido.
 
 ### Partido de torneo
-1. **Torneos** → **Crear nuevo torneo** → duplas, formato y reglas.
+1. **Torneos** → **Crear nuevo torneo** → duplas, formato y reglas. Opcional: **Activar premios** (inscripción, % y reparto) y marca quién pagó.
+   Los pagos se siguen marcando en la pestaña **💰 Premios** del torneo.
 2. En el detalle, **🏐 Pitar** un partido → revisa la configuración precargada → **Empezar partido**.
 3. Anota en **Marcador** y pulsa **Finalizar**: el ganador avanza solo en el cuadro.
 4. ¿Ya tienes el resultado? Usa **Colocar marcador** para cargarlo set a set.
@@ -194,12 +204,14 @@ board_beachvoley/
 │   ├── court.css            Cancha, mapa de calor y leyenda
 │   ├── tournaments.css      Torneos, partidos y llaves
 │   ├── match.css            Configuración, Scout y Marcador vivo
-│   └── stats.css            Estadísticas y dashboard de jugador
+│   ├── stats.css            Estadísticas y dashboard de jugador
+│   └── prizes.css           Premios: ajustes, reparto y pagos
 ├── js/
-│   ├── core/                Lógica pura: constants, utils, rules, tournament-engine, stats-engine
-│   ├── services/            storage (localStorage + backup) y exporters (PDF/CSV/JSON)
+│   ├── core/                Lógica pura: constants, utils, rules, tournament-engine, prize-engine, stats-engine
+│   ├── i18n/                Diccionarios es.js / en.js (formato i18next)
+│   ├── services/            storage (localStorage + backup), i18n y exporters (PDF/CSV/JSON)
 │   ├── state/               match-store: partido en curso
-│   ├── ui/                  dom, feedback (toasts y confirmaciones) y router
+│   ├── ui/                  dom, feedback (toasts y confirmaciones), router y language (selector ES/EN)
 │   ├── views/               Una vista por pantalla
 │   └── main.js              Arranque
 ├── tests/                   Tests unitarios del núcleo (node:test)
@@ -222,8 +234,10 @@ board_beachvoley/
 npm test
 ```
 
-Ejecuta 29 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
-motor de reglas y del saque, la generación de llaves y los BYE, la clasificación, los filtros, los KPIs y los indicadores profesionales (side-out, break point y recepción).
+Ejecuta 44 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
+motor de reglas y del saque, la generación de llaves y los BYE, la clasificación, los premios (pagos, bolsa y reparto exacto),
+los filtros, los KPIs, los indicadores profesionales (side-out, break point y recepción) y que los diccionarios
+de español e inglés estén completos.
 
 ### Convenciones
 
@@ -251,7 +265,7 @@ motor de reglas y del saque, la generación de llaves y los BYE, la clasificaci�
 - Como los datos viven en un solo navegador, usa **Config → Copia de seguridad** para exportarlos o pasarlos a otro dispositivo.
 - **Servicios externos** que se cargan desde internet:
   - [DiceBear](https://www.dicebear.com/) genera los avatares a partir de los **nombres de jugadores y equipos**, que viajan en la URL de la imagen.
-  - [jsDelivr](https://www.jsdelivr.com/) sirve **Bootstrap 5.3.9** (con hash de integridad SRI).
+  - [jsDelivr](https://www.jsdelivr.com/) sirve **Bootstrap 5.3.9** e **i18next 23.16.8** (traducciones), ambos con hash de integridad SRI. Sin conexión, los textos siguen funcionando con un traductor de respaldo incluido en la app.
   - [cdnjs](https://cdnjs.com/) sirve `html2pdf.js` para exportar a PDF.
   - [Google Fonts](https://fonts.google.com/) sirve la tipografía *Outfit*.
 - Los archivos exportados (`VoleyPlaya_*.pdf/csv/json`) están en el `.gitignore` para que no se suban por error.
@@ -279,6 +293,8 @@ funcionando, pero los avisos pueden quedar detrás de los modales.
 - [x] Historial de partidos en Estadísticas y copia de seguridad.
 - [x] Exportación a PDF, CSV y JSON.
 - [x] Avisos no bloqueantes, diálogos accesibles y atajos de teclado.
+- [x] Premios por torneo: inscripciones, pagos por jugador, bolsa y reparto.
+- [x] Interfaz en español e inglés.
 
 **Próximamente**
 - [ ] Instalable como **PWA** y uso 100 % sin conexión (incluidos los avatares).

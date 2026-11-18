@@ -128,24 +128,29 @@
 
     /**
      * Premios del "Salón de la Fama".
-     * @returns {Array<{emoji:string,title:string,playerId:string,winner:string,team:string,value:string,isNegative:boolean}>}
+     * `key` ('topScorer' | 'mostErrors' | clave del gesto) y `count`/`unit`
+     * permiten a la interfaz traducir `title` y `value`.
+     * @returns {Array<{key:string,emoji:string,title:string,playerId:string,winner:string,team:string,value:string,count:number,unit:'pts'|'errs',isNegative:boolean}>}
      */
     function computeAwards(totals) {
         const players = Object.values(totals);
         const best = (score) => [...players].sort((a, b) => score(b) - score(a))[0];
         const awards = [];
-        const push = (emoji, title, player, value, isNegative = false) =>
-            awards.push({ emoji, title, playerId: player.id, winner: player.name, team: player.team, value, isNegative });
+        const push = (key, emoji, title, player, count, unit, isNegative = false) =>
+            awards.push({
+                key, emoji, title, playerId: player.id, winner: player.name, team: player.team,
+                value: `${count} ${unit}`, count, unit, isNegative
+            });
 
         const topScorer = best((p) => p.pts);
-        if (topScorer && topScorer.pts > 0) push('🔥', 'Máx. Anotador', topScorer, `${topScorer.pts} pts`);
+        if (topScorer && topScorer.pts > 0) push('topScorer', '🔥', 'Máx. Anotador', topScorer, topScorer.pts, 'pts');
 
         const mostErrors = best((p) => p.errs);
-        if (mostErrors && mostErrors.errs > 0) push('☠️', 'Más Errores', mostErrors, `${mostErrors.errs} errs`, true);
+        if (mostErrors && mostErrors.errs > 0) push('mostErrors', '☠️', 'Más Errores', mostErrors, mostErrors.errs, 'errs', true);
 
         SKILLS.forEach((skill) => {
             const leader = best((p) => p.skills[skill.key]);
-            if (leader && leader.skills[skill.key] > 0) push(skill.emoji, skill.award, leader, `${leader.skills[skill.key]} pts`);
+            if (leader && leader.skills[skill.key] > 0) push(skill.key, skill.emoji, skill.award, leader, leader.skills[skill.key], 'pts');
         });
         return awards;
     }
@@ -181,6 +186,7 @@
             playerName: isTimeout(point) ? '-' : playerName || point.jugadorId,
             action: describeAction(point),
             kind: point.tipoAccion,
+            detail: point.actionDetail || null, // Para traducir `action` en la interfaz
             score: point.marcadorMomento,
             xMeters: meters ? meters.x.toFixed(1) : '-',
             yMeters: meters ? meters.y.toFixed(1) : '-'

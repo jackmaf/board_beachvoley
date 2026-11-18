@@ -156,13 +156,30 @@
         }
     }
 
+    /** Idioma elegido ('es' | 'en'), también como texto plano. `null` si nunca se eligió. */
+    function getLanguage() {
+        try {
+            return localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+        } catch {
+            return null;
+        }
+    }
+
+    function saveLanguage(language) {
+        try {
+            localStorage.setItem(STORAGE_KEYS.LANGUAGE, language);
+        } catch (error) {
+            console.warn('[storage] No se pudo guardar el idioma:', error);
+        }
+    }
+
     // ---------------------------------------------------------------------
     // Borrado total y copia de seguridad
     // ---------------------------------------------------------------------
 
     /**
      * Borra TODOS los datos de juego (partidos, historial y torneos).
-     * El tema visual se conserva porque es una preferencia, no un dato.
+     * El tema visual y el idioma se conservan porque son preferencias, no datos.
      */
     function clearAllData() {
         [STORAGE_KEYS.CURRENT_MATCH, STORAGE_KEYS.LAST_MATCH, STORAGE_KEYS.HISTORY, STORAGE_KEYS.TOURNAMENTS].forEach(remove);
@@ -189,11 +206,11 @@
      */
     function importBackup(backup) {
         if (!backup || backup.app !== 'voley-playa-scout' || !backup.data) {
-            return { ok: false, error: 'El archivo no es una copia de seguridad de Voley Playa Scout.' };
+            return { ok: false, code: 'notBackup', error: 'El archivo no es una copia de seguridad de Voley Playa Scout.' };
         }
         const { currentMatch, lastMatch, history, tournaments } = backup.data;
         if (!Array.isArray(history) || !Array.isArray(tournaments)) {
-            return { ok: false, error: 'La copia de seguridad está incompleta o dañada.' };
+            return { ok: false, code: 'backupDamaged', error: 'La copia de seguridad está incompleta o dañada.' };
         }
         clearAllData();
         if (currentMatch) saveCurrentMatch(currentMatch);
@@ -217,6 +234,8 @@
         deleteTournament,
         getTheme,
         saveTheme,
+        getLanguage,
+        saveLanguage,
         clearAllData,
         exportBackup,
         importBackup

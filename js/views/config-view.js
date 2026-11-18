@@ -11,6 +11,8 @@
     const { toInt } = VP.utils;
     const { toast, confirm } = VP.feedback;
     const store = VP.matchStore;
+    const i18n = VP.i18n;
+    const { t } = i18n;
 
     /** IDs de los inputs del formulario y la clave de config que alimentan. */
     const FIELD_MAP = {
@@ -22,8 +24,9 @@
         'input-b2': 'pB2'
     };
 
-    /** Valores por defecto si el usuario deja un nombre vacío. */
-    const NAME_FALLBACK = { teamA: 'Equipo A', teamB: 'Equipo B', pA1: 'A1', pA2: 'A2', pB1: 'B1', pB2: 'B2' };
+    /** Valores por defecto si el usuario deja un nombre vacío (los de equipo, en el idioma activo). */
+    const nameFallback = (key) =>
+        ({ teamA: t('common.teamA'), teamB: t('common.teamB'), pA1: 'A1', pA2: 'A2', pB1: 'B1', pB2: 'B2' })[key];
 
     /**
      * Partido de torneo pendiente de empezar. Se rellena al pulsar "Pitar" en
@@ -40,7 +43,7 @@
     function readForm() {
         const config = {};
         Object.entries(FIELD_MAP).forEach(([inputId, key]) => {
-            config[key] = byId(inputId).value.trim() || NAME_FALLBACK[key];
+            config[key] = byId(inputId).value.trim() || nameFallback(key);
         });
         config.maxSets = toInt(byId('input-max-sets').value, 3);
         config.ptsNormal = toInt(byId('input-pts-normal').value, 21);
@@ -52,8 +55,8 @@
     /** Las opciones de "Saque inicial" muestran el nombre real de cada dupla. */
     function syncFirstServerLabels() {
         const select = byId('input-first-server');
-        select.options[0].textContent = `🏐 ${byId('input-team-a').value.trim() || 'Equipo A'}`;
-        select.options[1].textContent = `🏐 ${byId('input-team-b').value.trim() || 'Equipo B'}`;
+        select.options[0].textContent = `🏐 ${byId('input-team-a').value.trim() || t('common.teamA')}`;
+        select.options[1].textContent = `🏐 ${byId('input-team-b').value.trim() || t('common.teamB')}`;
     }
 
     /** Rellena el formulario con una config (al volver a la vista o precargar un torneo). */
@@ -71,14 +74,14 @@
     /** Ajusta textos y botones según haya (o no) partido en curso. */
     function render() {
         const isUpdating = store.hasPoints() && !pendingTournamentLink;
-        byId('btn-start-match').textContent = isUpdating ? 'Actualizar datos del partido' : 'Empezar partido';
+        byId('btn-start-match').textContent = t(isUpdating ? 'config.update' : 'config.start');
         byId('btn-discard-match').hidden = !store.hasMatch() || Boolean(pendingTournamentLink);
 
         const notice = byId('config-tournament-notice');
         const link = pendingTournamentLink;
         notice.hidden = !link;
         if (link) {
-            notice.textContent = `🏆 Partido del torneo «${link.tournamentName}». Revisa los jugadores y pulsa «Empezar partido».`;
+            notice.textContent = t('config.tournamentNotice', { name: link.tournamentName });
         }
 
         if (store.hasMatch() && !pendingTournamentLink) fillForm(store.getState().config);
@@ -99,10 +102,10 @@
 
         if (store.hasPoints() && !link) {
             store.updateConfig(config);
-            toast('Datos del partido actualizados.', { type: 'success' });
+            toast(t('config.updated'), { type: 'success' });
         } else {
             store.start(config, link || {});
-            toast(`¡A jugar! ${config.teamA} vs ${config.teamB}`, { type: 'success' });
+            toast(t('config.started', { teamA: config.teamA, teamB: config.teamB }), { type: 'success' });
         }
         pendingTournamentLink = null;
         VP.router.go(store.isTournamentMatch() ? 'vista-marcador-vivo' : 'vista-registro');
@@ -137,9 +140,9 @@
 
     async function handleDiscard() {
         const accepted = await confirm({
-            title: 'Descartar partido',
-            message: 'Se perderá todo lo registrado en el partido en curso. ¿Continuar?',
-            confirmLabel: 'Descartar',
+            title: t('config.discardTitle'),
+            message: t('config.discardMessage'),
+            confirmLabel: t('config.discardConfirm'),
             danger: true
         });
         if (!accepted) return;
@@ -147,7 +150,7 @@
         byId('config-form').reset();
         syncFirstServerLabels();
         render();
-        toast('Partido descartado.', { type: 'info' });
+        toast(t('config.discarded'), { type: 'info' });
     }
 
     // ---------------------------------------------------------------------
@@ -179,19 +182,19 @@
         try {
             const backup = await VP.exporters.readJsonFile(file);
             const accepted = await confirm({
-                title: 'Importar copia de seguridad',
-                message: 'Se reemplazarán TODOS los datos actuales (partidos, historial y torneos). ¿Continuar?',
-                confirmLabel: 'Importar',
+                title: t('backup.importTitle'),
+                message: t('backup.importMessage'),
+                confirmLabel: t('backup.importConfirm'),
                 danger: true
             });
             if (!accepted) return;
 
             const result = VP.storage.importBackup(backup);
             if (!result.ok) {
-                toast(result.error, { type: 'error' });
+                toast(i18n.errorMessage(result), { type: 'error' });
                 return;
             }
-            toast('Datos importados. Recargando…', { type: 'success' });
+            toast(t('backup.imported'), { type: 'success' });
             setTimeout(() => window.location.reload(), 800);
         } catch (error) {
             toast(error.message, { type: 'error' });
@@ -200,16 +203,16 @@
 
     async function handleReset() {
         const first = await confirm({
-            title: '🚨 Atención',
-            message: 'Vas a borrar TODO: partidos, historial y torneos guardados en este dispositivo.',
-            confirmLabel: 'Sí, continuar',
+            title: t('reset.firstTitle'),
+            message: t('reset.firstMessage'),
+            confirmLabel: t('reset.firstConfirm'),
             danger: true
         });
         if (!first) return;
         const second = await confirm({
-            title: '⚠️ Última advertencia',
-            message: 'Esta acción NO se puede deshacer. Si quieres conservar algo, exporta antes una copia de seguridad.',
-            confirmLabel: 'Borrar todo',
+            title: t('reset.secondTitle'),
+            message: t('reset.secondMessage'),
+            confirmLabel: t('reset.secondConfirm'),
             danger: true
         });
         if (!second) return;
@@ -238,10 +241,16 @@
 
         byId('btn-backup-export').addEventListener('click', () => {
             VP.exporters.exportBackup();
-            toast('Copia de seguridad descargada.', { type: 'success' });
+            toast(t('backup.exported'), { type: 'success' });
         });
         byId('input-backup-import').addEventListener('change', handleImport);
         byId('btn-reset-db').addEventListener('click', handleReset);
+
+        // Cambio de idioma: textos que pinta esta vista con JS
+        i18n.onChange(() => {
+            syncFirstServerLabels();
+            render();
+        });
 
         VP.router.register('vista-configuracion', { onEnter: render });
     }

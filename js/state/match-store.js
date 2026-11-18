@@ -403,21 +403,21 @@
      * Un partido de torneo necesita un ganador por sets: si van empatados no
      * se puede cerrar (se devuelve error y no se pierde nada).
      *
-     * @returns {{ok:true, tournamentId:(string|null), archived:boolean} | {ok:false, error:string}}
+     * @returns {{ok:true, tournamentId:(string|null), archived:boolean} | {ok:false, error:string, code:string, params?:Object}}
      */
     function finish() {
-        if (!hasMatch()) return { ok: false, error: 'No hay ningún partido en curso.' };
+        if (!hasMatch()) return { ok: false, code: 'noMatch', error: 'No hay ningún partido en curso.' };
         const { tournamentId, tournamentMatchId } = state;
         const won = getSetsWon();
 
         if (tournamentId) {
             if (won.A === won.B) {
-                return { ok: false, error: `Los sets van ${won.A}-${won.B}: un partido de torneo necesita un ganador.` };
+                return { ok: false, code: 'tournamentNeedsWinner', params: { a: won.A, b: won.B }, error: `Los sets van ${won.A}-${won.B}: un partido de torneo necesita un ganador.` };
             }
             const update = storage.updateTournament(tournamentId, (t) =>
                 tournamentEngine.recordResult(t, tournamentMatchId, won.A, won.B)
             );
-            if (update && !update.result.ok) return { ok: false, error: update.result.error };
+            if (update && !update.result.ok) return { ok: false, ...update.result };
         }
 
         pauseTimer();

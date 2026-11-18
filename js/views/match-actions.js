@@ -10,6 +10,8 @@
     const VP = (root.VP = root.VP || {});
     const { toast, callout, confirm } = VP.feedback;
     const store = VP.matchStore;
+    const i18n = VP.i18n;
+    const { t } = i18n;
 
     /**
      * Comunica al usuario lo que provocó un punto (fin de set, de partido,
@@ -19,23 +21,23 @@
     function announceOutcome(outcome) {
         if (!outcome.ok) {
             if (outcome.reason === 'match-over') {
-                toast('El partido ya terminó. Pulsa «Finalizar» para guardarlo.', { type: 'warning' });
+                toast(t('match.alreadyOver'), { type: 'warning' });
             } else {
-                toast('No hay ningún partido en curso.', { type: 'error' });
+                toast(t('errors.noMatch'), { type: 'error' });
             }
             return;
         }
 
-        if (outcome.timerAutoStarted) toast('⏱️ Cronómetro iniciado automáticamente.', { type: 'info' });
+        if (outcome.timerAutoStarted) toast(t('match.timerAutoStarted'), { type: 'info' });
 
         if (outcome.matchWinner) {
             const won = store.getSetsWon();
-            callout(`¡${store.getTeamName(outcome.matchWinner)} gana el partido!`, '🏆', 3000);
-            toast(`Partido decidido (${won.A}-${won.B}). Pulsa «Finalizar» para guardarlo.`, { type: 'success', duration: 6000 });
+            callout(t('match.wonMatch', { team: store.getTeamName(outcome.matchWinner) }), '🏆', 3000);
+            toast(t('match.decided', { a: won.A, b: won.B }), { type: 'success', duration: 6000 });
         } else if (outcome.setWinner) {
-            callout(`¡${store.getTeamName(outcome.setWinner)} gana el Set ${outcome.setNumber}!`, '🏐');
+            callout(t('match.wonSet', { team: store.getTeamName(outcome.setWinner), set: outcome.setNumber }), '🏐');
         } else if (outcome.sideChange) {
-            callout('¡Cambio de lado!', '🔄');
+            callout(t('match.sideChange'), '🔄');
         }
     }
 
@@ -43,25 +45,25 @@
     function describePoint(point) {
         const config = store.getState().config || {};
         const name = config[`p${point.jugadorId}`] || store.getTeamName(point.equipo);
-        return `${VP.statsEngine.describeAction(point)} · ${name} · ${point.marcadorMomento}`;
+        return `${i18n.describeAction(point)} · ${name} · ${point.marcadorMomento}`;
     }
 
     /** Pide confirmación y deshace la última acción. */
     async function confirmAndUndo() {
         const { points } = store.getState();
         if (!points.length) {
-            toast('No hay acciones para deshacer.', { type: 'info' });
+            toast(t('match.nothingToUndo'), { type: 'info' });
             return;
         }
         const last = points[points.length - 1];
         const accepted = await confirm({
-            title: 'Deshacer última acción',
-            message: `Se eliminará: ${describePoint(last)}`,
-            confirmLabel: 'Deshacer'
+            title: t('match.undoTitle'),
+            message: t('match.undoMessage', { action: describePoint(last) }),
+            confirmLabel: t('match.undoConfirm')
         });
         if (!accepted) return;
         store.undo();
-        toast('Acción deshecha.', { type: 'success' });
+        toast(t('match.undone'), { type: 'success' });
     }
 
     /**
@@ -74,19 +76,19 @@
         const won = store.getSetsWon();
         const winner = store.getMatchWinner();
         const message = winner
-            ? `Ganador: ${store.getTeamName(winner)} (${won.A}-${won.B}). Se guardará en el historial.`
-            : `El partido aún no ha terminado (sets ${won.A}-${won.B}). ¿Guardarlo igualmente en el historial?`;
+            ? t('match.finishWinner', { team: store.getTeamName(winner), a: won.A, b: won.B })
+            : t('match.finishUnfinished', { a: won.A, b: won.B });
 
-        const accepted = await confirm({ title: 'Finalizar partido', message, confirmLabel: 'Finalizar y guardar' });
+        const accepted = await confirm({ title: t('match.finishTitle'), message, confirmLabel: t('match.finishConfirm') });
         if (!accepted) return;
 
         const result = store.finish();
         if (!result.ok) {
-            toast(result.error, { type: 'error', duration: 5000 });
+            toast(i18n.errorMessage(result), { type: 'error', duration: 5000 });
             return;
         }
 
-        toast('Partido guardado.', { type: 'success' });
+        toast(t('match.saved'), { type: 'success' });
         if (result.tournamentId) {
             VP.router.go('vista-torneos');
             VP.views.tournaments.openDetail(result.tournamentId);

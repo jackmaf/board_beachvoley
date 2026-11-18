@@ -8,12 +8,16 @@
 
     const VP = (root.VP = root.VP || {});
     const { byId, openModal } = VP.dom;
-    const { getAvatarUrl } = VP.utils;
+    const { getAvatarUrl, escapeHtml } = VP.utils;
     const { SKILLS, RECEPTION_GRADES } = VP.constants;
     const { toast } = VP.feedback;
+    const i18n = VP.i18n;
+    const { t } = i18n;
 
     /** Datos del reporte abierto (los usan los botones de exportar). */
     let currentReport = null;
+    /** Parámetros del último `open()`: permiten repintar al cambiar de idioma. */
+    let lastParams = null;
     let el = {};
 
     /**
@@ -50,9 +54,7 @@
     function renderReception(reception) {
         if (!reception.count) {
             el.reception.innerHTML = `
-                <p class="text-center text-body-secondary mb-0">
-                    Sin recepciones registradas. En Scout, marca 3·2·1·0 sobre este jugador cuando reciba.
-                </p>`;
+                <p class="text-center text-body-secondary mb-0">${escapeHtml(t('dash.noReception'))}</p>`;
             return;
         }
         const pct = (v) => (v === null ? '—' : `${Math.round(v)}%`);
@@ -62,7 +64,7 @@
             return `
                 <div class="zone-bar">
                     <span class="zone-bar__label"><span class="badge grade-badge grade-badge--g${g.grade}">${g.grade}</span></span>
-                    <div class="progress zone-bar__track" role="progressbar" aria-label="Recepciones de calidad ${g.grade}">
+                    <div class="progress zone-bar__track" role="progressbar" aria-label="${escapeHtml(t('dash.gradeBar', { grade: g.grade }))}">
                         <div class="progress-bar zone-bar__fill--g${g.grade}" style="width:${share}%"></div>
                     </div>
                     <span class="zone-bar__value">${count}</span>
@@ -71,9 +73,9 @@
 
         el.reception.innerHTML = `
             <div class="row g-3 mb-2">
-                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">Recepciones</span><strong class="kpi__value kpi__value--neutral">${reception.count}</strong></div></div></div>
-                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">Media</span><strong class="kpi__value">${reception.average.toFixed(2)}</strong><span class="kpi__sub">sobre 3</span></div></div></div>
-                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">Positivas (2-3)</span><strong class="kpi__value kpi__value--accent">${pct(reception.positivePct)}</strong><span class="kpi__sub">Side-out tras recibir: ${pct(reception.sideOutPct)}</span></div></div></div>
+                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">${escapeHtml(t('dash.receptions'))}</span><strong class="kpi__value kpi__value--neutral">${reception.count}</strong></div></div></div>
+                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">${escapeHtml(t('dash.average'))}</span><strong class="kpi__value">${reception.average.toFixed(2)}</strong><span class="kpi__sub">${escapeHtml(t('dash.outOf3'))}</span></div></div></div>
+                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">${escapeHtml(t('dash.positive'))}</span><strong class="kpi__value kpi__value--accent">${pct(reception.positivePct)}</strong><span class="kpi__sub">${escapeHtml(t('dash.sideOutAfter', { value: pct(reception.sideOutPct) }))}</span></div></div></div>
             </div>
             ${bars}`;
     }
@@ -84,7 +86,7 @@
             <div class="col">
             <div class="skill-tile vstack gap-1 align-items-center">
                 <span class="skill-tile__icon" aria-hidden="true">${skill.emoji}</span>
-                <span class="skill-tile__name">${skill.key}</span>
+                <span class="skill-tile__name">${escapeHtml(i18n.skill(skill.key))}</span>
                 <span class="skill-tile__count">${skills[skill.key] || 0}</span>
             </div>
             </div>`
@@ -107,8 +109,9 @@
 
         const center = size / 2;
         const radius = center - 50; // Margen para las etiquetas
-        const labels = SKILLS.map((s) => s.key);
-        const values = labels.map((key) => skills[key] || 0);
+        const keys = SKILLS.map((s) => s.key);
+        const labels = keys.map(i18n.skill);
+        const values = keys.map((key) => skills[key] || 0);
         const count = labels.length;
         const maxValue = Math.max(...values, 5); // Escala mínima de 5 para que no quede diminuto
         const angleOf = (i) => (Math.PI * 2 * i) / count - Math.PI / 2;
@@ -190,7 +193,15 @@
      * @param {Object} params.config  Config del partido analizado.
      * @param {'all'|number} params.set Filtro de set activo.
      */
-    function open({ points, playerId, config, set }) {
+    function open(params) {
+        lastParams = params;
+        render(params);
+        openModal(el.dialog);
+        drawRadarChart(currentReport.profile.skills); // Tras abrir: así getComputedStyle lee el tema real
+    }
+
+    /** Pinta el reporte (sin abrir el modal). */
+    function render({ points, playerId, config, set }) {
         const profile = VP.statsEngine.computePlayerProfile(points, playerId);
         // La recepción la registra el rally (no la acción del jugador), por eso va aparte
         const reception = VP.statsEngine.computeProIndicators(points).players[playerId];
@@ -208,10 +219,10 @@
 
         // Cabecera
         el.avatar.src = getAvatarUrl(playerName);
-        el.avatar.alt = `Avatar de ${playerName}`;
+        el.avatar.alt = t('dash.avatarOf', { name: playerName });
         el.avatar.className = `avatar avatar--xl avatar--team-${profile.team.toLowerCase()}`;
         el.name.textContent = playerName;
-        el.context.textContent = `${teamName} · ${set === 'all' ? 'Todo el partido' : `Set ${set}`}`;
+        el.context.textContent = `${teamName} · ${set === 'all' ? t('stats.wholeMatch') : `Set ${set}`}`;
 
         // KPIs
         setSignedValue(el.plusMinus, profile.plusMinus, profile.plusMinus > 0 ? `+${profile.plusMinus}` : String(profile.plusMinus));
@@ -224,24 +235,22 @@
         el.zoneLValue.textContent = `${profile.zones.pctLeft.toFixed(0)}%`;
         el.zoneRValue.textContent = `${profile.zones.pctRight.toFixed(0)}%`;
         el.bestMinute.textContent = profile.bestMinute
-            ? `Minuto ${profile.bestMinute.minute} (${profile.bestMinute.count} pts)`
-            : 'Ninguno aún';
+            ? t('dash.minute', { minute: profile.bestMinute.minute, count: profile.bestMinute.count })
+            : t('dash.noneYet');
 
         renderReception(reception);
         renderHeatmap(profile.heatPoints, profile.team);
         renderSkills(profile.skills);
-        openModal(el.dialog);
-        drawRadarChart(profile.skills); // Tras abrir: así getComputedStyle lee el tema real
     }
 
     async function handlePdf() {
         if (!currentReport) return;
         const button = byId('btn-export-pdf');
         button.disabled = true;
-        button.textContent = 'Exportando…';
+        button.textContent = t('dash.exporting');
         try {
             await VP.exporters.exportPlayerPdf(el.panel, currentReport);
-            toast('PDF descargado.', { type: 'success' });
+            toast(t('dash.pdfDone'), { type: 'success' });
         } catch (error) {
             toast(error.message, { type: 'error' });
         } finally {
@@ -274,6 +283,13 @@
         byId('btn-export-pdf').addEventListener('click', handlePdf);
         byId('btn-export-csv').addEventListener('click', () => currentReport && VP.exporters.exportPlayerCsv(currentReport));
         byId('btn-export-json').addEventListener('click', () => currentReport && VP.exporters.exportPlayerJson(currentReport));
+
+        // Cambio de idioma con el reporte abierto: repintar textos y radar
+        i18n.onChange(() => {
+            if (!el.dialog.open || !lastParams) return;
+            render(lastParams);
+            drawRadarChart(currentReport.profile.skills);
+        });
     }
 
     VP.views = VP.views || {};

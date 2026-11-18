@@ -1,0 +1,262 @@
+/* =========================================================================
+   PREMIOS DE TORNEO
+   -------------------------------------------------------------------------
+   Ajustes (prize-settings, prize-place-input), vista previa (prize-preview)
+   y pestaña «Premios» del detalle (prize-panel, prize-kpi, prize-pool,
+   prize-award, payment-row). Sólo tokens: funciona en los 3 temas.
+   Los fondos suaves se mezclan con `color-mix` a partir del token de estado.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-settings (componente clonado de #tpl-prize-settings)
+   ------------------------------------------------------------------------- */
+.prize-settings__sum {
+    color: var(--color-success);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.prize-settings__sum--error {
+    color: var(--color-danger);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-place-input (fila "🥇 Puesto 1.º [60] % ×")
+   ------------------------------------------------------------------------- */
+.prize-place-input {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem auto;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.prize-place-input__label {
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-preview (proyección en el formulario y al editar)
+   ------------------------------------------------------------------------- */
+.prize-preview {
+    padding: var(--space-3);
+    border: 2px dashed var(--color-primary-soft);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    font-size: 0.9rem;
+}
+
+.prize-preview:empty {
+    display: none;
+}
+
+.prize-preview__places {
+    display: grid;
+    gap: var(--space-1);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-panel (pestaña «Premios» del detalle)
+   ------------------------------------------------------------------------- */
+.prize-panel__title {
+    color: var(--color-heading);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-kpi (Recaudado · Esperado · Pendiente)
+   ------------------------------------------------------------------------- */
+.prize-kpi {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    height: 100%;
+    padding: var(--space-3) var(--space-2);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.prize-kpi__label {
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.prize-kpi__value {
+    color: var(--color-heading);
+    font-size: clamp(0.95rem, 3.6vw, 1.35rem);
+    font-weight: 900;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.prize-kpi__sub {
+    color: var(--color-text-subtle);
+    font-size: 0.75rem;
+}
+
+.prize-kpi--accent .prize-kpi__value {
+    color: var(--color-success);
+}
+
+.prize-kpi--warning .prize-kpi__value {
+    color: var(--color-warning);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-pool (franja Bolsa · Administración)
+   ------------------------------------------------------------------------- */
+.prize-pool {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: prize-award (un puesto del reparto)
+   ------------------------------------------------------------------------- */
+.prize-award {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-left: 4px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.prize-award--decided {
+    border-left-color: var(--color-secondary);
+}
+
+.prize-award__medal {
+    font-size: 1.6rem;
+}
+
+.prize-award__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.prize-award__place {
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.prize-award__teams {
+    color: var(--color-heading);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.prize-award__pending {
+    color: var(--color-text-subtle);
+    font-style: italic;
+    font-weight: 500;
+}
+
+.prize-award__money {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.prize-award__money strong {
+    color: var(--color-success);
+    font-size: 1.1rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.prize-award__money small {
+    color: var(--color-text-muted);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: payment-row (pagos de una dupla, un interruptor por jugador)
+   ------------------------------------------------------------------------- */
+.payment-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+        "number team status"
+        "number players players";
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3);
+    border-left: 4px solid var(--color-danger);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.payment-row--partial {
+    border-left-color: var(--color-warning);
+}
+
+.payment-row--paid {
+    border-left-color: var(--color-success);
+}
+
+.payment-row__number {
+    grid-area: number;
+    align-self: start;
+    color: var(--color-primary);
+    font-weight: 900;
+}
+
+.payment-row__team {
+    grid-area: team;
+    color: var(--color-heading);
+    font-weight: 700;
+}
+
+.payment-row__status {
+    grid-area: status;
+    background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+    color: var(--color-text);
+}
+
+.payment-row--partial .payment-row__status {
+    background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+}
+
+.payment-row--paid .payment-row__status {
+    background: color-mix(in srgb, var(--color-success) 18%, transparent);
+}
+
+.payment-row__players {
+    grid-area: players;
+    min-width: 0;
+}
+
+/* Botón-interruptor de cada jugador (btn-check + label.btn) */
+.payment-row__player {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    max-width: 100%;
+}
+
+.payment-row__check {
+    font-weight: 900;
+}

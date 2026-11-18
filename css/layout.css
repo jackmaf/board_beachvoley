@@ -8,9 +8,47 @@
    Bloque: app-header
    ------------------------------------------------------------------------- */
 .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
     background: var(--color-strong);
     color: var(--color-on-strong);
     box-shadow: var(--shadow-md);
+}
+
+/* En pantallas anchas el título va centrado y el idioma, a la derecha */
+@media (min-width: 576px) {
+    .app-header {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+    }
+
+    .app-header__title {
+        grid-column: 2;
+        text-align: center;
+    }
+}
+
+.app-header__lang {
+    flex-shrink: 0;
+    justify-self: end;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: lang-switch (ES / EN sobre la cabecera oscura)
+   ------------------------------------------------------------------------- */
+.lang-switch__option {
+    --bs-btn-color: var(--color-on-strong);
+    --bs-btn-border-color: var(--color-on-strong);
+    --bs-btn-hover-color: var(--color-strong);
+    --bs-btn-hover-bg: var(--color-on-strong);
+    --bs-btn-hover-border-color: var(--color-on-strong);
+    --bs-btn-active-color: var(--color-on-primary);
+    --bs-btn-active-bg: var(--color-primary);
+    --bs-btn-active-border-color: var(--color-primary);
+    min-width: 2.5rem;
+    font-weight: 700;
 }
 
 .app-header__title {

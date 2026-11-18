@@ -10,6 +10,8 @@
 Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 
 - **Torneos**: Round Robin (con tabla de clasificación) o Eliminación Directa (llaves con pases automáticos por BYE), campeón y progreso.
+- **Premios** (opcional por torneo): inscripción por jugador, pagos marcados jugador a jugador, bolsa calculada sobre lo **pagado**, % de administración y reparto por puestos.
+- **Idiomas**: español / inglés con el selector ES · EN de la cabecera (i18next).
 - **Scout táctico**: se toca la cancha donde cayó el balón y se elige jugador, punto/error y gesto técnico.
 - **Marcador Vivo**: marcador grande tipo TV, con atajos de teclado.
 - **Estadísticas**: partido en curso o cualquiera del historial, filtros, línea de tiempo animada, heatmap, Salón de la Fama, bitácora y dashboard por jugador (radar + PDF/CSV/JSON).
@@ -18,7 +20,7 @@ Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 | Aspecto | Detalle |
 |---|---|
 | Stack | HTML5 + **Bootstrap 5.3.9** (sólo CSS) + CSS propio con BEM + JavaScript vanilla (ES2020), **sin build** |
-| Externos | Bootstrap 5.3.9 (jsDelivr + SRI) · `html2pdf.js 0.10.1` (CDN) · Google Fonts *Outfit* · API **DiceBear** (avatares SVG) |
+| Externos | Bootstrap 5.3.9 (jsDelivr + SRI) · **i18next 23.16.8** (jsDelivr + SRI) · `html2pdf.js 0.10.1` (CDN) · Google Fonts *Outfit* · API **DiceBear** (avatares SVG) |
 | Ejecutar | Abrir `index.html` en el navegador (funciona con `file://`) |
 | Tests | `npm test` → `node --test` (Node ≥ 18, sin instalar nada) |
 
@@ -41,26 +43,33 @@ voley playa/
 │   ├── tournaments.css        tournament-card, team-row, match-card, bracket, manual-set
 │   ├── match.css              team-form, sets-tracker, match-clock, scoreboard,
 │   │                          action-menu, player-btn, timeout-btn, live-board
-│   └── stats.css              stats, summary, player-stat, fame-card, filters,
-│                              timeline, player-dash, skill-tile, export-btn
+│   ├── stats.css              stats, summary, player-stat, fame-card, filters,
+│   │                          timeline, player-dash, skill-tile, export-btn
+│   └── prizes.css             prize-settings, prize-preview, prize-kpi, prize-pool,
+│                              prize-award, payment-row
 ├── js/
 │   ├── core/                  ⚙️ PURO: sin DOM ni storage → testeable en Node
 │   │   ├── constants.js       Reglas por defecto, claves de storage, gestos técnicos…
 │   │   ├── utils.js           escapeHtml, formatDuration, metros, avatares, CSV…
 │   │   ├── rules.js           Motor de reglas: sets, partido, cambio de lado, validación
 │   │   ├── tournament-engine.js  Generación de llaves, BYE, resultados, clasificación
+│   │   ├── prize-engine.js    Premios: pagos, bolsa, administración, reparto y puestos
 │   │   └── stats-engine.js    Filtros, marcador, totales, premios, perfil de jugador
+│   ├── i18n/                  🌐 Diccionarios (formato i18next): es.js (por defecto) · en.js
 │   ├── services/
 │   │   ├── storage.js         ÚNICO acceso a localStorage + backup
+│   │   ├── i18n.js            t(), idioma activo, dinero COP, traducción de códigos del núcleo
 │   │   └── exporters.js       Descargas PDF / CSV / JSON / backup
 │   ├── state/
 │   │   └── match-store.js     Store del partido en curso (patrón observador)
 │   ├── ui/
 │   │   ├── dom.js             Selectores, delegación de eventos, modales
 │   │   ├── feedback.js        toast, callout, confirm (Promise), spinner
-│   │   └── router.js          Navegación entre vistas
+│   │   ├── router.js          Navegación entre vistas
+│   │   └── language.js        Traduce el HTML (data-i18n*) y conecta el selector ES/EN
 │   ├── views/                 Una por pantalla: sólo pintan y escuchan eventos
 │   │   ├── match-actions.js   Deshacer / finalizar / anunciar (compartido Scout + Vivo)
+│   │   ├── prize-panel.js     Sección de premios al crear + pestaña «Premios» del detalle
 │   │   ├── tournaments-view.js
 │   │   ├── config-view.js
 │   │   ├── scout-view.js
@@ -118,6 +127,7 @@ flowchart TB
         RULES[rules]
         TE[tournament-engine]
         SE[stats-engine]
+        PE[prize-engine]
         UT[utils]
         C[constants]
     end
@@ -129,12 +139,14 @@ flowchart TB
     SV & LV & MA --> STORE
     TV & CV --> STORAGE
     STV & PD --> SE
-    TV --> TE
+    TV --> TE & PE
+    V --> I18N["i18n + language<br/>(i18next)"]
     PD & CV --> EXP
     STORE --> RULES & STORAGE & TE
     STORAGE --> LS
     EXP --> EXT
-    RULES & TE & SE --> UT --> C
+    PE --> TE
+    RULES & TE & SE & PE --> UT --> C
 ```
 
 ### Patrones aplicados
@@ -143,7 +155,7 @@ flowchart TB
 |---|---|---|
 | **Módulos IIFE + namespace `VP`** | Todos los `js/*` | Encapsulan; funcionan con `file://` (los ES Modules no). Los de `core/` además exportan `module.exports` para Node. |
 | **Store + observador** | `match-store.js` | Única fuente de verdad; las vistas se suscriben a `'change'` / `'tick'` y se repintan. |
-| **Funciones puras** | `core/*` | Lógica de dominio aislada y cubierta por 29 tests. |
+| **Funciones puras** | `core/*` | Lógica de dominio aislada y cubierta por tests (`npm test`). |
 | **Repositorio** | `storage.js` | Un solo punto de lectura/escritura, tolerante a JSON corrupto. |
 | **Delegación de eventos** | `dom.delegate` | Sustituye a los `onclick="fn('${nombre}')"` inline (rompían con apóstrofes y exigían globales). |
 | **Escapado de HTML** | `utils.escapeHtml` | Todo texto del usuario pasa por aquí antes de `innerHTML` (anti-XSS). |
@@ -152,6 +164,8 @@ flowchart TB
 | **Plantillas `<template>`** | Fila de dupla | Marcado declarativo en HTML, clonado con JS. |
 | **Puente de tema** | `css/bootstrap-theme.css` | Bootstrap se personaliza reasignando sus variables `--bs-*` a nuestros tokens: sin Sass, sin tocar su CSS y con los 3 temas funcionando. |
 | **Constantes centralizadas** | `constants.js` | Añadir un gesto técnico o cambiar una regla en un solo sitio. |
+| **i18n con códigos** | `services/i18n.js` + `js/i18n/*` | El núcleo puro NO traduce: devuelve `{ code, params }` (y el texto en español como respaldo) y la vista usa `i18n.errorMessage()`. Los datos guardados (gestos `'Ataque'`, formatos) siguen en español y se traducen sólo al pintarlos. |
+| **i18next con respaldo** | `services/i18n.js` | Si el CDN no carga, un traductor mínimo con los mismos diccionarios (plurales e interpolación) evita que la app se rompa. |
 
 ---
 
@@ -192,6 +206,7 @@ stateDiagram-v2
 | `voley-history` | `Array` de partidos finalizados (lo lee el selector de Stats) |
 | `voley-tournaments` | `Array` de torneos |
 | `voley-theme` | `classic` · `dark` · `high-contrast` (texto plano) |
+| `voley-language` | `es` · `en` (texto plano; sin valor → español) |
 
 Los datos antiguos se **migran solos**: `match-store.load()` completa campos nuevos y `tournament-engine` deduce rondas y ganadores de torneos sin `round`/`winner`, y repara BYE atascados.
 
@@ -213,6 +228,7 @@ erDiagram
         object config_sets "maxSets, ptsNormal, ptsTiebreak"
         array teams
         number createdAt
+        object prize "opcional (ver 6.6)"
     }
     TMATCH {
         string id
@@ -352,6 +368,25 @@ flowchart LR
 
 ---
 
+### 6.6 Premios de torneo
+
+`tournament.prize = { enabled, feePerPlayer, poolPercent, distribution: [60, 30, 10], entries: [{ name, p1, p2, paid: { p1, p2 } }] }`
+
+```mermaid
+flowchart LR
+    PAY["entries[].paid<br/>(un interruptor por jugador)"] --> COL["Recaudado = jugadores que pagaron × inscripción"]
+    COL --> SPLIT["splitExact (mayor resto)<br/>sin redondear a miles, sin perder pesos"]
+    SPLIT --> POOL["Bolsa = poolPercent %"] & ADM["Administración = resto"]
+    POOL --> PLACES["Reparto por puestos (distribution)"]
+    GROUPS["getRankGroups<br/>RR: clasificación (provisional hasta terminar)<br/>KO: campeón · finalista · semis comparten 3.º-4.º…"] --> PLACES
+```
+
+- La bolsa se calcula sobre lo **pagado**; lo esperado y lo pendiente se muestran aparte.
+- Se activa al crear el torneo (casillas «¿Pagó?» en cada dupla) o después desde la pestaña «Premios».
+  Reconfigurar o desactivar **conserva los pagos**.
+- Los pases por BYE no ocupan puesto. Si hay más puestos premiados que duplas, el sobrante se avisa (`unassigned`).
+- *Queen & King of the Court* todavía no tiene puestos en `getRankGroups` (pendiente de integrar).
+
 ## 7. Convenciones de código
 
 ### CSS — Bootstrap 5.3 + BEM
@@ -394,12 +429,22 @@ flowchart LR
 - `'use strict'`, `const` por defecto, sin variables globales salvo `window.VP`.
 - Todo texto del usuario → `escapeHtml()` antes de `innerHTML`, o `textContent`.
 
+### Textos e idiomas (i18n)
+
+- **Ningún texto visible escrito a mano** en vistas ni HTML sin clave: todo pasa por `VP.i18n.t('grupo.clave', params)`.
+- HTML estático: `data-i18n="clave"` (texto), `data-i18n-html="clave"` (sólo textos propios con `<strong>`/`<kbd>`),
+  `data-i18n-attr="placeholder:clave;title:clave"`. El español sigue escrito en el HTML como respaldo legible.
+- Un elemento cuyo contenido pinta JS **no** lleva `data-i18n` (se pisaría): lo traduce su vista.
+- `t()` **no escapa**: si el resultado va a `innerHTML` con datos del usuario, escapa esos datos antes de pasarlos.
+- Plurales con `clave_one` / `clave_other` y `t('clave', { count })`. Dinero con `i18n.money()` (COP, sin decimales si es entero).
+- Cada vista se repinta en `VP.i18n.onChange(...)`; las plantillas clonadas se traducen con `VP.language.translate(fragmento)`.
+
 ---
 
 ## 8. Cómo probar
 
 ```bash
-npm test          # 29 tests unitarios de js/core (reglas, saque, torneos, estadísticas)
+npm test          # 44 tests: js/core (reglas, saque, torneos, premios, estadísticas) + diccionarios i18n
 ```
 
 Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless (Puppeteer, fuera del repo) con 56 comprobaciones: partidos completos, deshacer entre sets, filtros, dashboard y radar, torneos con BYE, resultado manual, Marcador Vivo con teclado, tema oscuro, móvil sin scroll horizontal, migración de datos v1, backup y descargas PDF/CSV/JSON.
@@ -410,7 +455,11 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 
 | Quiero… | Dónde |
 |---|---|
-| Añadir un gesto técnico | Sólo `SKILLS` en `js/core/constants.js` (menú, filtros, premios, radar y CSV se generan solos) |
+| Añadir un gesto técnico | `SKILLS` en `js/core/constants.js` + su nombre en `skills.*` y `awards.*` de `js/i18n/es.js` y `en.js` (menú, filtros, premios, radar y CSV se generan solos) |
+| Añadir o cambiar un texto | La clave en `js/i18n/es.js` **y** `en.js` (el test `tests/i18n.test.js` avisa si falta en alguno o si el HTML/JS usa una clave inexistente) |
+| Añadir un idioma | Nuevo `js/i18n/xx.js` + entrada en `LANGUAGES` de `constants.js` + `<script>` en `index.html` + botón en `.lang-switch` |
+| Repartos de premios predefinidos | `PRIZE_PRESETS` / `PRIZE_DEFAULTS` en `constants.js` (+ opción en `#tpl-prize-settings` y su texto) |
+| Puestos premiados de un formato nuevo | `getRankGroups` en `core/prize-engine.js` (+ tests) |
 | Cambiar reglas de set / cambio de lado | `DEFAULT_RULES`, `SIDE_CHANGE_EVERY` en `constants.js`; lógica en `core/rules.js` |
 | Puntos de clasificación Round Robin | `STANDING_POINTS` en `constants.js` |
 | Nuevo formato de torneo | `core/tournament-engine.js` (+ tests) y `views/tournaments-view.js` |

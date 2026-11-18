@@ -19,6 +19,8 @@
     const { toast } = VP.feedback;
     const store = VP.matchStore;
     const actions = VP.views.matchActions;
+    const i18n = VP.i18n;
+    const { t } = i18n;
 
     let el = {};
 
@@ -38,11 +40,13 @@
      * aspecto de botón sin JS extra.
      */
     function renderSkillChoices() {
+        // Conserva el gesto elegido si se repinta (p. ej. al cambiar de idioma)
+        const selected = qs('input[name="actionDetail"]:checked', el.skillGroup)?.value || DEFAULT_SKILL;
         el.skillGroup.innerHTML = SKILLS.map(
             (skill) => `
             <input class="btn-check" type="radio" name="actionDetail" id="skill-${skill.key}" value="${skill.key}"
-                autocomplete="off" ${skill.key === DEFAULT_SKILL ? 'checked' : ''}>
-            <label class="btn btn-outline-secondary action-menu__skill" for="skill-${skill.key}">${skill.emoji} ${skill.key}</label>`
+                autocomplete="off" ${skill.key === selected ? 'checked' : ''}>
+            <label class="btn btn-outline-secondary action-menu__skill" for="skill-${skill.key}">${skill.emoji} ${escapeHtml(i18n.skill(skill.key))}</label>`
         ).join('');
     }
 
@@ -64,12 +68,12 @@
                     const isActive = pendingReception?.playerId === playerId && pendingReception.grade === g.grade;
                     return `<button type="button" class="reception__grade reception__grade--g${g.grade} ${isActive ? 'reception__grade--active' : ''}"
                         data-player="${playerId}" data-grade="${g.grade}" aria-pressed="${isActive}"
-                        title="${g.grade} · ${g.label}: ${g.hint}">${g.grade}</button>`;
+                        title="${escapeHtml(`${g.grade} · ${t(`reception.grade${g.grade}`)}: ${t(`reception.hint${g.grade}`)}`)}">${g.grade}</button>`;
                 }).join('');
                 return `
                 <div class="reception__row reception__row--${receivingTeam.toLowerCase()} d-flex align-items-center gap-2">
                     <span class="reception__player text-truncate">${name}</span>
-                    <div class="d-flex gap-1" role="group" aria-label="Calidad de recepción de ${name}">${buttons}</div>
+                    <div class="d-flex gap-1" role="group" aria-label="${escapeHtml(t('scout.receptionQuality', { name: config[`p${playerId}`] || playerId }))}">${buttons}</div>
                 </div>`;
             })
             .join('');
@@ -77,14 +81,14 @@
 
     /** Reloj de Bogotá (hora oficial de referencia del proyecto). */
     function renderRealClock() {
-        const time = new Intl.DateTimeFormat('es-CO', {
+        const time = new Intl.DateTimeFormat(i18n.getLocale(), {
             timeZone: 'America/Bogota',
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
             hour12: false
         }).format(new Date());
-        el.realClock.textContent = `${time} (Bogotá)`;
+        el.realClock.textContent = t('scout.bogotaClock', { time });
     }
 
     /** Cronómetro oficial y estado de sus botones. */
@@ -105,7 +109,8 @@
             const winner = VP.rules.getSetWinner(state.sets[i], i, matchRules);
             ['A', 'B'].forEach((team) => {
                 const won = winner === team ? `sets-tracker__box--won-${team.toLowerCase()}` : '';
-                boxes[team].push(`<span class="sets-tracker__box ${won}" aria-label="Set ${i + 1}${winner === team ? ' ganado' : ''}"></span>`);
+                const label = t(winner === team ? 'scout.setBoxWon' : 'scout.setBox', { set: i + 1 });
+                boxes[team].push(`<span class="sets-tracker__box ${won}" aria-label="${escapeHtml(label)}"></span>`);
             });
         }
         el.setBoxesA.innerHTML = boxes.A.join('');
@@ -142,7 +147,7 @@
             [el.logoB, config.teamB]
         ].forEach(([img, name]) => {
             img.src = getTeamLogoUrl(name);
-            img.alt = `Logo de ${name}`;
+            img.alt = t('scout.logoOf', { name });
             img.hidden = false;
         });
         renderPlayerButtons(config);
@@ -159,12 +164,12 @@
         // Etiqueta del set en juego
         const target = VP.rules.getSetTarget(state.currentSetIndex, store.getRules());
         el.setLabel.innerHTML = matchOver
-            ? `🏆 <strong>${escapeHtml(store.getTeamName(store.getMatchWinner()))}</strong> gana ${won.A}-${won.B}`
-            : `Set ${state.currentSetIndex + 1} · a ${target} puntos · Sets ${won.A}-${won.B}`;
+            ? t('scout.matchWon', { team: `<strong>${escapeHtml(store.getTeamName(store.getMatchWinner()))}</strong>`, a: won.A, b: won.B })
+            : escapeHtml(t('scout.setLabel', { set: state.currentSetIndex + 1, target, a: won.A, b: won.B }));
 
         // Tiempos muertos
-        el.toLabelA.textContent = `⏱️ T. ${config.teamA}`;
-        el.toLabelB.textContent = `⏱️ T. ${config.teamB}`;
+        el.toLabelA.textContent = t('scout.timeoutLabel', { team: config.teamA });
+        el.toLabelB.textContent = t('scout.timeoutLabel', { team: config.teamB });
         el.toCountA.textContent = `(${set.timeoutsA}/${MAX_TIMEOUTS_PER_SET})`;
         el.toCountB.textContent = `(${set.timeoutsB}/${MAX_TIMEOUTS_PER_SET})`;
         el.timeoutA.disabled = matchOver || set.timeoutsA >= MAX_TIMEOUTS_PER_SET;
@@ -242,9 +247,9 @@
     function handleTimeout(team) {
         const result = store.registerTimeout(team);
         if (result.ok) {
-            toast(`Tiempo muerto: ${store.getTeamName(team)}. Cronómetro en pausa.`, { type: 'info' });
+            toast(t('scout.timeoutTaken', { team: store.getTeamName(team) }), { type: 'info' });
         } else if (result.reason === 'limit') {
-            toast(`${store.getTeamName(team)} ya no tiene tiempos muertos en este set.`, { type: 'warning' });
+            toast(t('scout.timeoutLimit', { team: store.getTeamName(team) }), { type: 'warning' });
         } else {
             actions.announceOutcome(result);
         }
@@ -315,6 +320,12 @@
 
         // El store avisa: 'change' repinta todo, 'tick' sólo el cronómetro
         store.subscribe((event) => (event === 'tick' ? renderStopwatch() : render()));
+        i18n.onChange(() => {
+            renderSkillChoices();
+            renderRealClock();
+            if (!el.menu.hidden) renderReceptionChoices();
+            render();
+        });
         VP.router.register('vista-registro', { onEnter: render });
     }
 

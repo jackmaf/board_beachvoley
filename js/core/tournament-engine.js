@@ -252,8 +252,8 @@
      */
     function recordResult(tournament, matchId, setsA, setsB) {
         const match = findMatch(tournament, matchId);
-        if (!match) return { ok: false, error: 'No se encontró el partido.' };
-        if (setsA === setsB) return { ok: false, error: 'Un partido de voley playa no puede terminar empatado.' };
+        if (!match) return { ok: false, code: 'matchNotFound', error: 'No se encontró el partido.' };
+        if (setsA === setsB) return { ok: false, code: 'matchTied', error: 'Un partido de voley playa no puede terminar empatado.' };
 
         const newWinner = setsA > setsB ? 'teamA' : 'teamB';
         const previousWinner = getWinnerSlot(match);
@@ -261,7 +261,7 @@
         if (previousWinner && previousWinner !== newWinner && match.nextMatchId) {
             const next = findMatch(tournament, match.nextMatchId);
             if (next && next.status === MATCH_STATUS.FINISHED && !next.walkover) {
-                return { ok: false, error: 'No se puede cambiar el ganador: el siguiente partido ya se jugó.' };
+                return { ok: false, code: 'nextMatchPlayed', error: 'No se puede cambiar el ganador: el siguiente partido ya se jugó.' };
             }
             if (next && next.walkover) {
                 // Deshacer el pase automático para recalcularlo con el nuevo ganador

@@ -8,7 +8,7 @@
     'use strict';
 
     const VP = (root.VP = root.VP || {});
-    const { COURT_METERS, TEAM_EMOJIS } = VP.constants;
+    const { COURT_METERS, TEAM_EMOJIS, CURRENCY } = VP.constants;
 
     /**
      * Escapa caracteres especiales de HTML.
@@ -163,6 +163,24 @@
         return Number.isFinite(parsed) ? parsed : fallback;
     }
 
+    /**
+     * Formatea un monto en pesos colombianos.
+     * Sin redondeos: los montos enteros salen sin decimales ("$ 10.000") y,
+     * si hay centavos (p. ej. la mitad de un premio impar), se muestran.
+     * @param {number} amount
+     * @param {string} [locale='es-CO'] 'es-CO' → "$ 10.000" · 'en-US' → "$10,000"
+     * @returns {string}
+     */
+    function formatMoney(amount, locale = 'es-CO') {
+        return new Intl.NumberFormat(locale, {
+            style: 'currency',
+            currency: CURRENCY,
+            currencyDisplay: 'narrowSymbol',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+        }).format(Number(amount) || 0);
+    }
+
     VP.utils = Object.freeze({
         escapeHtml,
         formatDuration,
@@ -178,7 +196,8 @@
         slugify,
         debounce,
         deepClone,
-        toInt
+        toInt,
+        formatMoney
     });
 
     if (typeof module !== 'undefined' && module.exports) module.exports = VP.utils;

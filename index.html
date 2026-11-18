@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Scouting y estadísticas en tiempo real para voley playa 2 vs 2.">
+    <meta name="description" content="Scouting y estadísticas en tiempo real para voley playa 2 vs 2."
+        data-i18n-attr="content:meta.description">
     <meta name="theme-color" content="#2C363F">
     <title>Voley Playa Scout</title>
 
@@ -33,13 +34,25 @@
     <link rel="stylesheet" href="css/tournaments.css">
     <link rel="stylesheet" href="css/match.css">
     <link rel="stylesheet" href="css/stats.css">
+    <link rel="stylesheet" href="css/prizes.css">
 </head>
 
 <body data-theme="classic" data-bs-theme="light">
-    <a class="skip-link visually-hidden-focusable" href="#app-content">Saltar al contenido</a>
+    <a class="skip-link visually-hidden-focusable" href="#app-content" data-i18n="app.skipLink">Saltar al contenido</a>
 
-    <header class="app-header py-3 text-center">
+    <header class="app-header py-3 px-3">
         <h1 class="app-header__title mb-0">🏐 Voley Playa Scout</h1>
+
+        <!-- Selector de idioma: radios con aspecto de botón (.btn-check) -->
+        <div class="lang-switch btn-group btn-group-sm app-header__lang" role="radiogroup"
+            data-i18n-attr="aria-label:app.language">
+            <input class="btn-check lang-switch__input" type="radio" name="appLanguage" id="lang-es" value="es"
+                autocomplete="off" checked>
+            <label class="btn lang-switch__option" for="lang-es" title="Español" lang="es">ES</label>
+            <input class="btn-check lang-switch__input" type="radio" name="appLanguage" id="lang-en" value="en"
+                autocomplete="off">
+            <label class="btn lang-switch__option" for="lang-en" title="English" lang="en">EN</label>
+        </div>
     </header>
 
     <main id="app-content" class="app-main">
@@ -50,8 +63,9 @@
         <section id="vista-torneos" class="view px-3 py-4" aria-labelledby="torneos-title">
             <div class="card card--glass card--narrow">
                 <div class="card-body vstack gap-3">
-                    <h2 id="torneos-title" class="section-title">🏅 Gestión de Torneos</h2>
-                    <button type="button" id="btn-create-tournament" class="btn btn-primary w-100">
+                    <h2 id="torneos-title" class="section-title" data-i18n="tournaments.title">🏅 Gestión de Torneos</h2>
+                    <button type="button" id="btn-create-tournament" class="btn btn-primary w-100"
+                        data-i18n="tournaments.create">
                         + Crear nuevo torneo
                     </button>
                     <!-- Tarjetas generadas por tournaments-view.js -->
@@ -66,7 +80,7 @@
         <section id="vista-configuracion" class="view px-3 py-4" aria-labelledby="config-title">
             <div class="card card--glass card--narrow">
                 <div class="card-body vstack gap-3">
-                    <h2 id="config-title" class="section-title">Configuración del partido</h2>
+                    <h2 id="config-title" class="section-title" data-i18n="config.title">Configuración del partido</h2>
 
                     <!-- Aviso visible cuando el partido pertenece a un torneo -->
                     <p id="config-tournament-notice" class="alert alert-info small py-2 mb-0" hidden></p>
@@ -76,23 +90,27 @@
                             <div class="col-sm-6">
                                 <div class="team-form team-form--a vstack gap-2" role="group"
                                     aria-labelledby="team-a-title">
-                                    <h3 id="team-a-title" class="h5 fw-bold text-center">Equipo A</h3>
+                                    <h3 id="team-a-title" class="h5 fw-bold text-center" data-i18n="common.teamA">Equipo A</h3>
                                     <div>
-                                        <label class="form-label text-primary" for="input-team-a">
+                                        <label class="form-label text-primary" for="input-team-a"
+                                            data-i18n="config.teamName">
                                             Nombre de la dupla (país / club)
                                         </label>
                                         <input class="form-control" type="text" id="input-team-a" maxlength="40"
-                                            placeholder="Ej. Brasil / Team Playa" required autocomplete="off">
+                                            placeholder="Ej. Brasil / Team Playa" required autocomplete="off"
+                                            data-i18n-attr="placeholder:config.teamPlaceholderA">
                                     </div>
                                     <div>
-                                        <label class="form-label" for="input-a1">Jugador 1</label>
+                                        <label class="form-label" for="input-a1" data-i18n="common.player1">Jugador 1</label>
                                         <input class="form-control" type="text" id="input-a1" maxlength="40"
-                                            placeholder="Ej. Juan Pérez" required autocomplete="off">
+                                            placeholder="Ej. Juan Pérez" required autocomplete="off"
+                                            data-i18n-attr="placeholder:config.playerA1Placeholder">
                                     </div>
                                     <div>
-                                        <label class="form-label" for="input-a2">Jugador 2</label>
+                                        <label class="form-label" for="input-a2" data-i18n="common.player2">Jugador 2</label>
                                         <input class="form-control" type="text" id="input-a2" maxlength="40"
-                                            placeholder="Ej. Pedro Gómez" required autocomplete="off">
+                                            placeholder="Ej. Pedro Gómez" required autocomplete="off"
+                                            data-i18n-attr="placeholder:config.playerA2Placeholder">
                                     </div>
                                 </div>
                             </div>
@@ -100,23 +118,27 @@
                             <div class="col-sm-6">
                                 <div class="team-form team-form--b vstack gap-2" role="group"
                                     aria-labelledby="team-b-title">
-                                    <h3 id="team-b-title" class="h5 fw-bold text-center">Equipo B</h3>
+                                    <h3 id="team-b-title" class="h5 fw-bold text-center" data-i18n="common.teamB">Equipo B</h3>
                                     <div>
-                                        <label class="form-label text-primary" for="input-team-b">
+                                        <label class="form-label text-primary" for="input-team-b"
+                                            data-i18n="config.teamName">
                                             Nombre de la dupla (país / club)
                                         </label>
                                         <input class="form-control" type="text" id="input-team-b" maxlength="40"
-                                            placeholder="Ej. España / Team Sol" required autocomplete="off">
+                                            placeholder="Ej. España / Team Sol" required autocomplete="off"
+                                            data-i18n-attr="placeholder:config.teamPlaceholderB">
                                     </div>
                                     <div>
-                                        <label class="form-label" for="input-b1">Jugador 1</label>
+                                        <label class="form-label" for="input-b1" data-i18n="common.player1">Jugador 1</label>
                                         <input class="form-control" type="text" id="input-b1" maxlength="40"
-                                            placeholder="Ej. Carlos Ruiz" required autocomplete="off">
+                                            placeholder="Ej. Carlos Ruiz" required autocomplete="off"
+                                            data-i18n-attr="placeholder:config.playerB1Placeholder">
                                     </div>
                                     <div>
-                                        <label class="form-label" for="input-b2">Jugador 2</label>
+                                        <label class="form-label" for="input-b2" data-i18n="common.player2">Jugador 2</label>
                                         <input class="form-control" type="text" id="input-b2" maxlength="40"
-                                            placeholder="Ej. Luis Torres" required autocomplete="off">
+                                            placeholder="Ej. Luis Torres" required autocomplete="off"
+                                            data-i18n-attr="placeholder:config.playerB2Placeholder">
                                     </div>
                                 </div>
                             </div>
@@ -124,28 +146,28 @@
 
                         <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
                             aria-labelledby="rules-title">
-                            <h3 id="rules-title" class="h6 fw-bold text-center">Reglas del partido</h3>
+                            <h3 id="rules-title" class="h6 fw-bold text-center" data-i18n="config.rulesTitle">Reglas del partido</h3>
                             <div class="row g-3">
                                 <div class="col-6">
-                                    <label class="form-label" for="input-max-sets">Modalidad de sets</label>
+                                    <label class="form-label" for="input-max-sets" data-i18n="config.setsMode">Modalidad de sets</label>
                                     <select class="form-select" id="input-max-sets">
-                                        <option value="1">A 1 solo set</option>
-                                        <option value="3" selected>Al mejor de 3 sets</option>
-                                        <option value="5">Al mejor de 5 sets</option>
+                                        <option value="1" data-i18n="config.sets1">A 1 solo set</option>
+                                        <option value="3" selected data-i18n="config.sets3">Al mejor de 3 sets</option>
+                                        <option value="5" data-i18n="config.sets5">Al mejor de 5 sets</option>
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label" for="input-pts-normal">Pts. por set</label>
+                                    <label class="form-label" for="input-pts-normal" data-i18n="common.ptsPerSet">Pts. por set</label>
                                     <input class="form-control" type="number" id="input-pts-normal" value="21"
                                         min="1" max="50" inputmode="numeric">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label" for="input-pts-tiebreak">Pts. tie-break</label>
+                                    <label class="form-label" for="input-pts-tiebreak" data-i18n="common.ptsTiebreak">Pts. tie-break</label>
                                     <input class="form-control" type="number" id="input-pts-tiebreak" value="15"
                                         min="1" max="50" inputmode="numeric">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label" for="input-first-server">Saque inicial</label>
+                                    <label class="form-label" for="input-first-server" data-i18n="config.firstServer">Saque inicial</label>
                                     <!-- Necesario para calcular side-out y break point; se alterna en cada set -->
                                     <select class="form-select" id="input-first-server">
                                         <option value="A" selected>Equipo A</option>
@@ -158,7 +180,8 @@
                         <button type="submit" id="btn-start-match" class="btn btn-primary w-100">
                             Empezar partido
                         </button>
-                        <button type="button" id="btn-discard-match" class="btn btn-outline-primary w-100" hidden>
+                        <button type="button" id="btn-discard-match" class="btn btn-outline-primary w-100" hidden
+                            data-i18n="config.discard">
                             🗑️ Descartar partido en curso
                         </button>
                     </form>
@@ -167,42 +190,44 @@
 
             <div class="card card--glass card--narrow">
                 <div class="card-body vstack gap-3">
-                    <h2 class="section-title">Preferencias y datos</h2>
+                    <h2 class="section-title" data-i18n="config.prefsTitle">Preferencias y datos</h2>
 
                     <div class="theme-picker vstack gap-2 text-center" role="radiogroup"
                         aria-labelledby="theme-title">
-                        <h3 id="theme-title" class="h6 fw-bold">Tema visual</h3>
+                        <h3 id="theme-title" class="h6 fw-bold" data-i18n="theme.title">Tema visual</h3>
                         <div class="d-flex flex-wrap justify-content-center gap-2">
                             <input class="btn-check theme-picker__input" type="radio" name="appTheme"
                                 id="theme-classic" value="classic" autocomplete="off">
                             <label class="btn theme-picker__swatch theme-picker__swatch--classic" for="theme-classic"
-                                title="Modo original estilo arena">🏖️ Clásico</label>
+                                title="Modo original estilo arena" data-i18n="theme.classic"
+                                data-i18n-attr="title:theme.classicHint">🏖️ Clásico</label>
 
                             <input class="btn-check theme-picker__input" type="radio" name="appTheme" id="theme-dark"
                                 value="dark" autocomplete="off">
                             <label class="btn theme-picker__swatch theme-picker__swatch--dark" for="theme-dark"
-                                title="Tonos oscuros para ahorrar batería">🌙 Oscuro</label>
+                                title="Tonos oscuros para ahorrar batería" data-i18n="theme.dark"
+                                data-i18n-attr="title:theme.darkHint">🌙 Oscuro</label>
 
                             <input class="btn-check theme-picker__input" type="radio" name="appTheme"
                                 id="theme-contrast" value="high-contrast" autocomplete="off">
                             <label class="btn theme-picker__swatch theme-picker__swatch--contrast"
-                                for="theme-contrast" title="Máxima legibilidad bajo la luz del sol">☀️ Alto
-                                contraste</label>
+                                for="theme-contrast" title="Máxima legibilidad bajo la luz del sol" data-i18n="theme.contrast"
+                                data-i18n-attr="title:theme.contrastHint">☀️ Alto contraste</label>
                         </div>
                     </div>
 
                     <div class="p-3 rounded-3 bg-body-tertiary vstack gap-2" role="group"
                         aria-labelledby="backup-title">
-                        <h3 id="backup-title" class="h6 fw-bold text-center">Copia de seguridad</h3>
-                        <p class="small text-body-secondary text-center">
-                            Los datos sólo se guardan en este navegador. Descarga una copia para no perderlos
-                            o para pasarlos a otro dispositivo.
+                        <h3 id="backup-title" class="h6 fw-bold text-center" data-i18n="backup.title">Copia de seguridad</h3>
+                        <p class="small text-body-secondary text-center" data-i18n="backup.hint">
+                            Los datos sólo se guardan en este navegador. Descarga una copia para no perderlos o para pasarlos a otro dispositivo.
                         </p>
                         <div class="d-flex flex-wrap gap-2">
-                            <button type="button" id="btn-backup-export" class="btn btn-outline-primary flex-fill">
+                            <button type="button" id="btn-backup-export" class="btn btn-outline-primary flex-fill"
+                                data-i18n="backup.export">
                                 ⬇️ Exportar datos
                             </button>
-                            <label for="input-backup-import" class="btn btn-outline-primary flex-fill">
+                            <label for="input-backup-import" class="btn btn-outline-primary flex-fill" data-i18n="backup.import">
                                 ⬆️ Importar datos
                             </label>
                             <input type="file" id="input-backup-import" class="visually-hidden"
@@ -210,7 +235,7 @@
                         </div>
                     </div>
 
-                    <button type="button" id="btn-reset-db" class="btn btn-danger w-100">
+                    <button type="button" id="btn-reset-db" class="btn btn-danger w-100" data-i18n="reset.button">
                         🚨 Borrar todos los datos y reiniciar
                     </button>
                 </div>
@@ -220,9 +245,10 @@
         <!-- =============================================================
              VISTA: REGISTRO TÁCTICO (SCOUT)
              ============================================================= -->
-        <section id="vista-registro" class="view px-3 py-4" aria-label="Registro táctico">
+        <section id="vista-registro" class="view px-3 py-4" aria-label="Registro táctico"
+            data-i18n-attr="aria-label:scout.viewLabel">
             <div class="scout vstack gap-3 align-items-center">
-                <div class="sets-tracker" aria-label="Sets ganados">
+                <div class="sets-tracker" aria-label="Sets ganados" data-i18n-attr="aria-label:scout.setsWon">
                     <span class="sets-tracker__team" id="set-name-a">Eq. A</span>
                     <div class="sets-tracker__boxes" id="set-boxes-a"></div>
                     <span class="sets-tracker__divider" aria-hidden="true">|</span>
@@ -236,9 +262,11 @@
                         <time class="match-clock__time" id="match-stopwatch">00:00</time>
                         <div class="d-flex gap-2">
                             <button type="button" id="btn-timer-play" class="match-clock__btn"
-                                aria-label="Iniciar o reanudar el cronómetro">▶️</button>
+                                aria-label="Iniciar o reanudar el cronómetro"
+                                data-i18n-attr="aria-label:scout.timerPlay">▶️</button>
                             <button type="button" id="btn-timer-pause"
                                 class="match-clock__btn match-clock__btn--pause" aria-label="Pausar el cronómetro"
+                                data-i18n-attr="aria-label:scout.timerPause"
                                 disabled>⏸️</button>
                         </div>
                     </div>
@@ -250,7 +278,7 @@
                         <h2 class="scoreboard__name" id="name-team-a">Equipo A</h2>
                         <output class="scoreboard__score" id="score-a" aria-live="polite">0</output>
                         <span class="badge rounded-pill scoreboard__serve" id="serve-a" title="Tiene el saque"
-                            hidden>🏐 saca</span>
+                            data-i18n="scout.serves" data-i18n-attr="title:common.hasServe" hidden>🏐 saca</span>
                     </div>
                     <div class="scoreboard__divider" aria-hidden="true">-</div>
                     <div class="scoreboard__team scoreboard__team--b">
@@ -258,7 +286,7 @@
                         <h2 class="scoreboard__name" id="name-team-b">Equipo B</h2>
                         <output class="scoreboard__score" id="score-b" aria-live="polite">0</output>
                         <span class="badge rounded-pill scoreboard__serve" id="serve-b" title="Tiene el saque"
-                            hidden>🏐 saca</span>
+                            data-i18n="scout.serves" data-i18n-attr="title:common.hasServe" hidden>🏐 saca</span>
                     </div>
                 </div>
 
@@ -266,7 +294,8 @@
 
                 <div class="court-area">
                     <!-- La "zona libre" alrededor de la cancha permite marcar balones que caen fuera -->
-                    <div class="court-zone" id="free-zone" aria-label="Toca donde cayó el balón">
+                    <div class="court-zone" id="free-zone" aria-label="Toca donde cayó el balón"
+                        data-i18n-attr="aria-label:scout.courtHint">
                         <div class="court" id="main-court">
                             <div class="court__half court__half--a"></div>
                             <div class="court__net"></div>
@@ -278,31 +307,34 @@
                     <!-- Menú para elegir jugador y tipo de acción tras tocar la cancha -->
                     <div class="action-menu" id="player-menu" role="dialog" aria-labelledby="action-menu-title"
                         hidden>
-                        <h3 id="action-menu-title" class="action-menu__title">¿Quién fue el responsable?</h3>
+                        <h3 id="action-menu-title" class="action-menu__title" data-i18n="scout.menuTitle">¿Quién fue el responsable?</h3>
 
                         <!-- Radios con aspecto de botón (.btn-check de Bootstrap) -->
-                        <div class="d-flex gap-2" role="radiogroup" aria-label="Tipo de acción">
+                        <div class="d-flex gap-2" role="radiogroup" aria-label="Tipo de acción"
+                            data-i18n-attr="aria-label:scout.actionType">
                             <input class="btn-check" type="radio" name="actionType" id="action-type-point"
                                 value="punto" autocomplete="off" checked>
-                            <label class="btn btn-outline-success flex-fill" for="action-type-point">✔ Punto
-                                (winner)</label>
+                            <label class="btn btn-outline-success flex-fill" for="action-type-point"
+                                data-i18n="scout.pointWinner">✔ Punto (winner)</label>
                             <input class="btn-check" type="radio" name="actionType" id="action-type-error"
                                 value="error" autocomplete="off">
-                            <label class="btn btn-outline-danger flex-fill" for="action-type-error">✖ Error</label>
+                            <label class="btn btn-outline-danger flex-fill" for="action-type-error"
+                                data-i18n="scout.errorButton">✖ Error</label>
                         </div>
 
                         <!-- Gestos técnicos: generados desde VP.constants.SKILLS -->
                         <div class="d-flex flex-wrap gap-2" id="action-detail-group" role="radiogroup"
-                            aria-label="Gesto técnico"></div>
+                            aria-label="Gesto técnico" data-i18n-attr="aria-label:common.skill"></div>
 
                         <!-- Calidad de recepción (opcional): un toque = quién recibió + calidad 0-3 -->
                         <div class="reception vstack gap-2" id="reception-group">
                             <p class="reception__title">
-                                Recepción de <strong id="reception-team">Eq. B</strong>
-                                <span class="reception__optional">(opcional)</span>
+                                <span data-i18n="scout.receptionOf">Recepción de</span>
+                                <strong id="reception-team">Eq. B</strong>
+                                <span class="reception__optional" data-i18n="common.optional">(opcional)</span>
                             </p>
                             <div class="vstack gap-2" id="reception-rows"></div>
-                            <p class="reception__legend">3 perfecta · 2 buena · 1 mala · 0 error/ace</p>
+                            <p class="reception__legend" data-i18n="scout.receptionLegend">3 perfecta · 2 buena · 1 mala · 0 error/ace</p>
                         </div>
 
                         <div class="row g-2">
@@ -336,7 +368,7 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn btn-light w-100" id="cancel-point">Cancelar</button>
+                        <button type="button" class="btn btn-light w-100" id="cancel-point" data-i18n="common.cancel">Cancelar</button>
                     </div>
                 </div>
 
@@ -351,10 +383,10 @@
                             <span id="to-count-b">(0/1)</span>
                         </button>
                     </div>
-                    <button type="button" class="btn btn-warning w-100" id="btn-undo-action">
+                    <button type="button" class="btn btn-warning w-100" id="btn-undo-action" data-i18n="scout.undo">
                         ↩️ Deshacer última acción
                     </button>
-                    <button type="button" class="btn btn-danger w-100" id="btn-end-match">
+                    <button type="button" class="btn btn-danger w-100" id="btn-end-match" data-i18n="scout.finish">
                         Finalizar y guardar partido
                     </button>
                 </div>
@@ -364,7 +396,8 @@
         <!-- =============================================================
              VISTA: MARCADOR EN VIVO (CLICKER RÁPIDO)
              ============================================================= -->
-        <section id="vista-marcador-vivo" class="view px-3 py-4" aria-label="Marcador en vivo">
+        <section id="vista-marcador-vivo" class="view px-3 py-4" aria-label="Marcador en vivo"
+            data-i18n-attr="aria-label:live.viewLabel">
             <div class="live-board vstack gap-3">
                 <header class="live-board__header text-center">
                     <h2 id="live-tournament-name" class="live-board__tournament mb-1">Partido amistoso</h2>
@@ -375,27 +408,28 @@
 
                 <div class="d-flex flex-grow-1 gap-3">
                     <div class="live-board__team live-board__team--a">
-                        <span class="live-board__serve" id="live-serving-a" title="Tiene el saque" hidden>🏐</span>
+                        <span class="live-board__serve" id="live-serving-a" title="Tiene el saque"
+                            data-i18n-attr="title:common.hasServe" hidden>🏐</span>
                         <h3 class="live-board__name" id="live-name-a">Equipo A</h3>
                         <output class="live-board__score" id="live-score-a" aria-live="polite">0</output>
-                        <button type="button" class="live-board__add" id="btn-live-point-a">+1 Punto</button>
+                        <button type="button" class="live-board__add" id="btn-live-point-a" data-i18n="live.addPoint">+1 Punto</button>
                     </div>
                     <div class="live-board__team live-board__team--b">
-                        <span class="live-board__serve" id="live-serving-b" title="Tiene el saque" hidden>🏐</span>
+                        <span class="live-board__serve" id="live-serving-b" title="Tiene el saque"
+                            data-i18n-attr="title:common.hasServe" hidden>🏐</span>
                         <h3 class="live-board__name" id="live-name-b">Equipo B</h3>
                         <output class="live-board__score" id="live-score-b" aria-live="polite">0</output>
-                        <button type="button" class="live-board__add" id="btn-live-point-b">+1 Punto</button>
+                        <button type="button" class="live-board__add" id="btn-live-point-b" data-i18n="live.addPoint">+1 Punto</button>
                     </div>
                 </div>
 
                 <div class="live-board__controls d-flex gap-3">
-                    <button type="button" class="btn btn-warning" id="btn-live-undo">↩️ Deshacer</button>
-                    <button type="button" class="btn btn-danger" id="btn-live-end">Finalizar</button>
+                    <button type="button" class="btn btn-warning" id="btn-live-undo" data-i18n="live.undo">↩️ Deshacer</button>
+                    <button type="button" class="btn btn-danger" id="btn-live-end" data-i18n="live.finish">Finalizar</button>
                 </div>
 
-                <p class="live-board__hint small text-body-secondary text-center">
-                    Atajos: <kbd>A</kbd> / <kbd>←</kbd> punto A · <kbd>L</kbd> / <kbd>→</kbd> punto B ·
-                    <kbd>Z</kbd> deshacer
+                <p class="live-board__hint small text-body-secondary text-center" data-i18n-html="live.shortcuts">
+                    Atajos: <kbd>A</kbd> / <kbd>←</kbd> punto A · <kbd>L</kbd> / <kbd>→</kbd> punto B · <kbd>Z</kbd> deshacer
                 </p>
             </div>
         </section>
@@ -403,13 +437,14 @@
         <!-- =============================================================
              VISTA: ESTADÍSTICAS
              ============================================================= -->
-        <section id="vista-estadisticas" class="view px-3 py-4" aria-label="Estadísticas">
+        <section id="vista-estadisticas" class="view px-3 py-4" aria-label="Estadísticas"
+            data-i18n-attr="aria-label:stats.viewLabel">
             <div class="stats">
                 <div class="row g-4">
                     <div class="col-12">
                         <div class="card card--glass">
                             <div class="card-body d-flex flex-wrap align-items-center gap-3">
-                                <label class="source-picker__label" for="stats-source">📂 Partido analizado</label>
+                                <label class="source-picker__label" for="stats-source" data-i18n="stats.source">📂 Partido analizado</label>
                                 <select id="stats-source" class="form-select source-picker__select"></select>
                             </div>
                         </div>
@@ -418,12 +453,12 @@
                     <div class="col-12 col-md-6">
                         <div class="card card--glass h-100">
                             <div class="card-body vstack gap-3">
-                                <h2 class="section-title">Resumen del partido</h2>
+                                <h2 class="section-title" data-i18n="stats.summaryTitle">Resumen del partido</h2>
                                 <div class="vstack gap-2 text-center">
                                     <div class="d-flex align-items-center justify-content-center gap-3 mb-2"
                                         id="final-score"></div>
-                                    <p class="summary__meta">Duración: <strong id="match-duration">00:00</strong></p>
-                                    <p class="summary__meta">Acciones totales: <strong id="total-points">0</strong></p>
+                                    <p class="summary__meta"><span data-i18n="stats.duration">Duración:</span> <strong id="match-duration">00:00</strong></p>
+                                    <p class="summary__meta"><span data-i18n="stats.totalActions">Acciones totales:</span> <strong id="total-points">0</strong></p>
                                 </div>
                             </div>
                         </div>
@@ -432,8 +467,8 @@
                     <div class="col-12 col-md-6">
                         <div class="card card--glass h-100">
                             <div class="card-body vstack gap-3">
-                                <h2 class="section-title">Desglose por jugador</h2>
-                                <p class="small text-body-secondary text-center">
+                                <h2 class="section-title" data-i18n="stats.playersTitle">Desglose por jugador</h2>
+                                <p class="small text-body-secondary text-center" data-i18n="stats.playersHint">
                                     Pulsa «Heptagrama» para abrir el reporte analítico del jugador.
                                 </p>
                                 <div id="players-stats-container"></div>
@@ -444,8 +479,8 @@
                     <div class="col-12">
                         <div class="card card--glass">
                             <div class="card-body vstack gap-3">
-                                <h2 class="section-title">📈 Indicadores profesionales</h2>
-                                <p class="small text-body-secondary text-center">
+                                <h2 class="section-title" data-i18n="stats.proTitle">📈 Indicadores profesionales</h2>
+                                <p class="small text-body-secondary text-center" data-i18n-html="stats.proHint">
                                     <strong>Side-out</strong>: % de puntos ganados recibiendo ·
                                     <strong>Break point</strong>: % de puntos ganados sacando ·
                                     <strong>Recepción</strong>: escala 0-3
@@ -459,7 +494,7 @@
                     <div class="col-12">
                         <div class="card card--glass">
                             <div class="card-body vstack gap-3">
-                                <h2 class="section-title">👑 Top performers (Salón de la Fama)</h2>
+                                <h2 class="section-title" data-i18n="stats.fameTitle">👑 Top performers (Salón de la Fama)</h2>
                                 <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-5 g-3"
                                     id="gamification-container"></div>
                             </div>
@@ -470,34 +505,34 @@
                         <div class="card card--glass filters">
                             <div class="card-body vstack gap-3">
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                    <h2 class="section-title flex-grow-1">Filtros del mapa de calor</h2>
+                                    <h2 class="section-title flex-grow-1" data-i18n="stats.filtersTitle">Filtros del mapa de calor</h2>
                                     <button type="button" id="btn-reset-filters"
-                                        class="btn btn-outline-primary btn-sm">Limpiar filtros</button>
+                                        class="btn btn-outline-primary btn-sm" data-i18n="stats.resetFilters">Limpiar filtros</button>
                                 </div>
 
                                 <div class="row g-3">
                                     <div class="col-md-6 vstack gap-2">
-                                        <span class="filters__label" id="label-filter-players">Jugador</span>
+                                        <span class="filters__label" id="label-filter-players" data-i18n="common.player">Jugador</span>
                                         <div class="d-flex flex-wrap gap-2" id="filter-players" role="group"
                                             aria-labelledby="label-filter-players"></div>
                                     </div>
 
                                     <div class="col-md-6 vstack gap-2">
-                                        <span class="filters__label" id="label-filter-actions">Tipo de acción</span>
+                                        <span class="filters__label" id="label-filter-actions" data-i18n="scout.actionType">Tipo de acción</span>
                                         <div class="d-flex flex-wrap gap-2" id="filter-actions" role="group"
                                             aria-labelledby="label-filter-actions">
                                             <button type="button"
                                                 class="btn btn-sm rounded-pill btn-outline-secondary active"
-                                                data-value="all">Todas</button>
+                                                data-value="all" data-i18n="stats.allActions">Todas</button>
                                             <button type="button" class="btn btn-sm rounded-pill btn-outline-success"
-                                                data-value="punto">Puntos</button>
+                                                data-value="punto" data-i18n="stats.points">Puntos</button>
                                             <button type="button" class="btn btn-sm rounded-pill btn-outline-danger"
-                                                data-value="error">Errores</button>
+                                                data-value="error" data-i18n="stats.errors">Errores</button>
                                         </div>
                                     </div>
 
                                     <div class="col-12 vstack gap-2">
-                                        <span class="filters__label" id="label-filter-details">Gesto técnico</span>
+                                        <span class="filters__label" id="label-filter-details" data-i18n="common.skill">Gesto técnico</span>
                                         <div class="d-flex flex-wrap gap-2" id="filter-details" role="group"
                                             aria-labelledby="label-filter-details"></div>
                                     </div>
@@ -509,16 +544,18 @@
                                     </div>
 
                                     <div class="col-12 vstack gap-2">
-                                        <span class="filters__label">Rango de tiempo (minutos)</span>
+                                        <span class="filters__label" data-i18n="stats.timeRange">Rango de tiempo (minutos)</span>
                                         <div class="row g-2">
                                             <div class="col-sm-6">
                                                 <input type="number" id="filter-time-min" class="form-control"
                                                     min="1" placeholder="Minuto inicial" aria-label="Minuto inicial"
+                                                    data-i18n-attr="placeholder:stats.minuteFrom;aria-label:stats.minuteFrom"
                                                     inputmode="numeric">
                                             </div>
                                             <div class="col-sm-6">
                                                 <input type="number" id="filter-time-max" class="form-control"
                                                     min="1" placeholder="Minuto final" aria-label="Minuto final"
+                                                    data-i18n-attr="placeholder:stats.minuteTo;aria-label:stats.minuteTo"
                                                     inputmode="numeric">
                                             </div>
                                         </div>
@@ -526,12 +563,14 @@
 
                                     <div class="col-12 vstack gap-2">
                                         <label class="filters__label" for="filter-timeline">
-                                            Línea de tiempo (evolución): <span id="timeline-val">Todo el partido</span>
+                                            <span data-i18n="stats.timeline">Línea de tiempo (evolución):</span>
+                                            <span id="timeline-val">Todo el partido</span>
                                         </label>
                                         <div class="d-flex align-items-center gap-3">
                                             <button type="button" id="btn-play-timeline"
                                                 class="btn btn-success btn-sm text-nowrap timeline__play"
-                                                aria-label="Reproducir la evolución del partido">▶️ Play</button>
+                                                aria-label="Reproducir la evolución del partido"
+                                                data-i18n-attr="aria-label:stats.playTimeline">▶️ Play</button>
                                             <input type="range" id="filter-timeline" class="form-range" min="0"
                                                 max="100" step="1" value="100">
                                         </div>
@@ -544,14 +583,14 @@
                     <div class="col-12">
                         <div class="card card--glass">
                             <div class="card-body vstack gap-3">
-                                <h2 class="section-title">Mapa de calor</h2>
+                                <h2 class="section-title" data-i18n="stats.heatmapTitle">Mapa de calor</h2>
                                 <ul class="legend">
-                                    <li class="legend__item"><span class="legend__dot legend__dot--a"></span> Acción Eq. A
-                                    </li>
-                                    <li class="legend__item"><span class="legend__dot legend__dot--b"></span> Acción Eq. B
-                                    </li>
-                                    <li class="legend__item"><span class="legend__dot legend__dot--error"></span> Borde =
-                                        error</li>
+                                    <li class="legend__item"><span class="legend__dot legend__dot--a"></span>
+                                        <span data-i18n="stats.legendA">Acción Eq. A</span></li>
+                                    <li class="legend__item"><span class="legend__dot legend__dot--b"></span>
+                                        <span data-i18n="stats.legendB">Acción Eq. B</span></li>
+                                    <li class="legend__item"><span class="legend__dot legend__dot--error"></span>
+                                        <span data-i18n="stats.legendError">Borde = error</span></li>
                                 </ul>
                                 <div class="heatmap">
                                     <div class="court-zone court-zone--compact court-zone--static">
@@ -571,16 +610,16 @@
                     <div class="col-12">
                         <div class="card card--glass" id="global-log-section">
                             <div class="card-body vstack gap-3">
-                                <h2 class="section-title">Bitácora global del partido</h2>
+                                <h2 class="section-title" data-i18n="stats.logTitle">Bitácora global del partido</h2>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-striped table-hover align-middle text-center mb-0">
                                         <thead class="table-dark">
                                             <tr>
-                                                <th scope="col"># Punto</th>
-                                                <th scope="col">Logo</th>
-                                                <th scope="col">Jugador</th>
-                                                <th scope="col">Acción</th>
-                                                <th scope="col">Marcador</th>
+                                                <th scope="col" data-i18n="stats.colPoint"># Punto</th>
+                                                <th scope="col" data-i18n="stats.colLogo">Logo</th>
+                                                <th scope="col" data-i18n="common.player">Jugador</th>
+                                                <th scope="col" data-i18n="stats.colAction">Acción</th>
+                                                <th scope="col" data-i18n="stats.colScore">Marcador</th>
                                                 <th scope="col" class="d-none d-sm-table-cell">X (m)</th>
                                                 <th scope="col" class="d-none d-sm-table-cell">Y (m)</th>
                                             </tr>
@@ -599,26 +638,27 @@
     <!-- =================================================================
          NAVEGACIÓN INFERIOR
          ================================================================= -->
-    <nav class="bottom-nav fixed-bottom d-flex justify-content-around" aria-label="Navegación principal">
+    <nav class="bottom-nav fixed-bottom d-flex justify-content-around" aria-label="Navegación principal"
+        data-i18n-attr="aria-label:nav.label">
         <button type="button" class="bottom-nav__item" data-view="vista-torneos">
             <span class="bottom-nav__icon" aria-hidden="true">🏅</span>
-            <span>Torneos</span>
+            <span data-i18n="nav.tournaments">Torneos</span>
         </button>
         <button type="button" class="bottom-nav__item" data-view="vista-configuracion">
             <span class="bottom-nav__icon" aria-hidden="true">⚙️</span>
-            <span>Config</span>
+            <span data-i18n="nav.config">Config</span>
         </button>
         <button type="button" class="bottom-nav__item" data-view="vista-marcador-vivo" disabled>
             <span class="bottom-nav__icon" aria-hidden="true">⏱️</span>
-            <span>Marcador</span>
+            <span data-i18n="nav.live">Marcador</span>
         </button>
         <button type="button" class="bottom-nav__item" data-view="vista-registro" disabled>
             <span class="bottom-nav__icon" aria-hidden="true">📊</span>
-            <span>Scout</span>
+            <span data-i18n="nav.scout">Scout</span>
         </button>
         <button type="button" class="bottom-nav__item" data-view="vista-estadisticas">
             <span class="bottom-nav__icon" aria-hidden="true">📈</span>
-            <span>Stats</span>
+            <span data-i18n="nav.stats">Stats</span>
         </button>
     </nav>
 
@@ -631,82 +671,99 @@
     <!-- Crear torneo -->
     <dialog id="modal-tournament" class="app-dialog" aria-labelledby="modal-tournament-title">
         <div class="app-dialog__panel">
-            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"></button>
-            <h2 id="modal-tournament-title" class="h4 fw-bold pe-5">Nuevo torneo</h2>
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
+            <h2 id="modal-tournament-title" class="h4 fw-bold pe-5" data-i18n="tournamentForm.title">Nuevo torneo</h2>
 
             <form id="form-tournament" class="vstack gap-3">
                 <div>
-                    <label class="form-label" for="t-name">Nombre del torneo</label>
+                    <label class="form-label" for="t-name" data-i18n="tournamentForm.name">Nombre del torneo</label>
                     <input class="form-control" type="text" id="t-name" maxlength="60"
-                        placeholder="Ej. Open de Verano" required>
+                        placeholder="Ej. Open de Verano" required data-i18n-attr="placeholder:tournamentForm.namePlaceholder">
                 </div>
 
                 <div class="row g-3">
                     <div class="col-sm-4">
-                        <label class="form-label" for="t-category">Categoría</label>
+                        <label class="form-label" for="t-category" data-i18n="tournamentForm.category">Categoría</label>
                         <select class="form-select" id="t-category" required>
-                            <option value="" disabled selected>Elegir…</option>
-                            <option value="A">Categoría A</option>
-                            <option value="B">Categoría B</option>
-                            <option value="C">Categoría C</option>
-                            <option value="Pro">Categoría Pro</option>
+                            <option value="" disabled selected data-i18n="common.choose">Elegir…</option>
+                            <option value="A" data-i18n="categories.A">Categoría A</option>
+                            <option value="B" data-i18n="categories.B">Categoría B</option>
+                            <option value="C" data-i18n="categories.C">Categoría C</option>
+                            <option value="Pro" data-i18n="categories.Pro">Categoría Pro</option>
                         </select>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label" for="t-gender">Género</label>
+                        <label class="form-label" for="t-gender" data-i18n="tournamentForm.gender">Género</label>
                         <select class="form-select" id="t-gender" required>
-                            <option value="" disabled selected>Elegir…</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
-                            <option value="X">Mixto</option>
+                            <option value="" disabled selected data-i18n="common.choose">Elegir…</option>
+                            <option value="M" data-i18n="genders.M">Masculino</option>
+                            <option value="F" data-i18n="genders.F">Femenino</option>
+                            <option value="X" data-i18n="genders.X">Mixto</option>
                         </select>
                     </div>
                     <div class="col-sm-4">
-                        <label class="form-label" for="t-format">Formato</label>
+                        <label class="form-label" for="t-format" data-i18n="tournamentForm.format">Formato</label>
                         <select class="form-select" id="t-format" required>
-                            <option value="" disabled selected>Elegir…</option>
-                            <option value="Round Robin">Round Robin (todos vs todos)</option>
-                            <option value="Eliminacion Directa">Eliminación directa (llaves)</option>
+                            <option value="" disabled selected data-i18n="common.choose">Elegir…</option>
+                            <option value="Round Robin" data-i18n="tournamentForm.formatRoundRobin">Round Robin (todos vs todos)</option>
+                            <option value="Eliminacion Directa" data-i18n="tournamentForm.formatKnockout">Eliminación directa (llaves)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="p-3 rounded-3 bg-body-tertiary vstack gap-2" role="group" aria-labelledby="t-teams-title">
-                    <h3 id="t-teams-title" class="h6 fw-bold text-center">Equipos (duplas)</h3>
-                    <p class="small text-body-secondary text-center">
+                    <h3 id="t-teams-title" class="h6 fw-bold text-center" data-i18n="tournamentForm.teamsTitle">Equipos (duplas)</h3>
+                    <p class="small text-body-secondary text-center" data-i18n="tournamentForm.teamsHint">
                         Agrega los jugadores de cada dupla. El nombre de la dupla es opcional.
                     </p>
                     <div id="t-dynamic-teams" class="vstack gap-2"></div>
-                    <button type="button" id="btn-add-team" class="btn btn-outline-primary btn--dashed w-100">
+                    <button type="button" id="btn-add-team" class="btn btn-outline-primary btn--dashed w-100"
+                        data-i18n="tournamentForm.addTeam">
                         + Agregar otra dupla
                     </button>
                 </div>
 
                 <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group" aria-labelledby="t-rules-title">
-                    <h3 id="t-rules-title" class="h6 fw-bold text-center">Reglas por defecto del torneo</h3>
+                    <h3 id="t-rules-title" class="h6 fw-bold text-center" data-i18n="tournamentForm.rulesTitle">Reglas por defecto del torneo</h3>
                     <div class="row g-3">
                         <div class="col-sm-4">
-                            <label class="form-label" for="t-max-sets">Modalidad</label>
+                            <label class="form-label" for="t-max-sets" data-i18n="tournamentForm.mode">Modalidad</label>
                             <select class="form-select" id="t-max-sets">
-                                <option value="1">1 set</option>
-                                <option value="3" selected>Mejor de 3</option>
-                                <option value="5">Mejor de 5</option>
+                                <option value="1" data-i18n="tournamentForm.sets1">1 set</option>
+                                <option value="3" selected data-i18n="tournamentForm.sets3">Mejor de 3</option>
+                                <option value="5" data-i18n="tournamentForm.sets5">Mejor de 5</option>
                             </select>
                         </div>
                         <div class="col-sm-4">
-                            <label class="form-label" for="t-pts-normal">Pts. por set</label>
+                            <label class="form-label" for="t-pts-normal" data-i18n="common.ptsPerSet">Pts. por set</label>
                             <input class="form-control" type="number" id="t-pts-normal" value="21" min="1" max="50"
                                 inputmode="numeric">
                         </div>
                         <div class="col-sm-4">
-                            <label class="form-label" for="t-pts-tiebreak">Pts. tie-break</label>
+                            <label class="form-label" for="t-pts-tiebreak" data-i18n="common.ptsTiebreak">Pts. tie-break</label>
                             <input class="form-control" type="number" id="t-pts-tiebreak" value="15" min="1"
                                 max="50" inputmode="numeric">
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Crear y generar llaves</button>
+                <!-- Premios (opcional): el interruptor muestra los ajustes; los genera prize-panel.js -->
+                <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group" aria-labelledby="t-prize-title">
+                    <div class="d-flex align-items-center justify-content-between gap-3">
+                        <h3 id="t-prize-title" class="h6 fw-bold mb-0" data-i18n="prize.sectionTitle">💰 Premios</h3>
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input" type="checkbox" role="switch" id="t-prize-enabled">
+                            <label class="form-check-label" for="t-prize-enabled" data-i18n="prize.enable">Activar premios</label>
+                        </div>
+                    </div>
+                    <p class="small text-body-secondary mb-0" data-i18n="prize.intro">
+                        Cobra una inscripción por jugador y reparte la bolsa entre los mejores puestos.
+                    </p>
+                    <div id="t-prize-settings" class="vstack gap-3" hidden></div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100" data-i18n="tournamentForm.submit">Crear y generar llaves</button>
             </form>
         </div>
     </dialog>
@@ -717,29 +774,89 @@
             <span class="team-row__number" aria-hidden="true"></span>
             <div class="team-row__fields vstack gap-2">
                 <input type="text" class="form-control team-row__input team-row__input--name" data-field="name"
-                    maxlength="40" placeholder="Nombre de la dupla (opcional)">
+                    maxlength="40" placeholder="Nombre de la dupla (opcional)"
+                    data-i18n-attr="placeholder:tournamentForm.teamNamePlaceholder">
                 <div class="d-flex gap-2">
                     <input type="text" class="form-control team-row__input" data-field="p1" maxlength="40"
-                        placeholder="Jugador 1" required>
+                        placeholder="Jugador 1" required data-i18n-attr="placeholder:common.player1">
                     <input type="text" class="form-control team-row__input" data-field="p2" maxlength="40"
-                        placeholder="Jugador 2" required>
+                        placeholder="Jugador 2" required data-i18n-attr="placeholder:common.player2">
+                </div>
+                <!-- Pago de la inscripción de cada jugador (sólo con premios activos) -->
+                <div class="team-row__payments d-flex flex-wrap align-items-center gap-3" hidden>
+                    <span class="small fw-bold text-body-secondary" data-i18n="prize.paidQuestion">💵 ¿Pagó?</span>
+                    <label class="form-check mb-0 small">
+                        <input class="form-check-input" type="checkbox" data-paid="p1">
+                        <span class="form-check-label" data-i18n="common.player1">Jugador 1</span>
+                    </label>
+                    <label class="form-check mb-0 small">
+                        <input class="form-check-input" type="checkbox" data-paid="p2">
+                        <span class="form-check-label" data-i18n="common.player2">Jugador 2</span>
+                    </label>
                 </div>
             </div>
             <button type="button" class="btn btn-danger btn--icon flex-shrink-0 team-row__remove"
-                aria-label="Quitar dupla">&times;</button>
+                aria-label="Quitar dupla" data-i18n-attr="aria-label:tournamentForm.removeTeam">&times;</button>
         </div>
     </template>
 
-    <!-- Detalle de torneo: partidos, clasificación y llaves -->
+    <!--
+        Ajustes de premios (inscripción, % de bolsa y reparto). Se clona en el
+        formulario de creación y en la pestaña «Premios». Los `id` y `for` los
+        pone prize-panel.js con un prefijo distinto en cada copia.
+    -->
+    <template id="tpl-prize-settings">
+        <div class="prize-settings vstack gap-3">
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <label class="form-label" data-for="fee" data-i18n="prize.feePerPlayer">Inscripción por jugador</label>
+                    <div class="input-group">
+                        <span class="input-group-text">$</span>
+                        <input class="form-control" type="number" min="1" step="1" inputmode="numeric"
+                            data-prize-field="fee">
+                    </div>
+                    <div class="form-text" data-prize-out="feePerTeam"></div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" data-for="pool" data-i18n="prize.poolPercent">% de lo recaudado para premios</label>
+                    <div class="input-group">
+                        <input class="form-control" type="number" min="0" max="100" step="1" inputmode="numeric"
+                            data-prize-field="pool">
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="form-text" data-prize-out="admin"></div>
+                </div>
+            </div>
+            <div>
+                <label class="form-label" data-for="preset" data-i18n="prize.distribution">Reparto de la bolsa</label>
+                <select class="form-select" data-prize-field="preset">
+                    <option value="winner" data-i18n="prize.presetWinner">El ganador se lleva todo (100 %)</option>
+                    <option value="top2" data-i18n="prize.presetTop2">Top 2 (70 / 30)</option>
+                    <option value="top3" data-i18n="prize.presetTop3">Top 3 (60 / 30 / 10)</option>
+                    <option value="custom" data-i18n="prize.presetCustom">Personalizado</option>
+                </select>
+            </div>
+            <div class="vstack gap-2" data-prize-places></div>
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm btn--dashed" data-prize-action="add-place"
+                    data-i18n="prize.addPlace">+ Agregar puesto</button>
+                <span class="prize-settings__sum" data-prize-out="sum"></span>
+            </div>
+        </div>
+    </template>
+
+    <!-- Detalle de torneo: partidos, clasificación, llaves y premios -->
     <dialog id="modal-tournament-detail" class="app-dialog app-dialog--wide" aria-labelledby="detail-t-name">
         <div class="app-dialog__panel">
-            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"></button>
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
 
             <header class="vstack gap-2">
                 <h2 id="detail-t-name" class="h4 fw-bold pe-5">Torneo</h2>
                 <p id="detail-t-info" class="small text-body-secondary"></p>
                 <div class="d-flex align-items-center gap-3">
-                    <div class="progress progress--thin flex-grow-1" role="progressbar" aria-label="Progreso del torneo">
+                    <div class="progress progress--thin flex-grow-1" role="progressbar" aria-label="Progreso del torneo"
+                        data-i18n-attr="aria-label:detail.progress">
                         <div class="progress-bar" id="detail-t-progress-fill"></div>
                     </div>
                     <span class="small fw-bold text-body-secondary text-nowrap" id="detail-t-progress-label"></span>
@@ -747,13 +864,16 @@
                 <p id="detail-t-champion" class="champion-banner" hidden></p>
             </header>
 
-            <div class="nav nav-underline" id="detail-tabs" role="tablist" aria-label="Secciones del torneo">
+            <div class="nav nav-underline" id="detail-tabs" role="tablist" aria-label="Secciones del torneo"
+                data-i18n-attr="aria-label:detail.sections">
                 <button type="button" class="nav-link active" role="tab" data-tab="fixture" aria-selected="true"
-                    aria-controls="panel-fixture">Partidos</button>
+                    aria-controls="panel-fixture" data-i18n="detail.tabMatches">Partidos</button>
                 <button type="button" class="nav-link" role="tab" data-tab="standings" aria-selected="false"
-                    aria-controls="panel-standings">Clasificación</button>
+                    aria-controls="panel-standings" data-i18n="detail.tabStandings">Clasificación</button>
                 <button type="button" class="nav-link" role="tab" data-tab="bracket" aria-selected="false"
-                    aria-controls="panel-bracket">Llaves</button>
+                    aria-controls="panel-bracket" data-i18n="detail.tabBracket">Llaves</button>
+                <button type="button" class="nav-link" role="tab" data-tab="prizes" aria-selected="false"
+                    aria-controls="panel-prizes" data-i18n="detail.tabPrizes">💰 Premios</button>
             </div>
 
             <div id="panel-fixture" role="tabpanel">
@@ -761,9 +881,12 @@
             </div>
             <div id="panel-standings" role="tabpanel" hidden></div>
             <div id="panel-bracket" class="overflow-x-auto" role="tabpanel" hidden></div>
+            <!-- Generado por prize-panel.js -->
+            <div id="panel-prizes" class="prize-panel vstack gap-3" role="tabpanel" hidden></div>
 
             <footer class="app-dialog__footer">
-                <button type="button" id="btn-delete-tournament" class="btn btn-danger w-100">Eliminar torneo</button>
+                <button type="button" id="btn-delete-tournament" class="btn btn-danger w-100"
+                    data-i18n="detail.delete">Eliminar torneo</button>
             </footer>
         </div>
     </dialog>
@@ -771,18 +894,20 @@
     <!-- Carga manual del resultado de un partido de torneo -->
     <dialog id="modal-manual-score" class="app-dialog app-dialog--compact" aria-labelledby="manual-score-title">
         <div class="app-dialog__panel">
-            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"></button>
-            <h2 id="manual-score-title" class="h4 fw-bold pe-5">Registrar marcador final</h2>
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
+            <h2 id="manual-score-title" class="h4 fw-bold pe-5" data-i18n="manual.title">Registrar marcador final</h2>
             <p id="manual-score-match-info" class="small text-body-secondary"></p>
             <form id="form-manual-score" class="vstack gap-3" novalidate>
                 <!-- Una fila por set, según la modalidad del torneo -->
                 <div id="manual-sets" class="vstack gap-2"></div>
-                <p class="small text-body-secondary text-center">
+                <p class="small text-body-secondary text-center" data-i18n="manual.hint">
                     Introduce los puntos de cada set jugado y deja vacíos los no disputados.
                 </p>
                 <div class="d-flex gap-3">
-                    <button type="button" class="btn btn-outline-primary flex-fill" data-close-modal>Volver</button>
-                    <button type="submit" class="btn btn-primary flex-fill">Guardar resultado</button>
+                    <button type="button" class="btn btn-outline-primary flex-fill" data-close-modal
+                        data-i18n="common.back">Volver</button>
+                    <button type="submit" class="btn btn-primary flex-fill" data-i18n="manual.save">Guardar resultado</button>
                 </div>
             </form>
         </div>
@@ -791,25 +916,29 @@
     <!-- Editar la dupla de un hueco del partido -->
     <dialog id="modal-edit-team" class="app-dialog app-dialog--compact" aria-labelledby="edit-team-title">
         <div class="app-dialog__panel">
-            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"></button>
-            <h2 id="edit-team-title" class="h4 fw-bold pe-5">Editar dupla</h2>
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
+            <h2 id="edit-team-title" class="h4 fw-bold pe-5" data-i18n="editTeam.title">Editar dupla</h2>
             <form id="form-edit-team" class="vstack gap-3">
                 <div>
-                    <label class="form-label" for="edit-team-name">Nombre del equipo / dupla</label>
+                    <label class="form-label" for="edit-team-name" data-i18n="editTeam.name">Nombre del equipo / dupla</label>
                     <input class="form-control" type="text" id="edit-team-name" maxlength="40"
-                        placeholder="Ej. Bra / Arg (vacío = por definir)">
+                        placeholder="Ej. Bra / Arg (vacío = por definir)"
+                        data-i18n-attr="placeholder:editTeam.namePlaceholder">
                 </div>
                 <div>
-                    <label class="form-label" for="edit-team-p1">Jugador 1</label>
-                    <input class="form-control" type="text" id="edit-team-p1" maxlength="40" placeholder="Ej. Pedro">
+                    <label class="form-label" for="edit-team-p1" data-i18n="common.player1">Jugador 1</label>
+                    <input class="form-control" type="text" id="edit-team-p1" maxlength="40" placeholder="Ej. Pedro"
+                        data-i18n-attr="placeholder:editTeam.p1Placeholder">
                 </div>
                 <div>
-                    <label class="form-label" for="edit-team-p2">Jugador 2</label>
-                    <input class="form-control" type="text" id="edit-team-p2" maxlength="40" placeholder="Ej. Juan">
+                    <label class="form-label" for="edit-team-p2" data-i18n="common.player2">Jugador 2</label>
+                    <input class="form-control" type="text" id="edit-team-p2" maxlength="40" placeholder="Ej. Juan"
+                        data-i18n-attr="placeholder:editTeam.p2Placeholder">
                 </div>
                 <div class="d-flex gap-3">
-                    <button type="button" class="btn btn-danger flex-fill" id="btn-clear-team">Vaciar (TBD)</button>
-                    <button type="submit" class="btn btn-primary flex-fill">Guardar</button>
+                    <button type="button" class="btn btn-danger flex-fill" id="btn-clear-team" data-i18n="editTeam.clear">Vaciar (TBD)</button>
+                    <button type="submit" class="btn btn-primary flex-fill" data-i18n="common.save">Guardar</button>
                 </div>
             </form>
         </div>
@@ -818,7 +947,8 @@
     <!-- Dashboard individual del jugador -->
     <dialog id="player-dashboard" class="app-dialog app-dialog--wide" aria-labelledby="dash-name">
         <div class="app-dialog__panel player-dash" id="player-dash-panel">
-            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"></button>
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
 
             <header class="player-dash__header vstack gap-2 align-items-center text-center">
                 <img id="dash-avatar-img" class="avatar avatar--xl" src="" alt="">
@@ -835,61 +965,63 @@
                 <div class="col-sm-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body vstack gap-2 text-center">
-                            <span class="kpi__label">Plus / Minus (+/-)</span>
+                            <span class="kpi__label" data-i18n="dash.plusMinus">Plus / Minus (+/-)</span>
                             <strong class="kpi__value" id="dash-plus-minus">0</strong>
-                            <span class="badge text-bg-light align-self-center">Vital</span>
+                            <span class="badge text-bg-light align-self-center" data-i18n="dash.vital">Vital</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body vstack gap-2 text-center">
-                            <span class="kpi__label">Eficiencia neta</span>
+                            <span class="kpi__label" data-i18n="dash.efficiency">Eficiencia neta</span>
                             <strong class="kpi__value" id="dash-eff">0 %</strong>
-                            <span class="kpi__sub">(Pts − Errores) / Acciones</span>
+                            <span class="kpi__sub" data-i18n="dash.efficiencyHint">(Pts − Errores) / Acciones</span>
                         </div>
                     </div>
                 </div>
                 <div class="col-sm-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <div class="card-body vstack gap-2 text-center">
-                            <span class="kpi__label">Puntos clutch</span>
+                            <span class="kpi__label" data-i18n="dash.clutch">Puntos clutch</span>
                             <strong class="kpi__value kpi__value--accent" id="dash-clutch">0</strong>
-                            <span class="kpi__sub">Diferencia en el marcador ≤ 2</span>
+                            <span class="kpi__sub" data-i18n="dash.clutchHint">Diferencia en el marcador ≤ 2</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <section class="player-dash__section vstack gap-3" aria-labelledby="dash-zones-title">
-                <h3 id="dash-zones-title" class="player-dash__section-title">Puntos por zona de la cancha</h3>
+                <h3 id="dash-zones-title" class="player-dash__section-title" data-i18n="dash.zonesTitle">Puntos por zona de la cancha</h3>
                 <div class="zone-bar">
-                    <span class="zone-bar__label">Izqda.</span>
-                    <div class="progress zone-bar__track" role="progressbar" aria-label="Puntos en la mitad izquierda">
+                    <span class="zone-bar__label" data-i18n="dash.left">Izqda.</span>
+                    <div class="progress zone-bar__track" role="progressbar" aria-label="Puntos en la mitad izquierda"
+                        data-i18n-attr="aria-label:dash.leftHalf">
                         <div class="progress-bar" id="dash-zone-l"></div>
                     </div>
                     <span class="zone-bar__value" id="dash-zone-l-val">0%</span>
                 </div>
                 <div class="zone-bar">
-                    <span class="zone-bar__label">Drcha.</span>
-                    <div class="progress zone-bar__track" role="progressbar" aria-label="Puntos en la mitad derecha">
+                    <span class="zone-bar__label" data-i18n="dash.right">Drcha.</span>
+                    <div class="progress zone-bar__track" role="progressbar" aria-label="Puntos en la mitad derecha"
+                        data-i18n-attr="aria-label:dash.rightHalf">
                         <div class="progress-bar" id="dash-zone-r"></div>
                     </div>
                     <span class="zone-bar__value" id="dash-zone-r-val">0%</span>
                 </div>
                 <p class="player-dash__best-minute fw-bold">
-                    👑 Minuto más productivo: <strong id="dash-best-minute">--</strong>
+                    👑 <span data-i18n="dash.bestMinute">Minuto más productivo:</span> <strong id="dash-best-minute">--</strong>
                 </p>
             </section>
 
             <section class="player-dash__section vstack gap-3" aria-labelledby="dash-reception-title">
-                <h3 id="dash-reception-title" class="player-dash__section-title">Recepción (escala 0-3)</h3>
+                <h3 id="dash-reception-title" class="player-dash__section-title" data-i18n="dash.receptionTitle">Recepción (escala 0-3)</h3>
                 <!-- Generado por player-dashboard.js → renderReception() -->
                 <div id="dash-reception" class="vstack gap-2"></div>
             </section>
 
             <section class="player-dash__section vstack gap-3" aria-labelledby="dash-heatmap-title">
-                <h3 id="dash-heatmap-title" class="player-dash__section-title">Puntos ganadores exclusivos</h3>
+                <h3 id="dash-heatmap-title" class="player-dash__section-title" data-i18n="dash.heatmapTitle">Puntos ganadores exclusivos</h3>
                 <div class="court-zone court-zone--compact court-zone--static">
                     <div class="court court--tiny">
                         <div class="court__half court__half--a"></div>
@@ -904,9 +1036,10 @@
             <div class="row row-cols-2 row-cols-sm-4 g-3" id="dash-skills-grid"></div>
 
             <section class="player-dash__section vstack gap-3" aria-labelledby="dash-radar-title">
-                <h3 id="dash-radar-title" class="player-dash__section-title">Perfil táctico (heptagrama)</h3>
+                <h3 id="dash-radar-title" class="player-dash__section-title" data-i18n="dash.radarTitle">Perfil táctico (heptagrama)</h3>
                 <canvas id="player-radar-chart" class="player-dash__radar" width="300" height="300" role="img"
-                    aria-label="Gráfico radar con los puntos del jugador por gesto técnico"></canvas>
+                    aria-label="Gráfico radar con los puntos del jugador por gesto técnico"
+                    data-i18n-attr="aria-label:dash.radarLabel"></canvas>
             </section>
         </div>
     </dialog>
@@ -928,7 +1061,7 @@
     <!-- Capa de carga y avisos -->
     <div id="loading-spinner" class="loading" hidden>
         <div class="spinner-border text-warning" role="status"></div>
-        <p class="fw-bold">Filtrando estadísticas…</p>
+        <p class="fw-bold" data-i18n="stats.loading">Filtrando estadísticas…</p>
     </div>
     <div id="toast-stack" class="toast-container toast-stack" aria-live="polite" popover="manual"></div>
 
@@ -940,15 +1073,27 @@
     -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
 
+    <!--
+        i18next 23.16.8 (traducciones ES / EN) con SRI, verificado contra jsDelivr y unpkg.
+        Si no carga, js/services/i18n.js usa un traductor de respaldo con los mismos diccionarios.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/i18next@23.16.8/dist/umd/i18next.min.js"
+        integrity="sha384-ZB4j+Y4rqTlON+loxr/YKq9WV8qBuZOqKukqmQVgcZ0GFy93B7TMCSezcrRkfJF5" crossorigin="anonymous"
+        defer></script>
+
     <!-- 1. Núcleo puro (sin DOM, testeado con Node) -->
     <script src="js/core/constants.js" defer></script>
     <script src="js/core/utils.js" defer></script>
     <script src="js/core/rules.js" defer></script>
     <script src="js/core/tournament-engine.js" defer></script>
+    <script src="js/core/prize-engine.js" defer></script>
     <script src="js/core/stats-engine.js" defer></script>
 
-    <!-- 2. Servicios y estado -->
+    <!-- 2. Diccionarios, servicios y estado -->
+    <script src="js/i18n/es.js" defer></script>
+    <script src="js/i18n/en.js" defer></script>
     <script src="js/services/storage.js" defer></script>
+    <script src="js/services/i18n.js" defer></script>
     <script src="js/services/exporters.js" defer></script>
     <script src="js/state/match-store.js" defer></script>
 
@@ -956,9 +1101,11 @@
     <script src="js/ui/dom.js" defer></script>
     <script src="js/ui/feedback.js" defer></script>
     <script src="js/ui/router.js" defer></script>
+    <script src="js/ui/language.js" defer></script>
 
     <!-- 4. Vistas (una por pantalla) -->
     <script src="js/views/match-actions.js" defer></script>
+    <script src="js/views/prize-panel.js" defer></script>
     <script src="js/views/tournaments-view.js" defer></script>
     <script src="js/views/config-view.js" defer></script>
     <script src="js/views/scout-view.js" defer></script>

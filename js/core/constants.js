@@ -27,8 +27,25 @@
         LAST_MATCH: 'voley-lastMatch',       // Último partido finalizado
         HISTORY: 'voley-history',            // Array con todos los partidos finalizados
         TOURNAMENTS: 'voley-tournaments',    // Array de torneos
-        THEME: 'voley-theme'                 // Tema visual elegido
+        THEME: 'voley-theme',                // Tema visual elegido
+        LANGUAGE: 'voley-language'           // Idioma de la interfaz ('es' | 'en')
     });
+
+    /**
+     * Idiomas de la interfaz y la configuración regional con la que se
+     * formatean números, fechas y dinero en cada uno. El dinero siempre es
+     * en pesos colombianos (COP): sólo cambia cómo se escribe.
+     */
+    const LANGUAGES = Object.freeze({
+        es: Object.freeze({ label: 'Español', short: 'ES', locale: 'es-CO' }),
+        en: Object.freeze({ label: 'English', short: 'EN', locale: 'en-US' })
+    });
+
+    /** Idioma por defecto (y de respaldo si falta una traducción). */
+    const DEFAULT_LANGUAGE = 'es';
+
+    /** Moneda de los premios de los torneos. */
+    const CURRENCY = 'COP';
 
     /** Reglas por defecto de un partido de voley playa (FIVB). */
     const DEFAULT_RULES = Object.freeze({
@@ -124,11 +141,32 @@
     /** Etiquetas legibles para el género del torneo. */
     const GENDER_LABEL = Object.freeze({ M: 'Masculino', F: 'Femenino', X: 'Mixto' });
 
+    /**
+     * Premios de torneo: valores iniciales del formulario.
+     *  - feePerPlayer: inscripción por JUGADOR (la dupla paga el doble).
+     *  - poolPercent:  % de lo recaudado que va a la bolsa; el resto es administración.
+     *  - distribution: % de la bolsa para cada puesto (1.º, 2.º…). Debe sumar 100.
+     */
+    const PRIZE_DEFAULTS = Object.freeze({ feePerPlayer: 5000, poolPercent: 100, distribution: Object.freeze([100]) });
+
+    /** Repartos de la bolsa listos para elegir. */
+    const PRIZE_PRESETS = Object.freeze({
+        winner: Object.freeze([100]),
+        top2: Object.freeze([70, 30]),
+        top3: Object.freeze([60, 30, 10])
+    });
+
+    /** Máximo de puestos premiados que se pueden configurar. */
+    const MAX_PRIZE_PLACES = 8;
+
     /** A partir de cuántos registros se muestra el spinner al recalcular estadísticas. */
     const SPINNER_THRESHOLD = 300;
 
     VP.constants = Object.freeze({
         STORAGE_KEYS,
+        LANGUAGES,
+        DEFAULT_LANGUAGE,
+        CURRENCY,
         DEFAULT_RULES,
         MIN_POINT_DIFF,
         MAX_TIMEOUTS_PER_SET,
@@ -147,6 +185,9 @@
         STANDING_POINTS,
         TEAM_EMOJIS,
         GENDER_LABEL,
+        PRIZE_DEFAULTS,
+        PRIZE_PRESETS,
+        MAX_PRIZE_PLACES,
         SPINNER_THRESHOLD
     });
 

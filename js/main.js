@@ -3,6 +3,7 @@
  * @description Punto de arranque de la aplicación.
  *
  * Orden de inicialización:
+ *   0. Idioma: traduce el HTML antes de que las vistas pinten nada.
  *   1. Comportamiento global (modales, navegación).
  *   2. Cada vista registra sus eventos y sus hooks en el router.
  *   3. El store carga el partido guardado (si lo hay) y avisa a las vistas.
@@ -15,6 +16,7 @@
     const store = VP.matchStore;
 
     function start() {
+        VP.language.init();
         VP.dom.initModals();
         VP.router.init();
 
@@ -40,7 +42,7 @@
     // al usuario en lugar de dejar la app "congelada" sin explicación.
     root.addEventListener('error', (event) => {
         console.error('[app] Error no controlado:', event.error || event.message);
-        VP.feedback?.toast('Ocurrió un error inesperado. Revisa la consola para más detalles.', { type: 'error' });
+        VP.feedback?.toast(VP.i18n ? VP.i18n.t('errors.unexpected') : 'Ocurrió un error inesperado.', { type: 'error' });
     });
 
     // Los scripts usan `defer`, así que el DOM ya está listo al llegar aquí.

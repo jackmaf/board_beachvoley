@@ -15,6 +15,8 @@
     const VP = (root.VP = root.VP || {});
     const { toCsv, slugify, getAvatarUrl } = VP.utils;
     const { SKILLS } = VP.constants;
+    /** Traducción en el momento de exportar (i18n se carga después de este archivo). */
+    const t = (key, params) => VP.i18n.t(key, params);
 
     /**
      * Descarga un archivo generado en memoria.
@@ -51,15 +53,15 @@
 
     /** Filas de recepción para el CSV (vacías si no hay recepciones registradas). */
     function receptionRows(reception) {
-        if (!reception || !reception.count) return [['Recepciones', 0]];
+        if (!reception || !reception.count) return [[t('csv.receptions'), 0]];
         const pct = (v) => (v === null ? '-' : v.toFixed(1));
         return [
-            ['Recepciones', reception.count],
-            ['Recepción media (0-3)', reception.average.toFixed(2)],
-            ['Recepciones positivas 2-3 (%)', pct(reception.positivePct)],
-            ['Recepciones perfectas 3 (%)', pct(reception.perfectPct)],
-            ['Side-out tras su recepción (%)', pct(reception.sideOutPct)],
-            ['Recepciones por calidad 3/2/1/0', [3, 2, 1, 0].map((g) => reception.grades[g]).join(' / ')]
+            [t('csv.receptions'), reception.count],
+            [t('csv.receptionAverage'), reception.average.toFixed(2)],
+            [t('csv.receptionPositive'), pct(reception.positivePct)],
+            [t('csv.receptionPerfect'), pct(reception.perfectPct)],
+            [t('csv.receptionSideOut'), pct(reception.sideOutPct)],
+            [t('csv.receptionByGrade'), [3, 2, 1, 0].map((g) => reception.grades[g]).join(' / ')]
         ];
     }
 
@@ -83,28 +85,28 @@
     function exportPlayerCsv(report) {
         const { profile } = report;
         const rows = [
-            ['--- RESUMEN DEL JUGADOR ---'],
-            ['Métrica', 'Valor'],
-            ['Jugador', `${report.playerName} (${report.playerId})`],
-            ['Equipo', report.teamName],
-            ['Eficiencia neta (%)', profile.efficiency.toFixed(1)],
+            [t('csv.summaryHeader')],
+            [t('csv.metric'), t('csv.value')],
+            [t('common.player'), `${report.playerName} (${report.playerId})`],
+            [t('csv.team'), report.teamName],
+            [t('csv.efficiency'), profile.efficiency.toFixed(1)],
             ['Plus/Minus', profile.plusMinus],
-            ['Puntos ganadores', profile.pts],
-            ['Errores', profile.errs],
-            ['Puntos clutch', profile.clutch],
-            ['Puntos zona izquierda (%)', profile.zones.pctLeft.toFixed(1)],
-            ['Puntos zona derecha (%)', profile.zones.pctRight.toFixed(1)],
-            ['Minuto más productivo', profile.bestMinute ? `${profile.bestMinute.minute} (${profile.bestMinute.count} pts)` : '-'],
-            ...SKILLS.map((skill) => [`${skill.key} (puntos)`, profile.skills[skill.key] || 0]),
+            [t('csv.winners'), profile.pts],
+            [t('stats.errors'), profile.errs],
+            [t('dash.clutch'), profile.clutch],
+            [t('csv.zoneLeft'), profile.zones.pctLeft.toFixed(1)],
+            [t('csv.zoneRight'), profile.zones.pctRight.toFixed(1)],
+            [t('csv.bestMinute'), profile.bestMinute ? `${profile.bestMinute.minute} (${profile.bestMinute.count} pts)` : '-'],
+            ...SKILLS.map((skill) => [t('csv.skillPoints', { skill: VP.i18n.skill(skill.key) }), profile.skills[skill.key] || 0]),
             ...receptionRows(report.reception),
             [],
-            ['--- BITÁCORA DE ACCIONES (orden cronológico) ---'],
-            ['Nro. punto', 'Set', 'Avatar (URL)', 'Acción', 'Marcador', 'X (m)', 'Y (m)'],
+            [t('csv.logHeader')],
+            [t('csv.colPoint'), 'Set', t('csv.colAvatar'), t('stats.colAction'), t('stats.colScore'), 'X (m)', 'Y (m)'],
             ...profile.log.map((row) => [
                 row.pointNumber ?? '-',
                 row.setNumber,
                 getAvatarUrl(report.playerName),
-                row.action,
+                VP.i18n.describeAction({ tipoAccion: row.kind, actionDetail: row.detail }),
                 row.score,
                 row.xMeters,
                 row.yMeters
@@ -124,7 +126,7 @@
      */
     async function exportPlayerPdf(element, report) {
         if (!window.html2pdf) {
-            throw new Error('La librería de PDF no se pudo cargar. Comprueba tu conexión a internet.');
+            throw new Error(t('errors.pdfLibrary'));
         }
         const body = document.body;
         const originalTheme = body.dataset.theme;
@@ -175,10 +177,10 @@
                 try {
                     resolve(JSON.parse(reader.result));
                 } catch {
-                    reject(new Error('El archivo no es un JSON válido.'));
+                    reject(new Error(t('errors.invalidJson')));
                 }
             };
-            reader.onerror = () => reject(new Error('No se pudo leer el archivo.'));
+            reader.onerror = () => reject(new Error(t('errors.readFile')));
             reader.readAsText(file);
         });
     }

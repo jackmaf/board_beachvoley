@@ -208,12 +208,12 @@
                 reachedEmpty = true;
                 continue;
             }
-            if (a === null || b === null) return { ok: false, error: `Completa los dos marcadores del Set ${i + 1}.` };
-            if (reachedEmpty) return { ok: false, error: `El Set ${i + 1} está relleno pero falta un set anterior.` };
-            if (a < 0 || b < 0) return { ok: false, error: 'Los puntos no pueden ser negativos.' };
-            if (a === b) return { ok: false, error: `El Set ${i + 1} no puede terminar empatado.` };
+            if (a === null || b === null) return { ok: false, code: 'setIncomplete', params: { set: i + 1 }, error: `Completa los dos marcadores del Set ${i + 1}.` };
+            if (reachedEmpty) return { ok: false, code: 'setGap', params: { set: i + 1 }, error: `El Set ${i + 1} está relleno pero falta un set anterior.` };
+            if (a < 0 || b < 0) return { ok: false, code: 'negativePoints', error: 'Los puntos no pueden ser negativos.' };
+            if (a === b) return { ok: false, code: 'setTied', params: { set: i + 1 }, error: `El Set ${i + 1} no puede terminar empatado.` };
             if (setsA >= needed || setsB >= needed) {
-                return { ok: false, error: `El partido ya estaba decidido antes del Set ${i + 1}.` };
+                return { ok: false, code: 'alreadyDecided', params: { set: i + 1 }, error: `El partido ya estaba decidido antes del Set ${i + 1}.` };
             }
 
             if (a > b) setsA++;
@@ -221,7 +221,7 @@
         }
 
         if (setsA < needed && setsB < needed) {
-            return { ok: false, error: `Un equipo debe ganar ${needed} set(s) para cerrar el partido.` };
+            return { ok: false, code: 'setsNeeded', params: { count: needed }, error: `Un equipo debe ganar ${needed} set(s) para cerrar el partido.` };
         }
         return { ok: true, setsA, setsB, winner: setsA > setsB ? 'A' : 'B' };
     }

@@ -105,14 +105,19 @@
      *   if (await VP.feedback.confirm({ message: '¿Borrar?', danger: true })) { … }
      *
      * @param {Object} options
-     * @param {string} [options.title='¿Estás seguro?']
+     * @param {string} [options.title]        Por defecto «¿Estás seguro?» en el idioma activo.
      * @param {string} options.message
-     * @param {string} [options.confirmLabel='Aceptar']
-     * @param {string} [options.cancelLabel='Cancelar']
+     * @param {string} [options.confirmLabel] Por defecto «Aceptar».
+     * @param {string} [options.cancelLabel]  Por defecto «Cancelar».
      * @param {boolean} [options.danger=false] Pinta el botón de confirmar en rojo.
      * @returns {Promise<boolean>} `true` si el usuario confirmó.
      */
-    function confirm({ title = '¿Estás seguro?', message, confirmLabel = 'Aceptar', cancelLabel = 'Cancelar', danger = false }) {
+    function confirm({ title, message, confirmLabel, cancelLabel, danger = false }) {
+        // Los textos por defecto se traducen al llamar (no al cargar), así siguen el idioma activo
+        const t = VP.i18n ? VP.i18n.t : (key) => key;
+        title = title || t('confirm.title');
+        confirmLabel = confirmLabel || t('confirm.accept');
+        cancelLabel = cancelLabel || t('common.cancel');
         const dialog = byId('confirm-dialog');
         byId('confirm-title').textContent = title;
         byId('confirm-message').textContent = message;

@@ -15,6 +15,8 @@
     const { SKILLS, PLAYER_IDS, ACTION, SPINNER_THRESHOLD, RECEPTION_GRADES } = VP.constants;
     const stats = VP.statsEngine;
     const store = VP.matchStore;
+    const i18n = VP.i18n;
+    const { t } = i18n;
 
     const VIEW_ID = 'vista-estadisticas';
     const TIMELINE_STEP = 10;      // % que avanza la animación en cada paso
@@ -51,7 +53,7 @@
         const lastPoint = match.points?.[match.points.length - 1];
         const timestamp = match.finishedAt || lastPoint?.timestamp;
         const date = timestamp
-            ? new Date(timestamp).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+            ? new Date(timestamp).toLocaleString(i18n.getLocale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
             : '';
         return `${match.config?.teamA} vs ${match.config?.teamB} · ${won.A}-${won.B}${date ? ` · ${date}` : ''}`;
     }
@@ -60,7 +62,7 @@
     function renderSourceOptions() {
         const history = VP.storage.getHistory();
         const options = [];
-        if (store.hasPoints()) options.push({ value: 'current', label: `🔴 En curso: ${describeMatch(store.getState())}` });
+        if (store.hasPoints()) options.push({ value: 'current', label: t('stats.inProgress', { match: describeMatch(store.getState()) }) });
         // Historial del más reciente al más antiguo
         for (let i = history.length - 1; i >= 0; i--) {
             if (history[i]?.config) options.push({ value: String(i), label: describeMatch(history[i]) });
@@ -74,7 +76,7 @@
 
         el.source.innerHTML = options.length
             ? options.map((o) => `<option value="${o.value}">${escapeHtml(o.label)}</option>`).join('')
-            : '<option value="">No hay partidos registrados</option>';
+            : `<option value="">${escapeHtml(t('stats.noMatches'))}</option>`;
         el.source.value = source === null ? '' : String(source);
         el.source.disabled = options.length === 0;
     }
@@ -96,7 +98,7 @@
     function renderFilterPills(match) {
         const config = match?.config || {};
         el.filterPlayers.innerHTML = [
-            '<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">Todos</button>',
+            `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">${escapeHtml(t('stats.allPlayers'))}</button>`,
             ...PLAYER_IDS.map(
                 (id) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary btn--team-${id.charAt(0).toLowerCase()}" data-value="${id}">
                     ${escapeHtml(config[`p${id}`] || id)}</button>`
@@ -104,14 +106,14 @@
         ].join('');
 
         el.filterDetails.innerHTML = [
-            '<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">Todas</button>',
-            ...SKILLS.map((s) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="${s.key}">${s.emoji} ${s.key}</button>`)
+            `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">${escapeHtml(t('stats.allActions'))}</button>`,
+            ...SKILLS.map((s) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="${s.key}">${s.emoji} ${escapeHtml(i18n.skill(s.key))}</button>`)
         ].join('');
 
         const maxSets = VP.rules.normalizeRules(config).maxSets;
         el.filterSetsContainer.hidden = maxSets <= 1;
         el.filterSets.innerHTML = [
-            '<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">Todos los sets</button>',
+            `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">${escapeHtml(t('stats.allSets'))}</button>`,
             ...Array.from({ length: maxSets }, (_, i) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="${i + 1}">Set ${i + 1}</button>`)
         ].join('');
 
@@ -153,7 +155,7 @@
     function stopTimeline() {
         clearInterval(timelineTimer);
         timelineTimer = null;
-        el.playTimeline.textContent = '▶️ Play';
+        el.playTimeline.textContent = t('stats.play');
         el.playTimeline.classList.remove('timeline__play--playing');
     }
 
@@ -164,7 +166,7 @@
             return;
         }
         if (filters.timelinePct >= 100) filters.timelinePct = 0;
-        el.playTimeline.textContent = '⏸️ Pausa';
+        el.playTimeline.textContent = t('stats.pause');
         el.playTimeline.classList.add('timeline__play--playing');
         render();
 
@@ -180,22 +182,23 @@
     // =====================================================================
 
     function renderEmpty() {
-        el.finalScore.innerHTML = '<p class="text-center text-body-secondary py-3 mb-0">No hay datos registrados aún.</p>';
+        const empty = (key) => `<p class="text-center text-body-secondary py-3 mb-0">${escapeHtml(t(key))}</p>`;
+        el.finalScore.innerHTML = empty('stats.noData');
         el.duration.textContent = '00:00';
         el.totalPoints.textContent = '0';
-        el.players.innerHTML = '<p class="text-center text-body-secondary py-3 mb-0">Registra un partido en «Scout» para ver estadísticas.</p>';
+        el.players.innerHTML = empty('stats.noPlayers');
         el.fame.innerHTML = '';
-        el.pro.innerHTML = '<p class="text-center text-body-secondary py-3 mb-0">Sin datos para calcular indicadores.</p>';
+        el.pro.innerHTML = empty('stats.noPro');
         el.heatmap.innerHTML = '';
-        el.logBody.innerHTML = '<tr><td colspan="7" class="text-body-secondary py-3">Sin datos registrados.</td></tr>';
-        el.timelineValue.textContent = 'Todo el partido';
+        el.logBody.innerHTML = `<tr><td colspan="7" class="text-body-secondary py-3">${escapeHtml(t('stats.noLog'))}</td></tr>`;
+        el.timelineValue.textContent = t('stats.wholeMatch');
     }
 
     function renderSummary(match, bySet) {
         const { teamA, teamB } = match.config;
         const score = stats.computeScore(bySet);
         const won = VP.rules.countSetsWon(match.sets || [], match.config);
-        const subtitle = filters.set === 'all' ? `Sets ${won.A} - ${won.B}` : `Puntos del Set ${filters.set}`;
+        const subtitle = filters.set === 'all' ? `Sets ${won.A} - ${won.B}` : t('stats.setPoints', { set: filters.set });
 
         const teamHtml = (name, team) => `
             <div class="summary__team summary__team--${team}">
@@ -229,12 +232,12 @@
                     <span class="player-stat__name">${escapeHtml(p.name)}</span>
                 </div>
                 <div class="d-flex flex-column align-items-end">
-                    <span class="player-stat__pts">${p.pts} <small class="player-stat__unit">pts ganadores</small></span>
-                    <span class="player-stat__errs">${p.errs} errores</span>
+                    <span class="player-stat__pts">${p.pts} <small class="player-stat__unit">${escapeHtml(t('stats.winnerPoints', { count: p.pts }))}</small></span>
+                    <span class="player-stat__errs">${escapeHtml(t('stats.errorCount', { count: p.errs }))}</span>
                 </div>
                 <div class="d-flex gap-2 w-100">
-                    <button type="button" class="btn btn-dark btn-sm flex-fill" data-action="dashboard" data-player="${id}">🕸️ Heptagrama</button>
-                    <button type="button" class="btn btn-primary btn-sm flex-fill" data-action="log" data-player="${id}">📜 Bitácora</button>
+                    <button type="button" class="btn btn-dark btn-sm flex-fill" data-action="dashboard" data-player="${id}">${escapeHtml(t('stats.radarButton'))}</button>
+                    <button type="button" class="btn btn-primary btn-sm flex-fill" data-action="log" data-player="${id}">${escapeHtml(t('stats.logButton'))}</button>
                 </div>
             </div>`;
         }).join('');
@@ -242,7 +245,7 @@
 
     function renderFame(awards) {
         if (!awards.length) {
-            el.fame.innerHTML = '<div class="col-12"><p class="text-center text-body-secondary py-3 mb-0">Aún no hay jugadas suficientes para el Salón de la Fama.</p></div>';
+            el.fame.innerHTML = `<div class="col-12"><p class="text-center text-body-secondary py-3 mb-0">${escapeHtml(t('stats.noFame'))}</p></div>`;
             return;
         }
         el.fame.innerHTML = awards
@@ -253,9 +256,9 @@
                 <img class="avatar avatar--lg avatar--pulse avatar--team-${award.team.toLowerCase()}"
                     src="${getAvatarUrl(award.winner)}" alt="">
                 <span class="fame-card__emoji" aria-hidden="true">${award.emoji}</span>
-                <span class="fame-card__title">${escapeHtml(award.title)}</span>
+                <span class="fame-card__title">${escapeHtml(t(`awards.${award.key}`, { defaultValue: award.title }))}</span>
                 <span class="fame-card__winner">${escapeHtml(award.winner)}</span>
-                <span class="badge text-bg-light align-self-center">${escapeHtml(award.value)}</span>
+                <span class="badge text-bg-light align-self-center">${escapeHtml(t(`stats.unit_${award.unit}`, { count: award.count }))}</span>
             </div>
             </div>`
             )
@@ -266,9 +269,9 @@
         el.heatmap.innerHTML = visible
             .filter(stats.hasRealCoords)
             .map((p) => {
-                const kind = p.tipoAccion === ACTION.POINT ? 'Punto' : 'Error';
+                const kind = t(p.tipoAccion === ACTION.POINT ? 'actions.point' : 'actions.error');
                 const name = totals[p.jugadorId]?.name || p.jugadorId;
-                const title = `(#${p.pointNumber}) ${kind} de ${name} (${p.marcadorMomento})`;
+                const title = t('stats.heatDot', { number: p.pointNumber, kind, name, score: p.marcadorMomento });
                 const modifiers = [`heat-dot--${p.equipo.toLowerCase()}`, p.tipoAccion === ACTION.ERROR ? 'heat-dot--error' : '']
                     .join(' ');
                 return `<span class="heat-dot heat-dot--numbered ${modifiers}" style="left:${p.coordenadas.x}%;top:${p.coordenadas.y}%"
@@ -291,7 +294,7 @@
         const rows = bySet.filter((p) => visibleSet.has(p) || (p.tipoAccion === ACTION.TIMEOUT && noActorFilters && inMinuteRange(p)));
 
         if (!rows.length) {
-            el.logBody.innerHTML = '<tr><td colspan="7" class="text-body-secondary py-3">Sin acciones para estos filtros.</td></tr>';
+            el.logBody.innerHTML = `<tr><td colspan="7" class="text-body-secondary py-3">${escapeHtml(t('stats.noLogFiltered'))}</td></tr>`;
             return;
         }
 
@@ -308,7 +311,7 @@
                     <td>#${row.pointNumber ?? '-'} (Set ${row.setNumber})</td>
                     <td>${avatar}</td>
                     <td class="fw-bold">${escapeHtml(isTimeout ? (row.team === 'A' ? config.teamA : config.teamB) : row.playerName)}</td>
-                    <td class="${cellModifier}">${escapeHtml(row.action)}</td>
+                    <td class="${cellModifier}">${escapeHtml(i18n.describeAction({ tipoAccion: row.kind, actionDetail: row.detail }))}</td>
                     <td>${escapeHtml(row.score)}</td>
                     <td class="d-none d-sm-table-cell">${row.xMeters === '-' ? '-' : `${row.xMeters} m`}</td>
                     <td class="d-none d-sm-table-cell">${row.yMeters === '-' ? '-' : `${row.yMeters} m`}</td>
@@ -344,12 +347,12 @@
             `<span class="versus__value versus__value--${team} ${leader === team ? 'versus__value--lead' : ''}">${text}</span>`;
         return `
             <div class="versus__row" title="${escapeHtml(hint)}">
-                <span class="versus__label">${label}</span>
+                <span class="versus__label">${escapeHtml(label)}</span>
                 ${value('a', aText)}
-                <div class="progress versus__track versus__track--a" role="progressbar" aria-label="${label}: equipo A">
+                <div class="progress versus__track versus__track--a" role="progressbar" aria-label="${escapeHtml(`${label}: ${t('common.teamA')}`)}">
                     <div class="progress-bar" style="width:${width(a)}%"></div>
                 </div>
-                <div class="progress versus__track versus__track--b" role="progressbar" aria-label="${label}: equipo B">
+                <div class="progress versus__track versus__track--b" role="progressbar" aria-label="${escapeHtml(`${label}: ${t('common.teamB')}`)}">
                     <div class="progress-bar" style="width:${width(b)}%"></div>
                 </div>
                 ${value('b', bText)}
@@ -368,33 +371,33 @@
                 label: 'Side-out', a: A.sideOutPct, b: B.sideOutPct, max: 100,
                 aText: `${formatPct(A.sideOutPct)} ${sample(A.sideOutWon, A.received)}`,
                 bText: `${formatPct(B.sideOutPct)} ${sample(B.sideOutWon, B.received)}`,
-                hint: 'Puntos ganados cuando el equipo RECIBÍA el saque / rallies recibiendo'
+                hint: t('pro.sideOutHint')
             }),
             versusRow({
                 label: 'Break point', a: A.breakPct, b: B.breakPct, max: 100,
                 aText: `${formatPct(A.breakPct)} ${sample(A.breakWon, A.served)}`,
                 bText: `${formatPct(B.breakPct)} ${sample(B.breakWon, B.served)}`,
-                hint: 'Puntos ganados cuando el equipo SACABA / rallies sacando'
+                hint: t('pro.breakHint')
             }),
             versusRow({
-                label: 'Recepción media (0-3)', a: A.reception.average, b: B.reception.average, max: 3,
+                label: t('pro.receptionAverage'), a: A.reception.average, b: B.reception.average, max: 3,
                 aText: formatAvg(A.reception.average), bText: formatAvg(B.reception.average),
-                hint: 'Media de la calidad de recepción: 3 perfecta, 2 buena, 1 mala, 0 error'
+                hint: t('pro.receptionAverageHint')
             }),
             versusRow({
-                label: 'Recepción positiva (2-3)', a: A.reception.positivePct, b: B.reception.positivePct, max: 100,
+                label: t('pro.receptionPositive'), a: A.reception.positivePct, b: B.reception.positivePct, max: 100,
                 aText: formatPct(A.reception.positivePct), bText: formatPct(B.reception.positivePct),
-                hint: '% de recepciones de calidad 2 o 3'
+                hint: t('pro.receptionPositiveHint')
             }),
             versusRow({
                 label: 'Aces', a: A.aces, b: B.aces, max: maxCount(A.aces, B.aces),
                 aText: String(A.aces), bText: String(B.aces),
-                hint: 'Saques que terminaron directamente en punto'
+                hint: t('pro.acesHint')
             }),
             versusRow({
-                label: 'Errores de saque', a: A.serveErrors, b: B.serveErrors, max: maxCount(A.serveErrors, B.serveErrors),
+                label: t('pro.serveErrors'), a: A.serveErrors, b: B.serveErrors, max: maxCount(A.serveErrors, B.serveErrors),
                 aText: String(A.serveErrors), bText: String(B.serveErrors), lowerIsBetter: true,
-                hint: 'Saques fallados (regalan el punto al rival)'
+                hint: t('pro.serveErrorsHint')
             })
         ].join('');
 
@@ -412,8 +415,7 @@
         if (!pro.hasReceptionData) {
             return `
                 <p class="small text-body-secondary text-center bg-body-tertiary rounded-3 p-3 mb-0">
-                    💡 Para ver la calidad de recepción, marca <strong>3 · 2 · 1 · 0</strong> sobre el receptor
-                    en el menú de Scout al registrar cada punto.
+                    ${t('pro.receptionTip')}
                 </p>`;
         }
 
@@ -421,7 +423,7 @@
         const byGradeRows = RECEPTION_GRADES.map(
             (g) => `
             <tr>
-                <td class="text-start text-nowrap"><span class="badge grade-badge grade-badge--g${g.grade}">${g.grade}</span> ${g.label}</td>
+                <td class="text-start text-nowrap"><span class="badge grade-badge grade-badge--g${g.grade}">${g.grade}</span> ${escapeHtml(t(`reception.grade${g.grade}`))}</td>
                 <td>${cell(pro.byGrade.A[g.grade])}</td>
                 <td>${cell(pro.byGrade.B[g.grade])}</td>
             </tr>`
@@ -449,11 +451,11 @@
         return `
             <div class="row g-4">
                 <section class="col-md-6">
-                    <h3 class="pro-stats__subtitle">Side-out según la calidad de recepción</h3>
+                    <h3 class="pro-stats__subtitle">${escapeHtml(t('pro.byGradeTitle'))}</h3>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle text-center mb-0">
                             <thead class="table-dark"><tr>
-                                <th scope="col">Recepción</th>
+                                <th scope="col">${escapeHtml(t('pro.reception'))}</th>
                                 <th scope="col">${escapeHtml(config.teamA)}</th>
                                 <th scope="col">${escapeHtml(config.teamB)}</th>
                             </tr></thead>
@@ -462,16 +464,16 @@
                     </div>
                 </section>
                 <section class="col-md-6">
-                    <h3 class="pro-stats__subtitle">Receptores</h3>
+                    <h3 class="pro-stats__subtitle">${escapeHtml(t('pro.receiversTitle'))}</h3>
                     <div class="table-responsive">
                         <table class="table table-sm table-striped align-middle text-center mb-0">
                             <thead class="table-dark"><tr>
-                                <th scope="col">Jugador</th>
-                                <th scope="col" title="Recepciones registradas">Rec.</th>
-                                <th scope="col" title="Media 0-3">Media</th>
-                                <th scope="col" title="% de recepciones 2-3">Posit.</th>
-                                <th scope="col" class="d-none d-sm-table-cell" title="% de recepciones 3">Perf.</th>
-                                <th scope="col" title="% de rallies ganados tras su recepción">Side-out</th>
+                                <th scope="col">${escapeHtml(t('common.player'))}</th>
+                                <th scope="col" title="${escapeHtml(t('pro.colReceptionsHint'))}">${escapeHtml(t('pro.colReceptions'))}</th>
+                                <th scope="col" title="${escapeHtml(t('pro.colAverageHint'))}">${escapeHtml(t('pro.colAverage'))}</th>
+                                <th scope="col" title="${escapeHtml(t('pro.colPositiveHint'))}">${escapeHtml(t('pro.colPositive'))}</th>
+                                <th scope="col" class="d-none d-sm-table-cell" title="${escapeHtml(t('pro.colPerfectHint'))}">${escapeHtml(t('pro.colPerfect'))}</th>
+                                <th scope="col" title="${escapeHtml(t('pro.colSideOutHint'))}">Side-out</th>
                             </tr></thead>
                             <tbody>${receivers}</tbody>
                         </table>
@@ -493,7 +495,7 @@
         const totalsBySet = stats.computePlayerTotals(bySet, match.config);
 
         el.timelineValue.textContent =
-            filters.timelinePct === 100 ? 'Todo el partido' : `Jugada ${timeline.length} de ${match.points.length}`;
+            filters.timelinePct === 100 ? t('stats.wholeMatch') : t('stats.playOf', { current: timeline.length, total: match.points.length });
 
         renderSummary(match, bySet);
         renderPlayers(totalsVisible);
@@ -606,6 +608,13 @@
         // Si se está viendo el partido en curso, se actualiza en vivo
         store.subscribe((event) => {
             if (event === 'change' && VP.router.getCurrent() === VIEW_ID && source === 'current') render();
+        });
+
+        // Cambio de idioma: si la vista está abierta se repinta entera
+        i18n.onChange(() => {
+            if (!timelineTimer) stopTimeline();
+            else el.playTimeline.textContent = t('stats.pause');
+            if (VP.router.getCurrent() === VIEW_ID) enter();
         });
 
         VP.router.register(VIEW_ID, { onEnter: enter });

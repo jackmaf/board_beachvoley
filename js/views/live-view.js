@@ -13,6 +13,7 @@
     const { byId, setTextWithBump, isAnyModalOpen } = VP.dom;
     const store = VP.matchStore;
     const actions = VP.views.matchActions;
+    const { t } = VP.i18n;
 
     const VIEW_ID = 'vista-marcador-vivo';
     let el = {};
@@ -26,7 +27,7 @@
 
         // Nombre del torneo (o "Partido amistoso")
         const tournament = state.tournamentId ? VP.storage.getTournament(state.tournamentId) : null;
-        el.tournament.textContent = tournament ? `Torneo: ${tournament.name}` : 'Partido amistoso';
+        el.tournament.textContent = tournament ? t('live.tournament', { name: tournament.name }) : t('live.friendly');
 
         el.setNumber.textContent = state.currentSetIndex + 1;
         el.setsWon.textContent = `${won.A} - ${won.B}`;
@@ -88,6 +89,7 @@
         store.subscribe((event) => {
             if (event === 'change') render();
         });
+        VP.i18n.onChange(render);
         VP.router.register(VIEW_ID, { onEnter: render });
     }
 
