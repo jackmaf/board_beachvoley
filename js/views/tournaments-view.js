@@ -353,9 +353,9 @@
 
         return `
             <div class="match-card__team ${isWinner ? 'match-card__team--winner' : ''}">
-                ${!isPlaceholder && VP.photos.hasTeam(name)
-                    ? `<img class="avatar avatar--md" src="${escapeHtml(VP.photos.teamSrc(name))}" alt="">`
-                    : `<span aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>`}
+                ${isPlaceholder
+                    ? '<span aria-hidden="true">⏳</span>'
+                    : `<img class="avatar avatar--md" src="${escapeHtml(VP.photos.teamSrc(name))}" alt="">`}
                 <div class="match-card__team-info">
                     <span class="match-card__team-name ${isPlaceholder ? 'match-card__team-name--placeholder' : ''}">
                         ${escapeHtml(isPlaceholder ? placeholderText[name] : name)}

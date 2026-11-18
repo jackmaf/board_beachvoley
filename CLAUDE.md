@@ -15,13 +15,13 @@ Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 - **Scout táctico**: se toca la cancha donde cayó el balón y se elige jugador, punto/error y gesto técnico.
 - **Marcador Vivo**: marcador grande tipo TV, con atajos de teclado.
 - **Estadísticas**: partido en curso o cualquiera del historial, filtros, línea de tiempo animada, heatmap, Salón de la Fama, bitácora y dashboard por jugador (radar + PDF/CSV/JSON).
-- **Fotos**: cada jugador y dupla puede llevar una foto subida desde el móvil (galería o cámara), guardada en el dispositivo.
+- **Fotos y avatares**: cada jugador y dupla puede llevar una foto (cámara o galería del móvil) o un avatar de ejemplo; sin elección, uno por defecto. Todo se guarda en el dispositivo y funciona sin conexión.
 - **Datos**: `localStorage` con copia de seguridad (exportar/importar).
 
 | Aspecto | Detalle |
 |---|---|
 | Stack | HTML5 + **Bootstrap 5.3.9** (sólo CSS) + CSS propio con BEM + JavaScript vanilla (ES2020), **sin build** |
-| Externos | Bootstrap 5.3.9 (jsDelivr + SRI) · **i18next 23.16.8** (jsDelivr + SRI) · `html2pdf.js 0.10.1` (CDN) · Google Fonts *Outfit* · API **DiceBear** (avatares SVG) |
+| Externos | Bootstrap 5.3.9 (jsDelivr + SRI) · **i18next 23.16.8** (jsDelivr + SRI) · `html2pdf.js 0.10.1` (CDN) · Google Fonts *Outfit* · API **DiceBear** (sólo la URL de avatar del CSV exportado) |
 | Ejecutar | Abrir `index.html` en el navegador (funciona con `file://`) |
 | Tests | `npm test` → `node --test` (Node ≥ 18, sin instalar nada) |
 
@@ -52,7 +52,8 @@ voley playa/
 ├── js/
 │   ├── core/                  ⚙️ PURO: sin DOM ni storage → testeable en Node
 │   │   ├── constants.js       Reglas por defecto, claves de storage, gestos técnicos…
-│   │   ├── utils.js           escapeHtml, formatDuration, metros, avatares, CSV…
+│   │   ├── utils.js           escapeHtml, formatDuration, metros, nameKey, CSV…
+│   │   ├── avatars.js         Avatares de ejemplo propios (SVG) y el asignado por defecto
 │   │   ├── rules.js           Motor de reglas: sets, partido, cambio de lado, validación
 │   │   ├── kotc-engine.js     Queen & King of the Court: rotación, puntos, tiempo, deshacer
 │   │   ├── tournament-engine.js  Generación de llaves, BYE, resultados, clasificación
@@ -213,7 +214,7 @@ stateDiagram-v2
 | `voley-tournaments` | `Array` de torneos |
 | `voley-theme` | `classic` · `dark` · `high-contrast` (texto plano) |
 | `voley-language` | `es` · `en` (texto plano; sin valor → español) |
-| `voley-photos` | `{ players: {nombre→dataURL}, teams: {nombre→dataURL} }` (ver 5.3) |
+| `voley-photos` | `{ players: {nombre→valor}, teams: {nombre→valor} }`; valor = data URL de la foto o `avatar:<id>` (ver 5.3) |
 
 Los datos antiguos se **migran solos**: `match-store.load()` completa campos nuevos y `tournament-engine` deduce rondas y ganadores de torneos sin `round`/`winner`, y repara BYE atascados.
 
@@ -277,18 +278,28 @@ erDiagram
 
 **Regla clave:** `punto` suma al equipo del jugador; `error` suma al **rival** (`rules.getPointWinner`).
 
-### 5.3 Fotos de jugadores y duplas
+### 5.3 Fotos y avatares de jugadores y duplas
 
-- Se suben desde los tres sitios donde se escriben nombres: formulario de Config, filas de dupla al
-  crear un torneo y modal «Editar dupla». `photo-picker.js` añade un círculo 📷 delante del input
-  (`<template id="tpl-photo-picker">`); `accept="image/*"` ofrece galería o cámara en el móvil.
+- Se eligen en los tres sitios donde se escriben nombres: formulario de Config, filas de dupla al
+  crear un torneo y modal «Editar dupla». `photo-picker.js` pone un círculo delante del input
+  (`<template id="tpl-photo-picker">`) que abre el diálogo `#photo-dialog`:
+  - **📸 Tomar foto**: input con `capture="environment"` → abre la cámara directamente. Es necesario
+    porque en Android reciente `accept="image/*"` a secas abre el selector de fotos del sistema, sin cámara.
+  - **🖼️ Galería**: input sin `capture`.
+  - **Avatares de ejemplo** (`core/avatars.js`): 12 caras de jugador y 10 escudos de dupla en SVG
+    generado en código (sin internet). Se guarda sólo la referencia `avatar:<id>`.
+  - **Quitar**: vuelve al avatar por defecto.
+- **Avatar por defecto**: sin nada elegido, cada nombre recibe siempre el mismo avatar de ejemplo
+  (`avatars.getDefaultId`, hash del nombre). El círculo lo muestra con un distintivo 📷. Ya no se usa
+  DiceBear para pintar (sólo queda su URL en el CSV exportado).
 - Van **por nombre** (`utils.nameKey`: sin mayúsculas ni espacios sobrantes) en una clave propia
   `voley-photos`, no dentro de partidos/torneos: no se duplican en el historial y, si la cuota se llena,
-  sólo falla la foto. Se recortan en cuadrado a 256 px JPEG (~20 KB) en `photos.processFile`.
-- La foto elegida queda pendiente hasta enviar el formulario (`photoPicker.commit`), con el nombre
+  sólo falla la foto. Las fotos se recortan en cuadrado a 256 px JPEG (~20 KB) en `photos.processFile`.
+- Lo elegido queda pendiente hasta enviar el formulario (`photoPicker.commit`), con el nombre
   definitivo (incluidos «Equipo A» o «Pedro / Juan» generados).
-- Para pintar: `VP.photos.playerSrc(name)` / `teamSrc(name)` devuelven la foto (como `blob:` corto)
-  o el avatar DiceBear de siempre. El dashboard usa el data URL para que salga en el PDF.
+- Para pintar: `VP.photos.playerSrc(name)` / `teamSrc(name)` devuelven una URL `blob:` corta de la
+  foto, del avatar elegido o del de por defecto. El dashboard usa `photos.dataSrc` (data URL) para que
+  la imagen salga en el PDF.
 - Entran en la copia de seguridad (v2) y en el borrado total.
 
 ---
@@ -519,7 +530,8 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 | Nuevo tema | Bloque `[data-theme="…"]` en `css/tokens.css` + opción en el `theme-picker` de `index.html`; si es oscuro, `data-bs-theme="dark"` en `applyTheme()` |
 | Nueva vista | `<section class="view">` + botón `bottom-nav__item[data-view]` + `VP.router.register()` en su archivo de vista |
 | Cambiar persistencia (p. ej. backend) | Sólo `js/services/storage.js` |
-| Mostrar la foto de un jugador/dupla en otra pantalla | `VP.photos.playerSrc(name)` / `teamSrc(name)` (con avatar generado de respaldo) |
+| Mostrar la foto de un jugador/dupla en otra pantalla | `VP.photos.playerSrc(name)` / `teamSrc(name)` (con avatar por defecto de respaldo) |
+| Añadir o cambiar avatares de ejemplo | `PLAYER_PRESETS` / `TEAM_PRESETS` en `js/core/avatars.js` (+ `tests/avatars.test.js`) |
 | Añadir foto a otro input de nombre | `VP.photoPicker.attach(input, VP.photos.KIND.PLAYER)` + `commit(input, nombreFinal)` al enviar |
 
 ---
@@ -530,4 +542,4 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 
 **Funcionalidades nuevas:** clasificación Round Robin · campeón y barra de progreso · nombres de ronda en las llaves · historial de partidos en Estadísticas · copia de seguridad · avisos no bloqueantes y diálogos accesibles · atajos de teclado en Marcador Vivo · indicador de saque en Scout · avisos de fin de set y cambio de lado también en Scout · cronómetro que arranca con el primer punto · timeouts visibles en la bitácora · filtros con nombres de jugadores · botón «Limpiar filtros» · jugadores de cada dupla guardados en el torneo.
 
-**Deuda técnica pendiente:** las vistas aún generan HTML con template strings (un micro-framework de componentes sería el siguiente paso) · no hay tests automáticos de UI dentro del repo · los avatares dependen de un servicio externo (DiceBear) y no funcionan sin conexión · Bootstrap se carga por CDN: sin conexión la app pierde los estilos (para una PWA conviene copiarlo a `vendor/`).
+**Deuda técnica pendiente:** las vistas aún generan HTML con template strings (un micro-framework de componentes sería el siguiente paso) · no hay tests automáticos de UI dentro del repo · Bootstrap se carga por CDN: sin conexión la app pierde los estilos (para una PWA conviene copiarlo a `vendor/`).

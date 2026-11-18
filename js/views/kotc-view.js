@@ -81,15 +81,11 @@
         setTextWithBump(el[`${prefix}Points`], points ?? 0, 'kotc__points--bump');
     }
 
-    /**
-     * Fotos de trono y retador: sólo si alguna de las dos duplas tiene foto
-     * subida, y entonces las dos (logo generado de relleno) para no desalinear.
-     */
+    /** Foto o avatar (siempre hay uno: el de ejemplo por defecto) de trono y retador. */
     function renderSidePhotos(king, challenger) {
-        const show = [king, challenger].some((team) => team && VP.photos.hasTeam(team.name));
         [[el.thronePhoto, king], [el.challengerPhoto, challenger]].forEach(([img, team]) => {
-            img.hidden = !show || !team;
-            if (!img.hidden) img.src = VP.photos.teamSrc(team.name);
+            img.hidden = !team;
+            if (team) img.src = VP.photos.teamSrc(team.name);
         });
     }
 

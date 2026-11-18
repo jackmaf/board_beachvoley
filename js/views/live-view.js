@@ -19,16 +19,13 @@
     let el = {};
 
     /**
-     * Fotos de las duplas en el marcador. Sólo aparecen si el usuario subió alguna
-     * (los logos generados restarían protagonismo a los números); y entonces van
-     * las DOS, con el logo generado para la que no tenga, para que los
-     * marcadores sigan alineados.
+     * Foto o avatar de cada dupla. Siempre hay imagen (foto subida, avatar
+     * elegido o el de ejemplo por defecto), así los dos marcadores quedan alineados.
      */
     function renderPhotos({ teamA, teamB }) {
-        const show = VP.photos.hasTeam(teamA) || VP.photos.hasTeam(teamB);
         [[el.photoA, teamA], [el.photoB, teamB]].forEach(([img, name]) => {
-            img.hidden = !show;
-            if (show) img.src = VP.photos.teamSrc(name);
+            img.src = VP.photos.teamSrc(name);
+            img.hidden = false;
         });
     }
 

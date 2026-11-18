@@ -208,10 +208,10 @@
 }
 
 /* -------------------------------------------------------------------------
-   Bloque: photo-picker (círculo que abre la galería / cámara)
-   Elementos: __frame __img __placeholder __file __remove
+   Bloque: photo-picker (círculo que abre el diálogo de foto / avatar)
+   Elementos: __frame (botón) __img __placeholder __badge
    Modificadores del marco: --team (cuadrado redondeado, como los logos)
-                            --filled (ya tiene foto) --loading (procesando)
+                            --filled (foto o avatar elegido) --loading (procesando)
    ------------------------------------------------------------------------- */
 .photo-picker {
     position: relative;
@@ -222,7 +222,7 @@
     display: grid;
     width: 44px; /* Objetivo táctil mínimo recomendado */
     height: 44px;
-    margin: 0;
+    padding: 0;
     overflow: hidden;
     place-items: center;
     border: 2px dashed var(--color-border);
@@ -236,9 +236,9 @@
     border-color: var(--color-primary);
 }
 
-/* El input de archivo está oculto: el foco se señala en el marco */
-.photo-picker__frame:focus-within {
+.photo-picker__frame:focus-visible {
     border-color: var(--color-primary);
+    outline: none;
     box-shadow: 0 0 0 0.25rem var(--color-primary-soft);
 }
 
@@ -268,27 +268,78 @@
     opacity: 0.75;
 }
 
-.photo-picker__remove {
+/* Distintivo sobre el avatar por defecto: invita a poner una foto propia */
+.photo-picker__badge {
     position: absolute;
-    top: -6px;
-    right: -6px;
+    right: -4px;
+    bottom: -4px;
     display: grid;
-    width: 22px;
-    height: 22px;
-    padding: 0;
+    width: 20px;
+    height: 20px;
     place-items: center;
     border: 2px solid var(--color-surface);
     border-radius: 50%;
-    background: var(--color-danger);
-    color: var(--color-on-primary);
-    font-size: 0.85rem;
-    font-weight: 700;
+    background: var(--color-primary);
+    font-size: 0.65rem;
     line-height: 1;
-    box-shadow: var(--shadow-sm);
+    pointer-events: none; /* El toque llega al botón de debajo */
 }
 
 /* -------------------------------------------------------------------------
-   Bloque: avatar (foto generada del jugador o logo del equipo)
+   Bloque: photo-dialog (origen de la imagen: cámara, galería o avatar)
+   ------------------------------------------------------------------------- */
+
+/* El input de archivo está oculto dentro del botón: el foco se señala en él */
+.photo-dialog__source:focus-within {
+    box-shadow: 0 0 0 0.25rem var(--color-primary-soft);
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: avatar-grid / avatar-choice (avatares de ejemplo del diálogo)
+   Modificadores: --team (forma de logo)  --active (el elegido)
+   ------------------------------------------------------------------------- */
+.avatar-grid {
+    display: grid;
+    gap: var(--space-2);
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+}
+
+.avatar-choice {
+    aspect-ratio: 1;
+    padding: 0;
+    overflow: hidden;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    background: var(--color-surface-muted);
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.avatar-choice:hover {
+    transform: scale(1.06);
+}
+
+.avatar-choice:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 0.25rem var(--color-primary-soft);
+}
+
+.avatar-choice--team {
+    border-radius: var(--radius-sm);
+    background: #FFFFFF; /* Igual que los logos (.avatar--logo) */
+}
+
+.avatar-choice--active {
+    border-color: var(--color-primary);
+}
+
+.avatar-choice__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: avatar (foto o avatar de ejemplo del jugador, o logo del equipo)
    Tamaños: --sm --md --lg --xl --logo    Equipo: --team-a --team-b
    Estado:  --pulse
    ------------------------------------------------------------------------- */

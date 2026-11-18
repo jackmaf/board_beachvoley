@@ -145,9 +145,9 @@
                             </div>
                         </div>
 
-                        <p class="small text-body-secondary text-center mb-0">
-                            Toca 📷 junto a cada nombre para añadir su foto. Se guarda sólo en este dispositivo
-                            y se reutiliza en todos sus partidos y torneos.
+                        <p class="small text-body-secondary text-center mb-0" data-i18n="photos.configHint">
+                            Toca el avatar junto a cada nombre para tomar una foto, elegirla de la galería o usar
+                            un avatar de ejemplo. Se guarda sólo en este dispositivo.
                         </p>
 
                         <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
@@ -837,7 +837,7 @@
                     <h3 id="t-teams-title" class="h6 fw-bold text-center" data-i18n="tournamentForm.teamsTitle">Equipos (duplas)</h3>
                     <p class="small text-body-secondary text-center" data-i18n="tournamentForm.teamsHint">
                         Agrega los jugadores de cada dupla. El nombre de la dupla es opcional.
-                        Toca 📷 para añadir una foto (se guarda sólo en este dispositivo).
+                        Toca el avatar para tomar una foto, elegirla de la galería o usar uno de ejemplo.
                     </p>
                     <div id="t-dynamic-teams" class="vstack gap-2"></div>
                     <button type="button" id="btn-add-team" class="btn btn-outline-primary btn--dashed w-100"
@@ -958,14 +958,52 @@
     -->
     <template id="tpl-photo-picker">
         <div class="photo-picker">
-            <label class="photo-picker__frame" title="Subir foto" data-i18n-attr="title:photos.upload">
+            <button type="button" class="photo-picker__frame" title="Elegir foto o avatar"
+                data-i18n-attr="title:photos.upload">
                 <img class="photo-picker__img" alt="" hidden>
                 <span class="photo-picker__placeholder" aria-hidden="true">📷</span>
-                <input type="file" class="photo-picker__file visually-hidden" accept="image/*">
-            </label>
-            <button type="button" class="photo-picker__remove" hidden>&times;</button>
+            </button>
+            <span class="photo-picker__badge" aria-hidden="true" hidden>📷</span>
         </div>
     </template>
+
+    <!--
+        Origen de la imagen de un jugador o dupla (lo abre photo-picker.js).
+        Dos inputs de archivo: `capture` abre la cámara directamente; sin él, la galería.
+    -->
+    <dialog id="photo-dialog" class="app-dialog app-dialog--compact" aria-labelledby="photo-dialog-title">
+        <div class="app-dialog__panel">
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
+            <header>
+                <h2 id="photo-dialog-title" class="h4 fw-bold pe-5" data-i18n="photos.dialogTitle">Foto o avatar</h2>
+                <p id="photo-dialog-subject" class="small text-body-secondary mb-0"></p>
+            </header>
+
+            <div class="d-flex gap-2">
+                <label class="btn btn-primary flex-fill photo-dialog__source">
+                    <span data-i18n="photos.takePhoto">📸 Tomar foto</span>
+                    <input type="file" class="visually-hidden photo-dialog__file" accept="image/*"
+                        capture="environment">
+                </label>
+                <label class="btn btn-outline-primary flex-fill photo-dialog__source">
+                    <span data-i18n="photos.fromGallery">🖼️ Galería</span>
+                    <input type="file" class="visually-hidden photo-dialog__file" accept="image/*">
+                </label>
+            </div>
+
+            <section class="vstack gap-2" aria-labelledby="photo-dialog-samples">
+                <h3 id="photo-dialog-samples" class="h6 fw-bold mb-0" data-i18n="photos.samples">Avatares de ejemplo</h3>
+                <div id="photo-dialog-avatars" class="avatar-grid"></div>
+            </section>
+
+            <p class="small text-body-secondary text-center mb-0" data-i18n="photos.localOnly">
+                Se guarda sólo en este dispositivo.
+            </p>
+            <button type="button" id="photo-dialog-remove" class="btn btn-outline-danger w-100" hidden
+                data-i18n="photos.removeChosen">Quitar y usar el avatar por defecto</button>
+        </div>
+    </dialog>
 
     <!--
         Ajustes de premios (inscripción, % de bolsa y reparto). Se clona en el
@@ -1262,6 +1300,7 @@
     <!-- 1. Núcleo puro (sin DOM, testeado con Node) -->
     <script src="js/core/constants.js" defer></script>
     <script src="js/core/utils.js" defer></script>
+    <script src="js/core/avatars.js" defer></script>
     <script src="js/core/rules.js" defer></script>
     <script src="js/core/kotc-engine.js" defer></script>
     <script src="js/core/tournament-engine.js" defer></script>
