@@ -43,9 +43,19 @@
     font-weight: 700;
 }
 
+/*
+ * Un <select> mide por defecto lo que su opción más larga ("Equipo X vs Equipo Y ·
+ * 2-1 · fecha"). Como hijo flex tiene `min-width: auto`, así que NO podía encogerse
+ * por debajo de ese ancho: en móviles desbordaba la tarjeta y el navegador
+ * ensanchaba toda la página (scroll horizontal en Stats). `min-width: 0` le
+ * permite ajustarse al espacio disponible; el texto largo se recorta.
+ */
 .source-picker__select {
     flex: 1 1 240px;
     width: auto;
+    min-width: 0;
+    max-width: 100%;
+    text-overflow: ellipsis;
 }
 
 /* -------------------------------------------------------------------------
