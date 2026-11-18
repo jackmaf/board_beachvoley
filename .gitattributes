@@ -1,0 +1,13 @@
+# Finales de línea normalizados a LF en el repositorio, sin importar el sistema
+# operativo de quien haga commit (evita diffs fantasma entre Windows y WSL/Linux).
+* text=auto eol=lf
+
+# Binarios: nunca convertir ni intentar mostrar diffs de texto
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
