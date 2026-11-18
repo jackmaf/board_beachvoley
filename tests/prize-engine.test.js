@@ -138,3 +138,23 @@ test('formatMoney: pesos colombianos sin redondear', () => {
     assert.equal(utils.formatMoney(10000, 'en-US'), '$10,000');
     assert.equal(utils.formatMoney(3500.5, 'es-CO'), '$ 3.500,5');
 });
+
+test('Queen & King of the Court: jugadores de su cola y puestos por puntos de trono', () => {
+    const t = create(TOURNAMENT_FORMAT.KING_OF_COURT, 4);
+    prize.enablePrize(t, settings({ distribution: [70, 30] }));
+    payTeams(t, 4);
+    assert.equal(t.prize.entries[0].p1, 'J1a', 'los jugadores salen de tournament.kotc.teams');
+    assert.deepEqual(prize.summarize(t).awards[0].teams, [], 'sin rallies no hay líder');
+
+    const kotc = require('./load-core').kotcEngine;
+    kotc.applyRally(t.kotc, 'throne'); // D1 suma desde el trono
+    let s = prize.summarize(t);
+    assert.deepEqual(s.awards[0].teams, ['D1']);
+    assert.equal(s.awards[0].decided, false);
+
+    while (!t.kotc.winnerId) kotc.applyRally(t.kotc, 'throne');
+    s = prize.summarize(t);
+    assert.equal(s.awards[0].decided, true);
+    assert.deepEqual(s.awards[0].teams, ['D1']);
+    assert.equal(s.awards[0].amount, 28000);
+});

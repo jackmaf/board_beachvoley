@@ -509,6 +509,14 @@
     font-size: 1.2rem;
 }
 
+/* Foto de la dupla: sólo se muestra si el usuario subió una */
+.live-board__photo {
+    align-self: center;
+    width: 56px;
+    height: 56px;
+    margin-top: var(--space-3);
+}
+
 .live-board__name {
     margin-top: var(--space-4); /* Deja la esquina superior libre para el indicador de saque */
     color: inherit;

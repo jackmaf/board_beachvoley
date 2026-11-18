@@ -91,7 +91,9 @@ test('las claves dinámicas del dominio están traducidas', () => {
         ...['final', 'semifinals', 'quarterfinals', 'roundOf16', 'round'].map((r) => `rounds.${r}`),
         ...['played', 'won', 'lost', 'sets', 'points'].flatMap((k) => [`standings.${k}`, `standings.${k}Hint`]),
         'stats.unit_pts',
-        'stats.unit_errs'
+        'stats.unit_errs',
+        ...['throneWin', 'dethrone', 'adjust', 'timeUp'].map((code) => `kotc.log.${code}`),
+        ...['F', 'M', 'X'].map((g) => `kotc.throne.${g}`)
     ];
     // Formatos con espacios ("Round Robin") son claves de un nivel: se buscan dentro de su grupo
     const missing = expected.filter((key) => {
@@ -102,10 +104,10 @@ test('las claves dinámicas del dominio están traducidas', () => {
 });
 
 test('los códigos de error del núcleo tienen traducción', () => {
-    const sources = ['js/core/rules.js', 'js/core/tournament-engine.js', 'js/state/match-store.js', 'js/services/storage.js'];
+    const sources = ['js/core/rules.js', 'js/core/tournament-engine.js', 'js/core/kotc-engine.js', 'js/state/match-store.js', 'js/services/storage.js'];
     const codes = new Set();
     sources.forEach((file) => {
-        for (const m of read(file).matchAll(/code: '(\w+)'/g)) codes.add(m[1]);
+        for (const m of read(file).matchAll(/(?:code|warningCode): '(\w+)'/g)) codes.add(m[1]);
     });
     assert.ok(codes.size >= 10);
     assert.deepEqual([...codes].filter((c) => !has(flatEs, `errors.${c}`)), []);

@@ -11,7 +11,7 @@ todo desde el navegador y sin instalar nada.
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.9-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
 ![CSS3 BEM](https://img.shields.io/badge/CSS3-BEM-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JS-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Tests](https://img.shields.io/badge/tests-29%20passing-2ea44f?style=for-the-badge)
+![Tests](https://img.shields.io/badge/tests-39%20passing-2ea44f?style=for-the-badge)
 ![Dependencias](https://img.shields.io/badge/dependencias-0-blueviolet?style=for-the-badge)
 
 <img src="docs/screenshots/scout.png" alt="Registro táctico: menú para elegir jugador, tipo de acción y gesto técnico" width="520">
@@ -43,13 +43,14 @@ todo desde el navegador y sin instalar nada.
 - **Eliminación directa** con cuadro de llaves por rondas (cuartos, semis, final), cabezas de serie y **pases automáticos por BYE**.
 - Campeón, barra de progreso, edición de duplas y carga manual del resultado con validación por sets.
 - Al «Pitar» un partido, la configuración (duplas, jugadores y reglas) se precarga sola.
+- **👑 Queen & King of the Court**: todas las duplas en una sola cancha con cola de espera. Pantalla de **pista en vivo** con el trono y el retador, botones grandes para cada rally, **tabla de todas las duplas** con correcciones **+1 / −1**, **deshacer cualquier jugada**, historial, cronómetro con límite opcional y **punto de oro** en caso de empate.
 
 ### 💰 Premios (opcional por torneo)
 - **Inscripción por jugador** (la dupla paga el doble) y casillas **«¿Pagó?»** jugador a jugador, al crear el torneo o después.
 - La **bolsa se calcula sobre lo pagado**, nunca sobre lo esperado; se muestran aparte lo **esperado** y lo **pendiente**.
 - **% para premios** y el resto para **administración**; reparto por puestos: *el ganador se lleva todo*, *Top 2*, *Top 3* o **personalizado**.
 - Montos **exactos en pesos colombianos** (sin redondear a miles y sin perder ni un peso en el reparto).
-- Ganadores asignados solos: clasificación en Round Robin y, en eliminación directa, los semifinalistas **comparten el 3.º-4.º**.
+- Ganadores asignados solos: clasificación en Round Robin, tabla de puntos en Queen & King of the Court y, en eliminación directa, los semifinalistas **comparten el 3.º-4.º**.
 - **Copiar resumen** para pegar en WhatsApp (bolsa, reparto y quién debe).
 
 ### 🎯 Scout táctico
@@ -136,6 +137,14 @@ npx serve .
 3. Anota en **Marcador** y pulsa **Finalizar**: el ganador avanza solo en el cuadro.
 4. ¿Ya tienes el resultado? Usa **Colocar marcador** para cargarlo set a set.
 
+### Queen & King of the Court
+1. **Torneos** → **Crear nuevo torneo** → formato **Queen & King of the Court**, mínimo 3 duplas, puntos para
+   ganar y (opcional) límite de tiempo.
+2. Se abre la **pista en vivo**: la primera dupla ocupa el trono y la segunda reta; el resto espera en cola.
+3. En cada rally pulsa **👑 Punto del trono** (suma +1 y el retador vuelve a la cola) o **⚔️ Gana el retador**
+   (sube al trono sin sumar). La tabla, la cola y el historial se actualizan solos.
+4. ¿Te equivocaste? **↩️ Deshacer** devuelve la última jugada (rally o corrección) tal como estaba.
+
 ### Atajos de teclado (Marcador vivo)
 
 | Tecla | Acción |
@@ -160,6 +169,9 @@ npx serve .
 | Calidad de recepción | 3 perfecta · 2 buena · 1 mala · 0 error/ace (positiva = 2-3) | — |
 | Cambio de lado | Cada 7 puntos (5 en tie-break) | — |
 | Clasificación Round Robin | Victoria 2 pts · derrota 1 pt | — |
+| Queen & King: puntuación | Sólo puntúa el trono (+1 por rally ganado); el retador que gana sube sin sumar | — |
+| Queen & King: victoria | Primera dupla en llegar al objetivo | Puntos (15 por defecto) |
+| Queen & King: tiempo | Al acabar, gana el líder; empate en cabeza → punto de oro | Minutos (0 = sin límite) |
 
 Los valores fijos están centralizados en [`js/core/constants.js`](js/core/constants.js).
 
@@ -203,13 +215,14 @@ board_beachvoley/
 │   ├── components.css       Bloques BEM genéricos: diálogo, avatar, KPI, avisos…
 │   ├── court.css            Cancha, mapa de calor y leyenda
 │   ├── tournaments.css      Torneos, partidos y llaves
+│   ├── kotc.css             Pista en vivo de Queen & King of the Court
 │   ├── match.css            Configuración, Scout y Marcador vivo
 │   ├── stats.css            Estadísticas y dashboard de jugador
 │   └── prizes.css           Premios: ajustes, reparto y pagos
 ├── js/
-│   ├── core/                Lógica pura: constants, utils, rules, tournament-engine, prize-engine, stats-engine
+│   ├── core/                Lógica pura: constants, utils, rules, kotc-engine, tournament-engine, prize-engine, stats-engine
 │   ├── i18n/                Diccionarios es.js / en.js (formato i18next)
-│   ├── services/            storage (localStorage + backup), i18n y exporters (PDF/CSV/JSON)
+│   ├── services/            storage (localStorage + backup), photos, i18n y exporters (PDF/CSV/JSON)
 │   ├── state/               match-store: partido en curso
 │   ├── ui/                  dom, feedback (toasts y confirmaciones), router y language (selector ES/EN)
 │   ├── views/               Una vista por pantalla
@@ -234,8 +247,9 @@ board_beachvoley/
 npm test
 ```
 
-Ejecuta 44 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
-motor de reglas y del saque, la generación de llaves y los BYE, la clasificación, los premios (pagos, bolsa y reparto exacto),
+Ejecuta 57 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
+motor de reglas y del saque, la generación de llaves y los BYE, la clasificación, el formato Queen & King of the Court
+(rotación de cola, puntuación, deshacer, tiempo y punto de oro), los premios (pagos, bolsa y reparto exacto),
 los filtros, los KPIs, los indicadores profesionales (side-out, break point y recepción) y que los diccionarios
 de español e inglés estén completos.
 
@@ -290,6 +304,7 @@ funcionando, pero los avisos pueden quedar detrás de los modales.
 **Hecho en la v2**
 - [x] Arquitectura modular por capas con tests, Bootstrap 5.3 y CSS BEM.
 - [x] Torneos: clasificación Round Robin, llaves con BYE automáticos y campeón.
+- [x] Formato **Queen & King of the Court** con pista en vivo, tabla de duplas y deshacer.
 - [x] Historial de partidos en Estadísticas y copia de seguridad.
 - [x] Exportación a PDF, CSV y JSON.
 - [x] Avisos no bloqueantes, diálogos accesibles y atajos de teclado.

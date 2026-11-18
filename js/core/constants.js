@@ -28,7 +28,8 @@
         HISTORY: 'voley-history',            // Array con todos los partidos finalizados
         TOURNAMENTS: 'voley-tournaments',    // Array de torneos
         THEME: 'voley-theme',                // Tema visual elegido
-        LANGUAGE: 'voley-language'           // Idioma de la interfaz ('es' | 'en')
+        LANGUAGE: 'voley-language',          // Idioma de la interfaz ('es' | 'en')
+        PHOTOS: 'voley-photos'               // Fotos de jugadores y duplas (por nombre)
     });
 
     /**
@@ -111,13 +112,15 @@
     /** Formatos de torneo soportados (el valor se guarda tal cual en localStorage). */
     const TOURNAMENT_FORMAT = Object.freeze({
         ROUND_ROBIN: 'Round Robin',
-        KNOCKOUT: 'Eliminacion Directa'
+        KNOCKOUT: 'Eliminacion Directa',
+        KING_OF_COURT: 'Queen & King of the Court'
     });
 
     /** Etiqueta legible de cada formato (el valor guardado no lleva tildes). */
     const FORMAT_LABEL = Object.freeze({
         [TOURNAMENT_FORMAT.ROUND_ROBIN]: 'Round Robin',
-        [TOURNAMENT_FORMAT.KNOCKOUT]: 'Eliminación directa'
+        [TOURNAMENT_FORMAT.KNOCKOUT]: 'Eliminación directa',
+        [TOURNAMENT_FORMAT.KING_OF_COURT]: 'Queen & King of the Court'
     });
 
     /** Estados de un partido dentro de un torneo. */
@@ -159,6 +162,26 @@
     /** Máximo de puestos premiados que se pueden configurar. */
     const MAX_PRIZE_PLACES = 8;
 
+    /**
+     * Queen & King of the Court: valores por defecto.
+     *  - targetPoints:     puntos para ganar (sólo se puntúa desde el trono).
+     *  - timeLimitMinutes: 0 = sin límite de tiempo.
+     *  - minTeams:         con menos de 3 duplas no hay cola y el formato no tiene sentido.
+     */
+    const KOTC_DEFAULTS = Object.freeze({ targetPoints: 15, timeLimitMinutes: 0, minTeams: 3 });
+
+    /** Cómo se llama el trono según la rama del torneo. */
+    const THRONE_LABEL = Object.freeze({ F: 'Reina', M: 'Rey', X: 'Trono' });
+
+    /**
+     * Fotos subidas por el usuario (jugadores y duplas).
+     *  - size:         lado en px del cuadrado final. 256 px se ve nítido en el avatar
+     *                  más grande (84 px a 3x) y deja cada foto en ~15-25 KB.
+     *  - quality:      calidad JPEG. localStorage ronda los 5 MB, así que se prima el tamaño.
+     *  - maxFileBytes: archivos más grandes ni se intentan decodificar (memoria del móvil).
+     */
+    const PHOTO = Object.freeze({ size: 256, quality: 0.82, maxFileBytes: 25 * 1024 * 1024 });
+
     /** A partir de cuántos registros se muestra el spinner al recalcular estadísticas. */
     const SPINNER_THRESHOLD = 300;
 
@@ -188,6 +211,9 @@
         PRIZE_DEFAULTS,
         PRIZE_PRESETS,
         MAX_PRIZE_PLACES,
+        KOTC_DEFAULTS,
+        THRONE_LABEL,
+        PHOTO,
         SPINNER_THRESHOLD
     });
 

@@ -118,6 +118,35 @@
     }
 
     /**
+     * Clave con la que se guarda la foto de un jugador o una dupla.
+     * Ignora mayúsculas y espacios sobrantes para que «Juan  Pérez» y
+     * «juan pérez» compartan foto. Las tildes SÍ cuentan (son nombres distintos).
+     * @param {string} name
+     * @returns {string} '' si el nombre está vacío.
+     */
+    function nameKey(name) {
+        return String(name ?? '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es');
+    }
+
+    /**
+     * Recorte cuadrado centrado de una imagen (para avatares redondos sin deformar).
+     * @param {number} width  Ancho original.
+     * @param {number} height Alto original.
+     * @param {number} maxSide Lado máximo del resultado.
+     * @returns {{sx:number, sy:number, side:number, output:number}}
+     *   Origen y lado del recorte en la imagen original, y lado final (nunca amplía).
+     */
+    function getSquareCrop(width, height, maxSide) {
+        const side = Math.min(width, height);
+        return {
+            sx: Math.round((width - side) / 2),
+            sy: Math.round((height - side) / 2),
+            side,
+            output: Math.max(1, Math.min(side, maxSide))
+        };
+    }
+
+    /**
      * Escapa una celda para CSV (RFC 4180): si contiene comas, comillas o
      * saltos de línea se envuelve en comillas dobles y se duplican las internas.
      */
@@ -191,6 +220,8 @@
         createId,
         getAvatarUrl,
         getTeamLogoUrl,
+        nameKey,
+        getSquareCrop,
         toCsvCell,
         toCsv,
         slugify,

@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/court.css">
     <link rel="stylesheet" href="css/tournaments.css">
+    <link rel="stylesheet" href="css/kotc.css">
     <link rel="stylesheet" href="css/match.css">
     <link rel="stylesheet" href="css/stats.css">
     <link rel="stylesheet" href="css/prizes.css">
@@ -144,6 +145,11 @@
                             </div>
                         </div>
 
+                        <p class="small text-body-secondary text-center mb-0">
+                            Toca 📷 junto a cada nombre para añadir su foto. Se guarda sólo en este dispositivo
+                            y se reutiliza en todos sus partidos y torneos.
+                        </p>
+
                         <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
                             aria-labelledby="rules-title">
                             <h3 id="rules-title" class="h6 fw-bold text-center" data-i18n="config.rulesTitle">Reglas del partido</h3>
@@ -220,7 +226,7 @@
                         aria-labelledby="backup-title">
                         <h3 id="backup-title" class="h6 fw-bold text-center" data-i18n="backup.title">Copia de seguridad</h3>
                         <p class="small text-body-secondary text-center" data-i18n="backup.hint">
-                            Los datos sólo se guardan en este navegador. Descarga una copia para no perderlos o para pasarlos a otro dispositivo.
+                            Los datos (también las fotos) sólo se guardan en este navegador. Descarga una copia para no perderlos o para pasarlos a otro dispositivo.
                         </p>
                         <div class="d-flex flex-wrap gap-2">
                             <button type="button" id="btn-backup-export" class="btn btn-outline-primary flex-fill"
@@ -410,6 +416,7 @@
                     <div class="live-board__team live-board__team--a">
                         <span class="live-board__serve" id="live-serving-a" title="Tiene el saque"
                             data-i18n-attr="title:common.hasServe" hidden>🏐</span>
+                        <img class="avatar avatar--logo live-board__photo" id="live-photo-a" alt="" hidden>
                         <h3 class="live-board__name" id="live-name-a">Equipo A</h3>
                         <output class="live-board__score" id="live-score-a" aria-live="polite">0</output>
                         <button type="button" class="live-board__add" id="btn-live-point-a" data-i18n="live.addPoint">+1 Punto</button>
@@ -417,6 +424,7 @@
                     <div class="live-board__team live-board__team--b">
                         <span class="live-board__serve" id="live-serving-b" title="Tiene el saque"
                             data-i18n-attr="title:common.hasServe" hidden>🏐</span>
+                        <img class="avatar avatar--logo live-board__photo" id="live-photo-b" alt="" hidden>
                         <h3 class="live-board__name" id="live-name-b">Equipo B</h3>
                         <output class="live-board__score" id="live-score-b" aria-live="polite">0</output>
                         <button type="button" class="live-board__add" id="btn-live-point-b" data-i18n="live.addPoint">+1 Punto</button>
@@ -633,6 +641,118 @@
                 </div>
             </div>
         </section>
+        <!-- =============================================================
+             VISTA: QUEEN & KING OF THE COURT (pista en vivo)
+             Se abre desde la tarjeta de un torneo con ese formato.
+             ============================================================= -->
+        <section id="vista-kotc" class="view px-3 py-4" aria-labelledby="kotc-title">
+            <div class="kotc vstack gap-3">
+                <header class="kotc__header vstack gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="btn-kotc-back" aria-label="Volver a Torneos"
+                            data-i18n-attr="aria-label:kotc.back">
+                            ← <span class="d-none d-sm-inline" data-i18n="nav.tournaments">Torneos</span>
+                        </button>
+                        <div class="kotc__heading flex-grow-1 text-center">
+                            <h2 id="kotc-title" class="kotc__title text-truncate">Torneo</h2>
+                            <p class="kotc__meta" id="kotc-meta"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="btn-kotc-timer"
+                            aria-label="Pausar o reanudar el reloj" data-i18n-attr="aria-label:kotc.timerToggle">⏸️</button>
+                    </div>
+                    <div class="kotc__clock" id="kotc-clock" aria-live="off">00:00</div>
+                </header>
+
+                <p id="kotc-champion" class="champion-banner" hidden></p>
+                <p id="kotc-golden" class="alert alert-warning text-center fw-bold mb-0" hidden></p>
+
+                <!-- La cancha: trono vs retador -->
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="kotc__side kotc__side--throne" id="kotc-throne">
+                            <span class="kotc__side-label" id="kotc-throne-label">👑 Trono</span>
+                            <img class="avatar avatar--logo" id="kotc-throne-photo" alt="" hidden>
+                            <strong class="kotc__team" id="kotc-throne-name">—</strong>
+                            <span class="kotc__players" id="kotc-throne-players"></span>
+                            <output class="kotc__points" id="kotc-throne-points" aria-live="polite">0</output>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="kotc__side kotc__side--challenger" id="kotc-challenger">
+                            <span class="kotc__side-label" data-i18n="kotc.challengerServes">⚔️ Retador · saca</span>
+                            <img class="avatar avatar--logo" id="kotc-challenger-photo" alt="" hidden>
+                            <strong class="kotc__team" id="kotc-challenger-name">—</strong>
+                            <span class="kotc__players" id="kotc-challenger-players"></span>
+                            <output class="kotc__points" id="kotc-challenger-points">0</output>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <button type="button" class="btn btn-warning kotc__action w-100 h-100" id="btn-kotc-throne"
+                            data-i18n-html="kotc.throneButton">
+                            👑 Punto del trono <small class="kotc__action-hint">+1 · retador a la cola</small>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn kotc__action kotc__action--challenger w-100 h-100" id="btn-kotc-challenger"
+                            data-i18n-html="kotc.challengerButton">
+                            ⚔️ Gana el retador <small class="kotc__action-hint">sube al trono · sin punto</small>
+                        </button>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary flex-fill" id="btn-kotc-undo"
+                        data-i18n="kotc.undo">↩️ Deshacer última jugada</button>
+                    <button type="button" class="btn btn-outline-primary flex-fill" id="btn-kotc-prizes"
+                        data-i18n="detail.tabPrizes">💰 Premios</button>
+                </div>
+
+                <div class="card card--glass">
+                    <div class="card-body vstack gap-2">
+                        <h3 class="section-title" data-i18n="kotc.queueTitle">Cola de espera</h3>
+                        <ol class="kotc__queue" id="kotc-queue"></ol>
+                    </div>
+                </div>
+
+                <div class="card card--glass">
+                    <div class="card-body vstack gap-3">
+                        <h3 class="section-title" data-i18n="kotc.tableTitle">Tabla de duplas</h3>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle text-center mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col" class="text-start" data-i18n="standings.team">Dupla</th>
+                                        <th scope="col" data-i18n="kotc.colPoints">Puntos</th>
+                                        <th scope="col" title="Tronos conquistados" data-i18n-attr="title:kotc.colThronesHint">👑</th>
+                                        <th scope="col" data-i18n="kotc.colStatus">Estado</th>
+                                        <th scope="col" data-i18n="kotc.colAdjust">Ajuste</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kotc-table"></tbody>
+                            </table>
+                        </div>
+                        <p class="small text-body-secondary text-center" data-i18n-html="kotc.adjustHint">
+                            Usa <strong>+1 / −1</strong> sólo para corregir errores: cada corrección queda en el historial y se puede deshacer.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card card--glass">
+                    <div class="card-body vstack gap-2">
+                        <h3 class="section-title" data-i18n="kotc.logTitle">Últimas jugadas</h3>
+                        <ol class="kotc__log" id="kotc-log"></ol>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-danger" id="btn-kotc-delete" data-i18n="detail.delete">Eliminar torneo</button>
+                <p class="kotc__hint small text-body-secondary text-center" data-i18n-html="kotc.shortcuts">
+                    Atajos: <kbd>T</kbd> / <kbd>←</kbd> punto del trono · <kbd>R</kbd> / <kbd>→</kbd> gana el retador · <kbd>Z</kbd> deshacer
+                </p>
+            </div>
+        </section>
     </main>
 
     <!-- =================================================================
@@ -708,6 +828,7 @@
                             <option value="" disabled selected data-i18n="common.choose">Elegir…</option>
                             <option value="Round Robin" data-i18n="tournamentForm.formatRoundRobin">Round Robin (todos vs todos)</option>
                             <option value="Eliminacion Directa" data-i18n="tournamentForm.formatKnockout">Eliminación directa (llaves)</option>
+                            <option value="Queen &amp; King of the Court" data-i18n="tournamentForm.formatKingOfCourt">Queen &amp; King of the Court (una cancha)</option>
                         </select>
                     </div>
                 </div>
@@ -716,6 +837,7 @@
                     <h3 id="t-teams-title" class="h6 fw-bold text-center" data-i18n="tournamentForm.teamsTitle">Equipos (duplas)</h3>
                     <p class="small text-body-secondary text-center" data-i18n="tournamentForm.teamsHint">
                         Agrega los jugadores de cada dupla. El nombre de la dupla es opcional.
+                        Toca 📷 para añadir una foto (se guarda sólo en este dispositivo).
                     </p>
                     <div id="t-dynamic-teams" class="vstack gap-2"></div>
                     <button type="button" id="btn-add-team" class="btn btn-outline-primary btn--dashed w-100"
@@ -724,7 +846,32 @@
                     </button>
                 </div>
 
-                <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group" aria-labelledby="t-rules-title">
+                <!-- Ajustes de Queen & King of the Court (visibles sólo con ese formato) -->
+                <div id="t-rules-kotc" class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
+                    aria-labelledby="t-kotc-title" hidden>
+                    <h3 id="t-kotc-title" class="h6 fw-bold text-center" data-i18n="kotcForm.title">👑 Reglas Queen &amp; King of the Court</h3>
+                    <p class="small text-body-secondary text-center" data-i18n="kotcForm.hint">
+                        Todas las duplas comparten una cancha. El retador saca contra el trono: si gana el trono suma +1; si gana el retador, sube al trono sin sumar. Sólo se puntúa desde el trono.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label" for="t-kotc-target" data-i18n="kotcForm.target">Puntos para ganar</label>
+                            <input class="form-control" type="number" id="t-kotc-target" value="15" min="1" max="99"
+                                inputmode="numeric">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="t-kotc-minutes" data-i18n="kotcForm.minutes">Límite de tiempo (min)</label>
+                            <input class="form-control" type="number" id="t-kotc-minutes" value="0" min="0" max="180"
+                                inputmode="numeric" aria-describedby="t-kotc-minutes-hint">
+                        </div>
+                    </div>
+                    <p id="t-kotc-minutes-hint" class="small text-body-secondary text-center" data-i18n="kotcForm.minutesHint">
+                        0 = sin límite. Con límite, al acabar el tiempo gana el líder (empate → punto de oro).
+                    </p>
+                </div>
+
+                <div id="t-rules-sets" class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
+                    aria-labelledby="t-rules-title">
                     <h3 id="t-rules-title" class="h6 fw-bold text-center" data-i18n="tournamentForm.rulesTitle">Reglas por defecto del torneo</h3>
                     <div class="row g-3">
                         <div class="col-sm-4">
@@ -774,13 +921,18 @@
             <span class="team-row__number" aria-hidden="true"></span>
             <div class="team-row__fields vstack gap-2">
                 <input type="text" class="form-control team-row__input team-row__input--name" data-field="name"
-                    maxlength="40" placeholder="Nombre de la dupla (opcional)"
+                    maxlength="40" placeholder="Dupla (opcional)"
                     data-i18n-attr="placeholder:tournamentForm.teamNamePlaceholder">
-                <div class="d-flex gap-2">
-                    <input type="text" class="form-control team-row__input" data-field="p1" maxlength="40"
-                        placeholder="Jugador 1" required data-i18n-attr="placeholder:common.player1">
-                    <input type="text" class="form-control team-row__input" data-field="p2" maxlength="40"
-                        placeholder="Jugador 2" required data-i18n-attr="placeholder:common.player2">
+                <!-- En móvil un jugador por línea: cada uno lleva además su selector de foto -->
+                <div class="row g-2">
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control team-row__input" data-field="p1" maxlength="40"
+                            placeholder="Jugador 1" required data-i18n-attr="placeholder:common.player1">
+                    </div>
+                    <div class="col-sm-6">
+                        <input type="text" class="form-control team-row__input" data-field="p2" maxlength="40"
+                            placeholder="Jugador 2" required data-i18n-attr="placeholder:common.player2">
+                    </div>
                 </div>
                 <!-- Pago de la inscripción de cada jugador (sólo con premios activos) -->
                 <div class="team-row__payments d-flex flex-wrap align-items-center gap-3" hidden>
@@ -797,6 +949,21 @@
             </div>
             <button type="button" class="btn btn-danger btn--icon flex-shrink-0 team-row__remove"
                 aria-label="Quitar dupla" data-i18n-attr="aria-label:tournamentForm.removeTeam">&times;</button>
+        </div>
+    </template>
+
+    <!--
+        Selector de foto de un jugador o dupla. photo-picker.js lo clona delante de cada
+        input de nombre. `accept="image/*"` en el móvil ofrece galería o cámara.
+    -->
+    <template id="tpl-photo-picker">
+        <div class="photo-picker">
+            <label class="photo-picker__frame" title="Subir foto" data-i18n-attr="title:photos.upload">
+                <img class="photo-picker__img" alt="" hidden>
+                <span class="photo-picker__placeholder" aria-hidden="true">📷</span>
+                <input type="file" class="photo-picker__file visually-hidden" accept="image/*">
+            </label>
+            <button type="button" class="photo-picker__remove" hidden>&times;</button>
         </div>
     </template>
 
@@ -888,6 +1055,17 @@
                 <button type="button" id="btn-delete-tournament" class="btn btn-danger w-100"
                     data-i18n="detail.delete">Eliminar torneo</button>
             </footer>
+        </div>
+    </dialog>
+
+    <!-- Premios de un torneo sin detalle con pestañas (Queen & King of the Court) -->
+    <dialog id="modal-prizes" class="app-dialog app-dialog--wide" aria-labelledby="modal-prizes-title">
+        <div class="app-dialog__panel">
+            <button type="button" class="btn-close app-dialog__close" data-close-modal aria-label="Cerrar"
+                data-i18n-attr="aria-label:common.close"></button>
+            <h2 id="modal-prizes-title" class="h4 fw-bold pe-5">💰 Premios</h2>
+            <!-- Generado por prize-panel.js -->
+            <div id="modal-prizes-panel" class="prize-panel vstack gap-3"></div>
         </div>
     </dialog>
 
@@ -1085,6 +1263,7 @@
     <script src="js/core/constants.js" defer></script>
     <script src="js/core/utils.js" defer></script>
     <script src="js/core/rules.js" defer></script>
+    <script src="js/core/kotc-engine.js" defer></script>
     <script src="js/core/tournament-engine.js" defer></script>
     <script src="js/core/prize-engine.js" defer></script>
     <script src="js/core/stats-engine.js" defer></script>
@@ -1094,12 +1273,14 @@
     <script src="js/i18n/en.js" defer></script>
     <script src="js/services/storage.js" defer></script>
     <script src="js/services/i18n.js" defer></script>
+    <script src="js/services/photos.js" defer></script>
     <script src="js/services/exporters.js" defer></script>
     <script src="js/state/match-store.js" defer></script>
 
     <!-- 3. Utilidades de interfaz -->
     <script src="js/ui/dom.js" defer></script>
     <script src="js/ui/feedback.js" defer></script>
+    <script src="js/ui/photo-picker.js" defer></script>
     <script src="js/ui/router.js" defer></script>
     <script src="js/ui/language.js" defer></script>
 
@@ -1107,6 +1288,7 @@
     <script src="js/views/match-actions.js" defer></script>
     <script src="js/views/prize-panel.js" defer></script>
     <script src="js/views/tournaments-view.js" defer></script>
+    <script src="js/views/kotc-view.js" defer></script>
     <script src="js/views/config-view.js" defer></script>
     <script src="js/views/scout-view.js" defer></script>
     <script src="js/views/live-view.js" defer></script>

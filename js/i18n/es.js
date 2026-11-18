@@ -69,7 +69,8 @@
         },
         formats: {
             'Round Robin': 'Round Robin',
-            'Eliminacion Directa': 'Eliminación directa'
+            'Eliminacion Directa': 'Eliminación directa',
+            'Queen & King of the Court': 'Queen & King of the Court'
         },
         rounds: {
             final: 'Final',
@@ -156,9 +157,10 @@
             format: 'Formato',
             formatRoundRobin: 'Round Robin (todos vs todos)',
             formatKnockout: 'Eliminación directa (llaves)',
+            formatKingOfCourt: 'Queen & King of the Court (una cancha)',
             teamsTitle: 'Equipos (duplas)',
             teamsHint: 'Agrega los jugadores de cada dupla. El nombre de la dupla es opcional.',
-            teamNamePlaceholder: 'Nombre de la dupla (opcional)',
+            teamNamePlaceholder: 'Dupla (opcional)',
             teamNameLabel: 'Nombre de la dupla {{number}}',
             playerLabel: 'Dupla {{number}}, jugador {{player}}',
             paidLabel: 'Dupla {{number}}, el jugador {{player}} pagó la inscripción',
@@ -333,19 +335,19 @@
         },
         backup: {
             title: 'Copia de seguridad',
-            hint: 'Los datos sólo se guardan en este navegador. Descarga una copia para no perderlos o para pasarlos a otro dispositivo.',
+            hint: 'Los datos (también las fotos) sólo se guardan en este navegador. Descarga una copia para no perderlos o para pasarlos a otro dispositivo.',
             export: '⬇️ Exportar datos',
             import: '⬆️ Importar datos',
             exported: 'Copia de seguridad descargada.',
             importTitle: 'Importar copia de seguridad',
-            importMessage: 'Se reemplazarán TODOS los datos actuales (partidos, historial y torneos). ¿Continuar?',
+            importMessage: 'Se reemplazarán TODOS los datos actuales (partidos, historial, torneos y fotos). ¿Continuar?',
             importConfirm: 'Importar',
             imported: 'Datos importados. Recargando…'
         },
         reset: {
             button: '🚨 Borrar todos los datos y reiniciar',
             firstTitle: '🚨 Atención',
-            firstMessage: 'Vas a borrar TODO: partidos, historial y torneos guardados en este dispositivo.',
+            firstMessage: 'Vas a borrar TODO: partidos, historial, torneos y fotos guardados en este dispositivo.',
             firstConfirm: 'Sí, continuar',
             secondTitle: '⚠️ Última advertencia',
             secondMessage: 'Esta acción NO se puede deshacer. Si quieres conservar algo, exporta antes una copia de seguridad.',
@@ -543,6 +545,77 @@
             colAvatar: 'Avatar (URL)'
         },
 
+        // ----------------------------------------------------------------- Queen & King of the Court
+        kotcForm: {
+            title: '👑 Reglas Queen & King of the Court',
+            hint: 'Todas las duplas comparten una cancha. El retador saca contra el trono: si gana el trono suma +1; si gana el retador, sube al trono sin sumar. Sólo se puntúa desde el trono.',
+            target: 'Puntos para ganar',
+            minutes: 'Límite de tiempo (min)',
+            minutesHint: '0 = sin límite. Con límite, al acabar el tiempo gana el líder (empate → punto de oro).'
+        },
+        kotc: {
+            cardLeader_one: 'Líder: {{name}} {{points}}/{{target}} pts · {{count}} rally',
+            cardLeader_other: 'Líder: {{name}} {{points}}/{{target}} pts · {{count}} rallies',
+            cardReady: '👑 Listo para empezar · a {{target}} puntos',
+            minTeamsWhy: 'Queen & King necesita trono, retador y al menos una dupla en cola.',
+            created_one: '¡A jugar! «{{name}}»: {{count}} dupla a {{target}} puntos.',
+            created_other: '¡A jugar! «{{name}}»: {{count}} duplas a {{target}} puntos.',
+            back: 'Volver a Torneos',
+            timerToggle: 'Pausar o reanudar el reloj',
+            challengerServes: '⚔️ Retador · saca',
+            throneButton: '👑 Punto del trono <small class="kotc__action-hint">+1 · retador a la cola</small>',
+            challengerButton: '⚔️ Gana el retador <small class="kotc__action-hint">sube al trono · sin punto</small>',
+            undo: '↩️ Deshacer última jugada',
+            queueTitle: 'Cola de espera',
+            tableTitle: 'Tabla de duplas',
+            colPoints: 'Puntos',
+            colThronesHint: 'Tronos conquistados',
+            colStatus: 'Estado',
+            colAdjust: 'Ajuste',
+            adjustHint: 'Usa <strong>+1 / −1</strong> sólo para corregir errores: cada corrección queda en el historial y se puede deshacer.',
+            logTitle: 'Últimas jugadas',
+            shortcuts: 'Atajos: <kbd>T</kbd> / <kbd>←</kbd> punto del trono · <kbd>R</kbd> / <kbd>→</kbd> gana el retador · <kbd>Z</kbd> deshacer',
+            throne: {
+                F: 'Reina',
+                M: 'Rey',
+                X: 'Trono'
+            },
+            challenger: 'Retador',
+            inQueue: 'En cola · {{position}}',
+            pointsOf: '{{points}} de {{target}} puntos',
+            minusOne: 'Restar un punto a {{name}}',
+            plusOne: 'Sumar un punto a {{name}}',
+            noPlays: 'Aún no hay jugadas. El primer rally pone el reloj en marcha.',
+            meta_one: 'A {{target}} puntos{{limit}} · {{teams}} duplas · {{count}} rally',
+            meta_other: 'A {{target}} puntos{{limit}} · {{teams}} duplas · {{count}} rallies',
+            champion_one: '🏆 Campeón: {{name}} ({{count}} pt)',
+            champion_other: '🏆 Campeón: {{name}} ({{count}} pts)',
+            golden: '⚡ Tiempo cumplido con empate: punto de oro entre {{names}}',
+            championCallout: '¡{{name}} campeón!',
+            undone: 'Deshecho: {{play}}',
+            timeUpCallout: '¡Tiempo! Punto de oro',
+            log: {
+                throneWin: '👑 {{king}} gana desde el trono a {{challenger}} (+1)',
+                dethrone: '⚔️ {{challenger}} destrona a {{king}}',
+                adjust: '✏️ Corrección: {{team}} {{delta}}',
+                timeUp: '⏱️ Tiempo cumplido'
+            }
+        },
+
+        // ----------------------------------------------------------------- Fotos
+        photos: {
+            upload: 'Subir foto',
+            change: 'Cambiar foto',
+            nameFallback: 'nombre',
+            photoOf: 'Foto: {{what}}',
+            removeOf: 'Quitar foto: {{what}}',
+            noSpace: 'No queda espacio en el dispositivo para la foto de «{{name}}». Prueba a quitar otras fotos.',
+            unsupported: 'Formato de imagen no compatible. Prueba con una foto JPG o PNG.',
+            noFile: 'No se eligió ninguna imagen.',
+            notImage: 'El archivo elegido no es una imagen.',
+            tooBig: 'La imagen es demasiado grande (máx. {{max}} MB).'
+        },
+
         // ----------------------------------------------------------------- Errores (códigos del núcleo)
         errors: {
             unexpected: 'Ocurrió un error inesperado. Revisa la consola para más detalles.',
@@ -563,6 +636,11 @@
             pdfLibrary: 'La librería de PDF no se pudo cargar. Comprueba tu conexión a internet.',
             invalidJson: 'El archivo no es un JSON válido.',
             readFile: 'No se pudo leer el archivo.',
+            photosNotSaved: 'Los datos se importaron, pero las fotos no cupieron en el almacenamiento.',
+            kotcFinished: 'El torneo ya tiene campeón. Deshaz la última jugada para corregir.',
+            kotcNoChallenger: 'No hay retador en cola.',
+            kotcTeamNotFound: 'Dupla no encontrada.',
+            kotcZeroPoints: '{{team}} ya tiene 0 puntos.',
             prize: {
                 fee: 'La inscripción por jugador debe ser mayor que 0.',
                 pool: 'El % para premios debe estar entre 0 y 100.',

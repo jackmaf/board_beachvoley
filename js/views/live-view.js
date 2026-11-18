@@ -18,6 +18,20 @@
     const VIEW_ID = 'vista-marcador-vivo';
     let el = {};
 
+    /**
+     * Fotos de las duplas en el marcador. Sólo aparecen si el usuario subió alguna
+     * (los logos generados restarían protagonismo a los números); y entonces van
+     * las DOS, con el logo generado para la que no tenga, para que los
+     * marcadores sigan alineados.
+     */
+    function renderPhotos({ teamA, teamB }) {
+        const show = VP.photos.hasTeam(teamA) || VP.photos.hasTeam(teamB);
+        [[el.photoA, teamA], [el.photoB, teamB]].forEach(([img, name]) => {
+            img.hidden = !show;
+            if (show) img.src = VP.photos.teamSrc(name);
+        });
+    }
+
     function render() {
         if (!store.hasMatch()) return;
         const state = store.getState();
@@ -33,6 +47,7 @@
         el.setsWon.textContent = `${won.A} - ${won.B}`;
         el.nameA.textContent = state.config.teamA;
         el.nameB.textContent = state.config.teamB;
+        renderPhotos(state.config);
         setTextWithBump(el.scoreA, set.scoreA, 'live-board__score--bump');
         setTextWithBump(el.scoreB, set.scoreB, 'live-board__score--bump');
 
@@ -70,6 +85,8 @@
             setsWon: byId('live-sets-won'),
             nameA: byId('live-name-a'),
             nameB: byId('live-name-b'),
+            photoA: byId('live-photo-a'),
+            photoB: byId('live-photo-b'),
             scoreA: byId('live-score-a'),
             scoreB: byId('live-score-b'),
             servingA: byId('live-serving-a'),

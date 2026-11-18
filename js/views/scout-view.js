@@ -14,7 +14,8 @@
 
     const VP = (root.VP = root.VP || {});
     const { byId, qs, qsa, setTextWithBump } = VP.dom;
-    const { escapeHtml, formatDuration, getAvatarUrl, getTeamLogoUrl } = VP.utils;
+    const { escapeHtml, formatDuration } = VP.utils;
+    const { playerSrc, teamSrc } = VP.photos;
     const { SKILLS, DEFAULT_SKILL, MAX_TIMEOUTS_PER_SET, RECEPTION_GRADES } = VP.constants;
     const { toast } = VP.feedback;
     const store = VP.matchStore;
@@ -123,7 +124,7 @@
             const name = config[`p${button.dataset.player}`];
             qs('.player-btn__name', button).textContent = name;
             const avatar = qs('.player-btn__avatar', button);
-            avatar.src = getAvatarUrl(name);
+            avatar.src = playerSrc(name);
             avatar.alt = '';
         });
     }
@@ -146,7 +147,7 @@
             [el.logoA, config.teamA],
             [el.logoB, config.teamB]
         ].forEach(([img, name]) => {
-            img.src = getTeamLogoUrl(name);
+            img.src = teamSrc(name);
             img.alt = t('scout.logoOf', { name });
             img.hidden = false;
         });

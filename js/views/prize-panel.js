@@ -3,8 +3,9 @@
  * @description Premios de un torneo en la interfaz:
  *  1. La sección «💰 Premios» del formulario de creación (interruptor,
  *     ajustes, casillas de pago por jugador y vista previa).
- *  2. La pestaña «Premios» del detalle: lo recaudado, la bolsa, el reparto
- *     por puestos y la lista de pagos de cada jugador.
+ *  2. La pestaña «Premios» del detalle (o el diálogo de premios de Queen &
+ *     King of the Court): lo recaudado, la bolsa, el reparto por puestos y la
+ *     lista de pagos de cada jugador.
  *
  * Los cálculos los hace `core/prize-engine.js`; aquí sólo se pinta y se
  * recogen eventos. Los ajustes (inscripción, % y reparto) son un mismo
@@ -244,7 +245,10 @@
     // 2. PESTAÑA «PREMIOS» DEL DETALLE
     // =====================================================================
 
-    const panelState = { tournamentId: null, editing: false, onlyPending: false, editor: null, onChange: null };
+    const panelState = { tournamentId: null, editing: false, onlyPending: false, editor: null, onChange: null, host: null };
+
+    /** Prefijo de `id` del contenedor actual: evita ids repetidos entre la pestaña y el diálogo. */
+    const idPrefix = () => panelState.host.id;
 
     const getTournament = () => storage.getTournament(panelState.tournamentId);
 
@@ -303,6 +307,7 @@
 
     /** Fila de pagos de una dupla, con un interruptor por jugador. */
     function paymentHtml(entry, index, fee) {
+        const prefix = idPrefix();
         const status =
             entry.paidCount === 2
                 ? { modifier: 'paid', text: t('prize.statusPaid') }
@@ -311,7 +316,7 @@
                     : { modifier: 'unpaid', text: t('prize.statusOwes', { amount: i18n.money(entry.owed) }) };
 
         const player = (key, fallback) => {
-            const id = `pay-${index}-${key}`;
+            const id = `${prefix}-pay-${index}-${key}`;
             const name = entry[key] || fallback;
             return `
                 <input type="checkbox" class="btn-check" id="${id}" data-pay="${key}" data-entry="${index}" autocomplete="off"
@@ -377,9 +382,9 @@
                         ${escapeHtml(t('prize.paymentsTitle', { paid: summary.paidTeams, total: summary.teams }))}
                     </h3>
                     <div class="form-check form-switch mb-0 small">
-                        <input class="form-check-input" type="checkbox" role="switch" id="prize-only-pending"
+                        <input class="form-check-input" type="checkbox" role="switch" id="${idPrefix()}-only-pending"
                             data-prize-action="toggle-pending" ${panelState.onlyPending ? 'checked' : ''}>
-                        <label class="form-check-label" for="prize-only-pending">${escapeHtml(t('prize.onlyPending'))}</label>
+                        <label class="form-check-label" for="${idPrefix()}-only-pending">${escapeHtml(t('prize.onlyPending'))}</label>
                     </div>
                 </div>
                 <p class="small text-body-secondary mb-0">${escapeHtml(t('prize.paymentsHint', { amount: i18n.money(summary.feePerPlayer) }))}</p>
@@ -395,7 +400,7 @@
 
     /** Pintado de la pestaña según el estado (sin premios · editando · resumen). */
     function renderPanel() {
-        const panel = byId('panel-prizes');
+        const panel = panelState.host;
         const tour = getTournament();
         if (!tour) return;
 
@@ -426,7 +431,7 @@
                         🏆 <strong>${money(s.pool)}</strong> · 🧾 <strong>${money(s.admin)}</strong></p>
                     ${placesListHtml(prize.splitExact(s.pool, settings.distribution))}`;
             };
-            panelState.editor = mountSettings(qs('[data-prize-editor]', panel), draft || current, 'prize-edit', renderPreview);
+            panelState.editor = mountSettings(qs('[data-prize-editor]', panel), draft || current, `${idPrefix()}-edit`, renderPreview);
             renderPreview(panelState.editor.read());
             return;
         }
@@ -454,15 +459,20 @@
     /**
      * Pinta la pestaña «Premios» de un torneo.
      * @param {string} tournamentId
-     * @param {{onChange?: () => void}} [options] `onChange` se llama tras guardar (para repintar el listado).
+     * @param {Object} [options]
+     * @param {() => void} [options.onChange] Se llama tras guardar (para repintar el listado).
+     * @param {HTMLElement} [options.host] Dónde pintar; por defecto la pestaña del detalle.
      */
-    function render(tournamentId, { onChange } = {}) {
-        if (panelState.tournamentId !== tournamentId) {
+    function render(tournamentId, { onChange, host = byId('panel-prizes') } = {}) {
+        if (panelState.tournamentId !== tournamentId || panelState.host !== host) {
             panelState.editing = false;
             panelState.onlyPending = false;
             panelState.editor = null;
         }
+        // Vaciar el otro contenedor: así nunca hay dos copias del panel en la página
+        if (panelState.host && panelState.host !== host) panelState.host.replaceChildren();
         panelState.tournamentId = tournamentId;
+        panelState.host = host;
         panelState.onChange = onChange || null;
         renderPanel();
     }
@@ -568,8 +578,21 @@
         teamRows.addEventListener('input', renderCreatePreview);
         teamRows.addEventListener('change', renderCreatePreview);
 
-        // Pestaña del detalle (delegación: el contenido se repinta entero)
-        const panel = byId('panel-prizes');
+        // Pestaña del detalle y diálogo de premios (delegación: el contenido se repinta entero)
+        [byId('panel-prizes'), byId('modal-prizes-panel')].forEach(bindHost);
+
+        // Cambio de idioma: los textos generados con JS se vuelven a pintar
+        i18n.onChange(() => {
+            if (createForm.settings) {
+                mountCreateSettings(createForm.settings.read());
+                syncCreateForm();
+            }
+            if (byId('modal-prizes').open) renderPanel();
+        });
+    }
+
+    /** Conecta los eventos de un contenedor del panel. */
+    function bindHost(panel) {
         panel.addEventListener('change', (event) => {
             const input = event.target;
             if (input.dataset.pay) {
@@ -580,18 +603,10 @@
             } else if (input.dataset.prizeAction === 'toggle-pending') {
                 panelState.onlyPending = input.checked;
                 renderPanel();
-                byId('prize-only-pending')?.focus();
+                byId(`${idPrefix()}-only-pending`)?.focus();
             }
         });
         delegate(panel, 'click', 'button[data-prize-action]', (_event, button) => handlePanelAction(button.dataset.prizeAction));
-
-        // Cambio de idioma: los textos generados con JS se vuelven a pintar
-        i18n.onChange(() => {
-            if (createForm.settings) {
-                mountCreateSettings(createForm.settings.read());
-                syncCreateForm();
-            }
-        });
     }
 
     VP.views = VP.views || {};

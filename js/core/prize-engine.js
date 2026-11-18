@@ -15,6 +15,7 @@
  *  - Puestos compartidos: en eliminación directa no hay partido por el 3.º,
  *    así que los dos perdedores de semifinal comparten los puestos 3.º y 4.º
  *    (y los de cuartos, del 5.º al 8.º). Su premio se suma y se divide.
+ *  - Queen & King of the Court: los puestos salen de su tabla (puntos de trono).
  *
  * Forma de los datos (se guarda en `tournament.prize`):
  * {
@@ -59,10 +60,14 @@
 
     /**
      * Jugadores de cada dupla del torneo. Los torneos sólo guardan el NOMBRE
-     * de la dupla en `teams`; los jugadores viven en los partidos.
+     * de la dupla en `teams`; los jugadores viven en los partidos (o, en
+     * Queen & King of the Court, en `tournament.kotc.teams`).
      * @returns {Array<{name:string, p1:string, p2:string}>}
      */
     function readTeams(tournament) {
+        if (tournament.kotc?.teams) {
+            return tournament.kotc.teams.map(({ name, p1, p2 }) => ({ name, p1: p1 || '', p2: p2 || '' }));
+        }
         return (tournament.teams || []).map((name) => {
             const team = { name, p1: '', p2: '' };
             for (const match of tournament.matches || []) {
@@ -241,6 +246,25 @@
     }
 
     /**
+     * Queen & King of the Court: un puesto por dupla según su tabla (puntos,
+     * tronos…). Provisional hasta que haya campeón.
+     * @returns {RankGroup[]}
+     */
+    function kingOfCourtGroups(tournament) {
+        const state = tournament.kotc;
+        const kotc = VP.kotcEngine;
+        if (!state || !kotc) return [];
+        const decided = Boolean(state.winnerId);
+        return kotc.computeStandings(state).map((row, index) => ({
+            rank: index + 1,
+            size: 1,
+            // Antes del primer rally la tabla sólo está ordenada por nombre
+            teams: state.rallies > 0 || decided ? [row.name] : [],
+            decided
+        }));
+    }
+
+    /**
      * Puestos del torneo agrupados (empates incluidos).
      * Los formatos sin puestos definidos todavía devuelven `[]`.
      * @returns {RankGroup[]}
@@ -248,6 +272,7 @@
     function getRankGroups(tournament) {
         if (tournament.format === TOURNAMENT_FORMAT.KNOCKOUT) return knockoutGroups(tournament);
         if (tournament.format === TOURNAMENT_FORMAT.ROUND_ROBIN) return roundRobinGroups(tournament);
+        if (tournament.format === TOURNAMENT_FORMAT.KING_OF_COURT) return kingOfCourtGroups(tournament);
         return [];
     }
 

@@ -61,7 +61,8 @@
         },
         formats: {
             'Round Robin': 'Round robin',
-            'Eliminacion Directa': 'Knockout'
+            'Eliminacion Directa': 'Knockout',
+            'Queen & King of the Court': 'Queen & King of the Court'
         },
         rounds: {
             final: 'Final',
@@ -148,9 +149,10 @@
             format: 'Format',
             formatRoundRobin: 'Round robin (everyone plays everyone)',
             formatKnockout: 'Knockout (bracket)',
+            formatKingOfCourt: 'Queen & King of the Court (one court)',
             teamsTitle: 'Teams (pairs)',
             teamsHint: 'Add the players of each team. The team name is optional.',
-            teamNamePlaceholder: 'Team name (optional)',
+            teamNamePlaceholder: 'Team (optional)',
             teamNameLabel: 'Name of team {{number}}',
             playerLabel: 'Team {{number}}, player {{player}}',
             paidLabel: 'Team {{number}}, player {{player}} paid the entry fee',
@@ -325,19 +327,19 @@
         },
         backup: {
             title: 'Backup',
-            hint: 'Data is only stored in this browser. Download a copy so you don’t lose it or to move it to another device.',
+            hint: 'Data (photos included) is only stored in this browser. Download a copy so you don’t lose it or to move it to another device.',
             export: '⬇️ Export data',
             import: '⬆️ Import data',
             exported: 'Backup downloaded.',
             importTitle: 'Import backup',
-            importMessage: 'ALL current data (matches, history and tournaments) will be replaced. Continue?',
+            importMessage: 'ALL current data (matches, history, tournaments and photos) will be replaced. Continue?',
             importConfirm: 'Import',
             imported: 'Data imported. Reloading…'
         },
         reset: {
             button: '🚨 Delete all data and restart',
             firstTitle: '🚨 Warning',
-            firstMessage: 'You are about to delete EVERYTHING: matches, history and tournaments saved on this device.',
+            firstMessage: 'You are about to delete EVERYTHING: matches, history, tournaments and photos saved on this device.',
             firstConfirm: 'Yes, continue',
             secondTitle: '⚠️ Final warning',
             secondMessage: 'This CANNOT be undone. If you want to keep anything, export a backup first.',
@@ -535,6 +537,77 @@
             colAvatar: 'Avatar (URL)'
         },
 
+        // ----------------------------------------------------------------- Queen & King of the Court
+        kotcForm: {
+            title: '👑 Queen & King of the Court rules',
+            hint: 'All teams share one court. The challenger serves against the throne: if the throne wins it scores +1; if the challenger wins, it takes the throne without scoring. Points are only scored from the throne.',
+            target: 'Points to win',
+            minutes: 'Time limit (min)',
+            minutesHint: '0 = no limit. With a limit, the leader wins when time is up (tie → golden point).'
+        },
+        kotc: {
+            cardLeader_one: 'Leader: {{name}} {{points}}/{{target}} pts · {{count}} rally',
+            cardLeader_other: 'Leader: {{name}} {{points}}/{{target}} pts · {{count}} rallies',
+            cardReady: '👑 Ready to start · to {{target}} points',
+            minTeamsWhy: 'Queen & King needs a throne, a challenger and at least one team in the queue.',
+            created_one: 'Let’s play! “{{name}}”: {{count}} team to {{target}} points.',
+            created_other: 'Let’s play! “{{name}}”: {{count}} teams to {{target}} points.',
+            back: 'Back to Tournaments',
+            timerToggle: 'Pause or resume the clock',
+            challengerServes: '⚔️ Challenger · serving',
+            throneButton: '👑 Throne point <small class="kotc__action-hint">+1 · challenger to the queue</small>',
+            challengerButton: '⚔️ Challenger wins <small class="kotc__action-hint">takes the throne · no point</small>',
+            undo: '↩️ Undo last play',
+            queueTitle: 'Waiting queue',
+            tableTitle: 'Teams table',
+            colPoints: 'Points',
+            colThronesHint: 'Thrones taken',
+            colStatus: 'Status',
+            colAdjust: 'Adjust',
+            adjustHint: 'Use <strong>+1 / −1</strong> only to fix mistakes: every correction is logged and can be undone.',
+            logTitle: 'Latest plays',
+            shortcuts: 'Shortcuts: <kbd>T</kbd> / <kbd>←</kbd> throne point · <kbd>R</kbd> / <kbd>→</kbd> challenger wins · <kbd>Z</kbd> undo',
+            throne: {
+                F: 'Queen',
+                M: 'King',
+                X: 'Throne'
+            },
+            challenger: 'Challenger',
+            inQueue: 'Queued · {{position}}',
+            pointsOf: '{{points}} of {{target}} points',
+            minusOne: 'Take a point from {{name}}',
+            plusOne: 'Give a point to {{name}}',
+            noPlays: 'No plays yet. The first rally starts the clock.',
+            meta_one: 'To {{target}} points{{limit}} · {{teams}} teams · {{count}} rally',
+            meta_other: 'To {{target}} points{{limit}} · {{teams}} teams · {{count}} rallies',
+            champion_one: '🏆 Champion: {{name}} ({{count}} pt)',
+            champion_other: '🏆 Champion: {{name}} ({{count}} pts)',
+            golden: '⚡ Time is up with a tie: golden point between {{names}}',
+            championCallout: '{{name}} are the champions!',
+            undone: 'Undone: {{play}}',
+            timeUpCallout: 'Time! Golden point',
+            log: {
+                throneWin: '👑 {{king}} wins from the throne against {{challenger}} (+1)',
+                dethrone: '⚔️ {{challenger}} dethrones {{king}}',
+                adjust: '✏️ Correction: {{team}} {{delta}}',
+                timeUp: '⏱️ Time is up'
+            }
+        },
+
+        // ----------------------------------------------------------------- Photos
+        photos: {
+            upload: 'Upload photo',
+            change: 'Change photo',
+            nameFallback: 'name',
+            photoOf: 'Photo: {{what}}',
+            removeOf: 'Remove photo: {{what}}',
+            noSpace: 'There is no space left on the device for the photo of “{{name}}”. Try removing other photos.',
+            unsupported: 'Unsupported image format. Try a JPG or PNG photo.',
+            noFile: 'No image was chosen.',
+            notImage: 'The chosen file is not an image.',
+            tooBig: 'The image is too large (max. {{max}} MB).'
+        },
+
         // ----------------------------------------------------------------- Errors (core codes)
         errors: {
             unexpected: 'An unexpected error occurred. Check the console for details.',
@@ -555,6 +628,11 @@
             pdfLibrary: 'The PDF library could not be loaded. Check your internet connection.',
             invalidJson: 'The file is not valid JSON.',
             readFile: 'The file could not be read.',
+            photosNotSaved: 'The data was imported, but the photos did not fit in storage.',
+            kotcFinished: 'The tournament already has a champion. Undo the last play to fix it.',
+            kotcNoChallenger: 'There is no challenger in the queue.',
+            kotcTeamNotFound: 'Team not found.',
+            kotcZeroPoints: '{{team}} already has 0 points.',
             prize: {
                 fee: 'The entry fee per player must be greater than 0.',
                 pool: 'The prize % must be between 0 and 100.',

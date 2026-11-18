@@ -1,0 +1,258 @@
+/* =========================================================================
+   QUEEN & KING OF THE COURT (BEM)
+   Pista en vivo: cabecera con reloj, cancha trono vs retador, botones de
+   rally, cola de espera, tabla de duplas e historial.
+   Botones, tabla, badges y barras son de Bootstrap; aquí está lo propio.
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   Bloque: kotc (contenedor; centrado pese al align-self de .vstack)
+   ------------------------------------------------------------------------- */
+.kotc {
+    align-self: center;
+    width: 100%;
+    max-width: 720px;
+}
+
+.kotc__header {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-strong);
+    color: var(--color-on-strong);
+    box-shadow: var(--shadow-md);
+}
+
+.kotc__heading {
+    min-width: 0; /* Permite recortar nombres de torneo largos */
+}
+
+.kotc__title {
+    color: var(--color-secondary);
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.kotc__meta {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.8rem;
+}
+
+/* Reloj: cuenta atrás si hay límite, tiempo jugado si no */
+.kotc__clock {
+    font-family: var(--font-mono);
+    font-size: 1.8rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.kotc__clock--warning {
+    color: var(--color-warning);
+    animation: kotc-blink 1s steps(2, start) infinite;
+}
+
+.kotc__clock--paused {
+    opacity: 0.55;
+}
+
+@keyframes kotc-blink {
+    to {
+        opacity: 0.4;
+    }
+}
+
+/* -------------------------------------------------------------------------
+   Lados de la cancha: trono (dorado) y retador (azul)
+   ------------------------------------------------------------------------- */
+.kotc__side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+    height: 100%;
+    min-height: 190px;
+    padding: var(--space-4) var(--space-3);
+    border-radius: var(--radius-lg);
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+    text-align: center;
+}
+
+.kotc__side--throne {
+    background: linear-gradient(135deg, #F6B93B, var(--color-primary));
+}
+
+.kotc__side--challenger {
+    background: var(--color-team-b);
+}
+
+/* Destello al registrar un rally (lo reinicia dom.replayAnimation) */
+.kotc__side--flash {
+    animation: kotc-flash 0.6s ease-out;
+}
+
+@keyframes kotc-flash {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 213, 111, 0.9);
+        transform: scale(1.03);
+    }
+
+    100% {
+        box-shadow: 0 0 0 18px rgba(255, 213, 111, 0);
+        transform: scale(1);
+    }
+}
+
+.kotc__side-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0.9;
+    text-transform: uppercase;
+}
+
+.kotc__team {
+    font-size: 1.15rem;
+    font-weight: 900;
+    line-height: 1.15;
+    word-break: break-word;
+}
+
+.kotc__players {
+    font-size: 0.8rem;
+    opacity: 0.85;
+}
+
+.kotc__points {
+    font-size: clamp(2.5rem, 12vw, 4rem);
+    font-weight: 900;
+    line-height: 1;
+}
+
+.kotc__points--bump {
+    animation: bump 0.4s var(--ease-bounce);
+}
+
+/* -------------------------------------------------------------------------
+   Botones de rally (son .btn de Bootstrap; aquí sólo tamaño y subtítulo)
+   ------------------------------------------------------------------------- */
+.kotc__action {
+    --bs-btn-padding-y: 1rem;
+    --bs-btn-font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation; /* Sin retardo de doble toque en móviles */
+}
+
+/* Botón del retador con el azul de su lado de la cancha (modificador sobre .btn) */
+.kotc__action--challenger {
+    --bs-btn-color: #FFFFFF;
+    --bs-btn-bg: var(--color-team-b);
+    --bs-btn-border-color: var(--color-team-b);
+    --bs-btn-hover-color: #FFFFFF;
+    --bs-btn-hover-bg: var(--color-team-b-shadow);
+    --bs-btn-hover-border-color: var(--color-team-b-shadow);
+    --bs-btn-active-color: #FFFFFF;
+    --bs-btn-active-bg: var(--color-team-b-shadow);
+    --bs-btn-disabled-color: #FFFFFF;
+    --bs-btn-disabled-bg: var(--color-team-b);
+    --bs-btn-disabled-border-color: var(--color-team-b);
+}
+
+/* Badge "Retador" en la cola y en la tabla, con el mismo azul */
+.kotc__badge--challenger {
+    background: var(--color-team-b);
+    color: #FFFFFF;
+}
+
+.kotc__action-hint {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.85;
+}
+
+/* -------------------------------------------------------------------------
+   Cola de espera
+   ------------------------------------------------------------------------- */
+.kotc__queue {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kotc__queue-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.kotc__queue-item--next {
+    outline: 2px solid var(--color-team-b);
+}
+
+.kotc__queue-pos {
+    color: var(--color-text-subtle);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+/* -------------------------------------------------------------------------
+   Tabla de duplas e historial
+   ------------------------------------------------------------------------- */
+.kotc__points-cell {
+    min-width: 120px;
+}
+
+.kotc__table-points {
+    min-width: 1.5rem;
+    font-size: 1.1rem;
+}
+
+.kotc__log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kotc__log-item {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    font-size: 0.85rem;
+}
+
+.kotc__log-item:last-child {
+    border-bottom: none;
+}
+
+.kotc__log-item--last {
+    font-weight: 700;
+}
+
+.kotc__log-time {
+    flex-shrink: 0;
+    color: var(--color-text-subtle);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+}
+
+/* Los atajos de teclado no tienen sentido en pantallas táctiles */
+@media (hover: none) {
+    .kotc__hint {
+        display: none;
+    }
+}

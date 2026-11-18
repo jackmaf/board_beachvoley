@@ -1,7 +1,7 @@
 /**
  * @file config-view.js
- * @description Vista "Config": formulario del partido (equipos, jugadores y
- * reglas), tema visual, copia de seguridad y borrado total de datos.
+ * @description Vista "Config": formulario del partido (equipos, jugadores,
+ * sus fotos y reglas), tema visual, copia de seguridad y borrado total de datos.
  */
 (function (root) {
     'use strict';
@@ -13,6 +13,7 @@
     const store = VP.matchStore;
     const i18n = VP.i18n;
     const { t } = i18n;
+    const picker = VP.photoPicker;
 
     /** IDs de los inputs del formulario y la clave de config que alimentan. */
     const FIELD_MAP = {
@@ -23,6 +24,20 @@
         'input-b1': 'pB1',
         'input-b2': 'pB2'
     };
+
+    /** Inputs de nombre como lista (para enganchar/refrescar/guardar sus fotos). */
+    const nameInputs = () => Object.keys(FIELD_MAP).map(byId);
+
+    /** Las claves `teamA`/`teamB` son duplas; el resto, jugadores. */
+    const photoKindOf = (key) => (key.startsWith('team') ? VP.photos.KIND.TEAM : VP.photos.KIND.PLAYER);
+
+    /**
+     * Guarda las fotos pendientes con los nombres definitivos del partido
+     * (incluidos los valores por defecto como «Equipo A»).
+     */
+    function commitPhotos(config) {
+        Object.entries(FIELD_MAP).forEach(([inputId, key]) => picker.commit(byId(inputId), config[key]));
+    }
 
     /** Valores por defecto si el usuario deja un nombre vacío (los de equipo, en el idioma activo). */
     const nameFallback = (key) =>
@@ -69,6 +84,7 @@
         byId('input-pts-tiebreak').value = config.ptsTiebreak || 15;
         byId('input-first-server').value = config.firstServer === 'B' ? 'B' : 'A';
         syncFirstServerLabels();
+        picker.refresh(...nameInputs());
     }
 
     /** Ajusta textos y botones según haya (o no) partido en curso. */
@@ -99,6 +115,8 @@
 
         const config = readForm();
         const link = pendingTournamentLink;
+        // Antes de start/updateConfig: así el marcador ya se pinta con las fotos nuevas
+        commitPhotos(config);
 
         if (store.hasPoints() && !link) {
             store.updateConfig(config);
@@ -149,6 +167,7 @@
         store.discard();
         byId('config-form').reset();
         syncFirstServerLabels();
+        picker.refresh(...nameInputs());
         render();
         toast(t('config.discarded'), { type: 'info' });
     }
@@ -194,8 +213,9 @@
                 toast(i18n.errorMessage(result), { type: 'error' });
                 return;
             }
+            if (result.warning) toast(i18n.errorMessage({ code: result.warningCode, error: result.warning }), { type: 'warning' });
             toast(t('backup.imported'), { type: 'success' });
-            setTimeout(() => window.location.reload(), 800);
+            setTimeout(() => window.location.reload(), result.warning ? 2500 : 800);
         } catch (error) {
             toast(error.message, { type: 'error' });
         }
@@ -226,6 +246,7 @@
     // ---------------------------------------------------------------------
 
     function init() {
+        Object.entries(FIELD_MAP).forEach(([inputId, key]) => picker.attach(byId(inputId), photoKindOf(key)));
         byId('config-form').addEventListener('submit', handleSubmit);
         byId('input-team-a').addEventListener('input', syncFirstServerLabels);
         byId('input-team-b').addEventListener('input', syncFirstServerLabels);

@@ -194,6 +194,100 @@
 }
 
 /* -------------------------------------------------------------------------
+   Bloque: photo-field (input de nombre + selector de foto, lo crea photo-picker.js)
+   ------------------------------------------------------------------------- */
+.photo-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.photo-field__input {
+    flex: 1;
+    min-width: 0;
+}
+
+/* -------------------------------------------------------------------------
+   Bloque: photo-picker (círculo que abre la galería / cámara)
+   Elementos: __frame __img __placeholder __file __remove
+   Modificadores del marco: --team (cuadrado redondeado, como los logos)
+                            --filled (ya tiene foto) --loading (procesando)
+   ------------------------------------------------------------------------- */
+.photo-picker {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.photo-picker__frame {
+    display: grid;
+    width: 44px; /* Objetivo táctil mínimo recomendado */
+    height: 44px;
+    margin: 0;
+    overflow: hidden;
+    place-items: center;
+    border: 2px dashed var(--color-border);
+    border-radius: 50%;
+    background: var(--color-surface-muted);
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.photo-picker__frame:hover {
+    border-color: var(--color-primary);
+}
+
+/* El input de archivo está oculto: el foco se señala en el marco */
+.photo-picker__frame:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem var(--color-primary-soft);
+}
+
+.photo-picker__frame--team {
+    border-radius: var(--radius-sm);
+}
+
+.photo-picker__frame--filled {
+    border-style: solid;
+    border-color: var(--color-primary);
+}
+
+.photo-picker__frame--loading {
+    opacity: 0.5;
+    cursor: progress;
+}
+
+.photo-picker__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-picker__placeholder {
+    font-size: 1.15rem;
+    line-height: 1;
+    opacity: 0.75;
+}
+
+.photo-picker__remove {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: grid;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    place-items: center;
+    border: 2px solid var(--color-surface);
+    border-radius: 50%;
+    background: var(--color-danger);
+    color: var(--color-on-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: var(--shadow-sm);
+}
+
+/* -------------------------------------------------------------------------
    Bloque: avatar (foto generada del jugador o logo del equipo)
    Tamaños: --sm --md --lg --xl --logo    Equipo: --team-a --team-b
    Estado:  --pulse

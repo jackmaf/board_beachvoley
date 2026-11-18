@@ -1,7 +1,9 @@
 /**
  * @file tournaments-view.js
  * @description Vista "Torneos": listado, creación, detalle (partidos,
- * clasificación, llaves y premios), resultado manual y edición de duplas.
+ * clasificación, llaves y premios), resultado manual y edición de duplas
+ * (con sus fotos). Los torneos Queen & King of the Court se abren en su
+ * propia pista (`kotc-view.js`).
  *
  * Esta vista sólo PINTA y RECOGE eventos. La lógica (generar llaves, avanzar
  * ganadores, BYE, clasificación) vive en `core/tournament-engine.js`, los
@@ -14,7 +16,7 @@
     const VP = (root.VP = root.VP || {});
     const { byId, qs, qsa, delegate, openModal, closeModal } = VP.dom;
     const { escapeHtml, pickTeamEmoji, toInt } = VP.utils;
-    const { TOURNAMENT_FORMAT, MATCH_STATUS, SLOT, STANDING_POINTS } = VP.constants;
+    const { TOURNAMENT_FORMAT, MATCH_STATUS, SLOT, STANDING_POINTS, KOTC_DEFAULTS } = VP.constants;
     const engine = VP.tournamentEngine;
     const prizeEngine = VP.prizeEngine;
     const prizePanel = VP.views.prizePanel;
@@ -22,6 +24,8 @@
     const i18n = VP.i18n;
     const { t } = i18n;
     const { toast, confirm } = VP.feedback;
+    const picker = VP.photoPicker;
+    const { KIND: PHOTO_KIND } = VP.photos;
 
     /** Mínimo de duplas para crear un torneo. */
     const MIN_TEAMS = 2;
@@ -58,6 +62,32 @@
             </span>`;
     }
 
+    /**
+     * Línea de progreso de la tarjeta (ya escapada).
+     *  - Formatos con partidos: "3/7 partidos jugados".
+     *  - Queen & King: líder y puntos ("Líder: Brasil 12/15 pts · 40 rallies").
+     */
+    function describeProgress(tour) {
+        if (!tour.kotc) {
+            const { done, total } = engine.getProgress(tour);
+            return escapeHtml(t('tournaments.matchesPlayed', { done, count: total }));
+        }
+        const [leader] = VP.kotcEngine.computeStandings(tour.kotc);
+        const { targetPoints } = tour.kotc.settings;
+        return escapeHtml(
+            tour.kotc.rallies
+                ? t('kotc.cardLeader', { name: leader.name, points: leader.points, target: targetPoints, count: tour.kotc.rallies })
+                : t('kotc.cardReady', { target: targetPoints })
+        );
+    }
+
+    /** Abre la pantalla adecuada según el formato del torneo. */
+    function openTournament(id) {
+        const tournament = storage.getTournament(id);
+        if (tournament?.kotc) VP.views.kotc.open(id);
+        else openDetail(id);
+    }
+
     /** Pinta las tarjetas de todos los torneos. */
     function renderList() {
         const tournaments = storage.getTournaments();
@@ -75,7 +105,6 @@
         el.list.innerHTML = [...tournaments]
             .reverse()
             .map((tour) => {
-                const { done, total } = engine.getProgress(tour);
                 const champion = engine.getChampion(tour);
                 return `
                 <button type="button" class="tournament-card" data-tournament-id="${escapeHtml(tour.id)}">
@@ -85,7 +114,7 @@
                         <span class="badge text-bg-light">${escapeHtml(i18n.formatLabel(tour.format))}</span>
                     </span>
                     <span class="tournament-card__progress">
-                        ${escapeHtml(t('tournaments.matchesPlayed', { done, count: total }))}
+                        ${describeProgress(tour)}
                         ${champion ? `· 🏆 <strong>${escapeHtml(champion)}</strong>` : ''}
                     </span>
                     ${prizeBadgeHtml(tour)}
@@ -98,17 +127,21 @@
     // CREACIÓN DE TORNEO
     // =====================================================================
 
+    /** Campos de nombre de una fila y el tipo de foto que lleva cada uno. */
+    const ROW_PHOTO_FIELDS = { name: PHOTO_KIND.TEAM, p1: PHOTO_KIND.PLAYER, p2: PHOTO_KIND.PLAYER };
+
     /** Añade una fila de dupla clonando el <template id="tpl-team-row">. */
     function addTeamRow() {
         const fragment = byId('tpl-team-row').content.cloneNode(true);
         VP.language.translate(fragment);
+        const row = qs('.team-row', fragment);
         el.teamRows.appendChild(fragment);
+        Object.entries(ROW_PHOTO_FIELDS).forEach(([field, kind]) => picker.attach(qs(`[data-field="${field}"]`, row), kind));
         renumberTeamRows();
         prizePanel.syncTeamRowPayments();
         prizePanel.renderCreatePreview();
         // Enfocar el primer jugador de la nueva fila para agilizar la carga
-        const rows = qsa('.team-row', el.teamRows);
-        qs('[data-field="p1"]', rows[rows.length - 1])?.focus();
+        qs('[data-field="p1"]', row)?.focus();
     }
 
     /** Actualiza los números visibles y las etiquetas accesibles de cada fila. */
@@ -121,11 +154,20 @@
             qs('[data-field="p2"]', row).setAttribute('aria-label', t('tournamentForm.playerLabel', { number, player: 2 }));
             qs('[data-paid="p1"]', row).setAttribute('aria-label', t('tournamentForm.paidLabel', { number, player: 1 }));
             qs('[data-paid="p2"]', row).setAttribute('aria-label', t('tournamentForm.paidLabel', { number, player: 2 }));
+            Object.keys(ROW_PHOTO_FIELDS).forEach((field) => picker.setLabel(qs(`[data-field="${field}"]`, row)));
         });
+    }
+
+    /** Muestra las reglas de sets o las de Queen & King según el formato elegido. */
+    function syncFormatPanels() {
+        const isKingOfCourt = byId('t-format').value === TOURNAMENT_FORMAT.KING_OF_COURT;
+        byId('t-rules-kotc').hidden = !isKingOfCourt;
+        byId('t-rules-sets').hidden = isKingOfCourt;
     }
 
     function openCreateModal() {
         el.formTournament.reset();
+        syncFormatPanels();
         el.teamRows.innerHTML = '';
         prizePanel.resetCreateForm();
         for (let i = 0; i < MIN_TEAMS; i++) addTeamRow();
@@ -133,28 +175,47 @@
         byId('t-name').focus();
     }
 
-    /** Lee las duplas del formulario (con sus pagos). Ignora filas sin los dos jugadores. */
-    function collectTeams() {
+    /**
+     * Lee las duplas del formulario (con sus pagos). Ignora filas sin los dos jugadores.
+     * @returns {Array<{row:HTMLElement, team:{name:string, p1:string, p2:string, paid:{p1:boolean, p2:boolean}}}>}
+     *   Se conserva la fila para guardar después sus fotos.
+     */
+    function collectTeamRows() {
         return qsa('.team-row', el.teamRows)
             .map((row) => {
                 const value = (field) => qs(`[data-field="${field}"]`, row).value.trim();
                 const paid = (key) => qs(`[data-paid="${key}"]`, row).checked;
                 const p1 = value('p1');
                 const p2 = value('p2');
-                return { name: value('name') || `${p1} / ${p2}`, p1, p2, paid: { p1: paid('p1'), p2: paid('p2') } };
+                return { row, team: { name: value('name') || `${p1} / ${p2}`, p1, p2, paid: { p1: paid('p1'), p2: paid('p2') } } };
             })
-            .filter((team) => team.p1 && team.p2);
+            .filter(({ team }) => team.p1 && team.p2);
+    }
+
+    /** Guarda las fotos elegidas en cada fila con los nombres definitivos. */
+    function commitRowPhotos(entries) {
+        entries.forEach(({ row, team }) => {
+            const input = (field) => qs(`[data-field="${field}"]`, row);
+            // Si la dupla no tiene nombre, la foto queda con el generado («Pedro / Juan»)
+            picker.commit(input('name'), team.name);
+            picker.commit(input('p1'), team.p1);
+            picker.commit(input('p2'), team.p2);
+        });
     }
 
     function handleCreateSubmit(event) {
         event.preventDefault();
         if (!el.formTournament.reportValidity()) return;
 
-        const teams = collectTeams();
+        const entries = collectTeamRows();
+        const teams = entries.map((entry) => entry.team);
         const format = byId('t-format').value;
 
-        if (teams.length < MIN_TEAMS) {
-            toast(t('tournamentForm.minTeams', { count: MIN_TEAMS }), { type: 'error' });
+        const isKingOfCourt = format === TOURNAMENT_FORMAT.KING_OF_COURT;
+        const minTeams = isKingOfCourt ? KOTC_DEFAULTS.minTeams : MIN_TEAMS;
+        if (teams.length < minTeams) {
+            const why = isKingOfCourt ? ` ${t('kotc.minTeamsWhy')}` : '';
+            toast(`${t('tournamentForm.minTeams', { count: minTeams })}${why}`, { type: 'error' });
             return;
         }
 
@@ -186,7 +247,11 @@
                 ptsNormal: toInt(byId('t-pts-normal').value, 21),
                 ptsTiebreak: toInt(byId('t-pts-tiebreak').value, 15)
             },
-            teams
+            teams,
+            kotc: {
+                targetPoints: toInt(byId('t-kotc-target').value, KOTC_DEFAULTS.targetPoints),
+                timeLimitMinutes: toInt(byId('t-kotc-minutes').value, 0)
+            }
         });
         if (prizeForm.enabled) {
             const payments = Object.fromEntries(teams.map((team) => [team.name, team.paid]));
@@ -194,15 +259,18 @@
         }
 
         storage.addTournament(tournament);
+        commitRowPhotos(entries);
         closeModal(el.modalCreate);
         renderList();
 
-        if (format === TOURNAMENT_FORMAT.ROUND_ROBIN && teams.length < 3) {
+        if (isKingOfCourt) {
+            toast(t('kotc.created', { name: tournament.name, count: teams.length, target: tournament.kotc.settings.targetPoints }), { type: 'success' });
+        } else if (format === TOURNAMENT_FORMAT.ROUND_ROBIN && teams.length < 3) {
             toast(t('tournamentForm.fewTeamsWarning'), { type: 'warning' });
         } else {
             toast(t('tournamentForm.created', { name: tournament.name, count: tournament.matches.length }), { type: 'success' });
         }
-        openDetail(tournament.id);
+        openTournament(tournament.id);
     }
 
     // =====================================================================
@@ -285,7 +353,9 @@
 
         return `
             <div class="match-card__team ${isWinner ? 'match-card__team--winner' : ''}">
-                <span aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>
+                ${!isPlaceholder && VP.photos.hasTeam(name)
+                    ? `<img class="avatar avatar--md" src="${escapeHtml(VP.photos.teamSrc(name))}" alt="">`
+                    : `<span aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>`}
                 <div class="match-card__team-info">
                     <span class="match-card__team-name ${isPlaceholder ? 'match-card__team-name--placeholder' : ''}">
                         ${escapeHtml(isPlaceholder ? placeholderText[name] : name)}
@@ -542,6 +612,7 @@
         byId('edit-team-name').value = engine.isRealTeam(team.name) ? team.name : '';
         byId('edit-team-p1').value = team.p1;
         byId('edit-team-p2').value = team.p2;
+        picker.refresh(byId('edit-team-name'), byId('edit-team-p1'), byId('edit-team-p2'));
         openModal(el.modalEditTeam);
         byId('edit-team-name').focus();
     }
@@ -552,6 +623,13 @@
         const team = clear
             ? { name, p1: '', p2: '' }
             : { name, p1: byId('edit-team-p1').value.trim(), p2: byId('edit-team-p2').value.trim() };
+
+        if (!clear) {
+            // «TBD» no es una dupla real: su foto no se guarda
+            picker.commit(byId('edit-team-name'), engine.isRealTeam(name) ? name : '');
+            picker.commit(byId('edit-team-p1'), team.p1);
+            picker.commit(byId('edit-team-p2'), team.p2);
+        }
 
         storage.updateTournament(context.tournamentId, (tour) => engine.setMatchTeam(tour, context.matchId, context.slot, team));
         closeModal(el.modalEditTeam);
@@ -615,10 +693,14 @@
         };
 
         prizePanel.init();
+        picker.attach(byId('edit-team-name'), PHOTO_KIND.TEAM);
+        picker.attach(byId('edit-team-p1'), PHOTO_KIND.PLAYER);
+        picker.attach(byId('edit-team-p2'), PHOTO_KIND.PLAYER);
 
         // Crear torneo
         byId('btn-create-tournament').addEventListener('click', openCreateModal);
         byId('btn-add-team').addEventListener('click', addTeamRow);
+        byId('t-format').addEventListener('change', syncFormatPanels);
         el.formTournament.addEventListener('submit', handleCreateSubmit);
         delegate(el.teamRows, 'click', '.team-row__remove', (_event, button) => {
             if (qsa('.team-row', el.teamRows).length <= MIN_TEAMS) {
@@ -631,7 +713,7 @@
         });
 
         // Abrir detalle desde una tarjeta
-        delegate(el.list, 'click', '.tournament-card', (_event, card) => openDetail(card.dataset.tournamentId));
+        delegate(el.list, 'click', '.tournament-card', (_event, card) => openTournament(card.dataset.tournamentId));
 
         // Pestañas del detalle
         delegate(el.tabs, 'click', '.nav-link', (_event, tab) => {
