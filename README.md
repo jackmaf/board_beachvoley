@@ -8,6 +8,7 @@ todo desde el navegador y sin instalar nada.
 
 ![Versión](https://img.shields.io/badge/versi%C3%B3n-2.0.0-orange?style=for-the-badge)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.9-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
 ![CSS3 BEM](https://img.shields.io/badge/CSS3-BEM-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JS-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Tests](https://img.shields.io/badge/tests-29%20passing-2ea44f?style=for-the-badge)
@@ -107,7 +108,7 @@ python3 -m http.server 8000      # → http://localhost:8000
 npx serve .
 ```
 
-> La primera carga necesita internet para las fuentes, los avatares y la librería de PDF. Sin conexión
+> La primera carga necesita internet para Bootstrap, las fuentes, los avatares y la librería de PDF. Sin conexión
 > la app funciona, pero sin avatares ni exportación a PDF.
 
 ---
@@ -173,7 +174,7 @@ flowchart TB
 - **Núcleo puro** (`js/core`): reglas, torneos y estadísticas como funciones sin efectos secundarios, cubiertas por tests.
 - **Store** (`js/state/match-store.js`): única fuente de verdad del partido. Las vistas se suscriben y se repintan solas.
 - **Scripts clásicos** con el namespace global `VP`, para que la app funcione al abrir `index.html` directamente (`file://`), algo que los ES Modules no permiten.
-- **CSS con BEM** (`bloque__elemento--modificador`) y tokens de diseño para los temas.
+- **Bootstrap 5.3** (sólo CSS) para componentes, rejilla y utilidades, adaptado a la identidad de la app mediante sus variables `--bs-*`; los bloques propios del dominio (cancha, marcadores, llaves…) con **BEM** (`bloque__elemento--modificador`).
 
 📘 La documentación técnica completa, con diagramas de flujo, modelo de datos y convenciones, está en **[CLAUDE.md](CLAUDE.md)**.
 
@@ -184,11 +185,12 @@ flowchart TB
 ```
 board_beachvoley/
 ├── index.html               Vistas, modales (<dialog>) y carga ordenada de scripts
-├── css/                     Estilos BEM, de lo genérico a lo específico
+├── css/                     Estilos propios (se cargan DESPUÉS de Bootstrap)
 │   ├── tokens.css           Variables de diseño y temas
-│   ├── base.css             Reset, accesibilidad y animaciones
+│   ├── bootstrap-theme.css  Puente: tokens → variables --bs-* de Bootstrap
+│   ├── base.css             Fondo, accesibilidad y animaciones
 │   ├── layout.css           Cabecera, vistas y navegación inferior
-│   ├── components.css       Botones, tarjetas, formularios, modales, tablas, avisos…
+│   ├── components.css       Bloques BEM genéricos: diálogo, avatar, KPI, avisos…
 │   ├── court.css            Cancha, mapa de calor y leyenda
 │   ├── tournaments.css      Torneos, partidos y llaves
 │   ├── match.css            Configuración, Scout y Marcador vivo
@@ -227,7 +229,7 @@ motor de reglas y del saque, la generación de llaves y los BYE, la clasificaci�
 
 | Ámbito | Convención |
 |---|---|
-| CSS | **BEM**: una clase por selector, sin `#id` ni estilos inline, colores siempre con tokens `var(--color-…)` |
+| CSS | **Bootstrap primero** (componentes y utilidades); lo que Bootstrap no cubre, con **BEM**. Sin `#id` ni estilos inline; colores siempre con tokens `var(--color-…)` |
 | JavaScript | Un módulo por archivo, bloque `@file` + **JSDoc**, `'use strict'`, texto del usuario siempre con `escapeHtml()` |
 | Formato | [`.editorconfig`](.editorconfig): UTF-8, LF y 4 espacios (2 en JSON/YAML) |
 | Commits | [Conventional Commits](https://www.conventionalcommits.org/es/) con emoji: `✨ feat(scout): …`, `🐛 fix(stats): …` (agente [`committer`](.claude/agents/committer.md)) |
@@ -238,7 +240,7 @@ motor de reglas y del saque, la generación de llaves y los BYE, la clasificaci�
 |---|---|
 | Añadir un gesto técnico | Solo en `SKILLS` de `js/core/constants.js`: menú, filtros, premios, radar y CSV se actualizan solos |
 | Cambiar una regla del juego | `js/core/rules.js` y sus tests en `tests/rules.test.js` |
-| Crear un tema nuevo | Bloque `[data-theme="…"]` en `css/tokens.css` y su opción en el selector de `index.html` |
+| Crear un tema nuevo | Bloque `[data-theme="…"]` en `css/tokens.css` y su opción en el selector de `index.html` (los componentes de Bootstrap lo heredan vía `css/bootstrap-theme.css`) |
 | Cambiar dónde se guardan los datos | Solo `js/services/storage.js` |
 
 ---
@@ -249,6 +251,7 @@ motor de reglas y del saque, la generación de llaves y los BYE, la clasificaci�
 - Como los datos viven en un solo navegador, usa **Config → Copia de seguridad** para exportarlos o pasarlos a otro dispositivo.
 - **Servicios externos** que se cargan desde internet:
   - [DiceBear](https://www.dicebear.com/) genera los avatares a partir de los **nombres de jugadores y equipos**, que viajan en la URL de la imagen.
+  - [jsDelivr](https://www.jsdelivr.com/) sirve **Bootstrap 5.3.9** (con hash de integridad SRI).
   - [cdnjs](https://cdnjs.com/) sirve `html2pdf.js` para exportar a PDF.
   - [Google Fonts](https://fonts.google.com/) sirve la tipografía *Outfit*.
 - Los archivos exportados (`VoleyPlaya_*.pdf/csv/json`) están en el `.gitignore` para que no se suban por error.
@@ -271,7 +274,7 @@ funcionando, pero los avisos pueden quedar detrás de los modales.
 ## 🗺️ Roadmap
 
 **Hecho en la v2**
-- [x] Arquitectura modular por capas con tests y CSS BEM.
+- [x] Arquitectura modular por capas con tests, Bootstrap 5.3 y CSS BEM.
 - [x] Torneos: clasificación Round Robin, llaves con BYE automáticos y campeón.
 - [x] Historial de partidos en Estadísticas y copia de seguridad.
 - [x] Exportación a PDF, CSV y JSON.

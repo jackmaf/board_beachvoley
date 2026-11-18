@@ -17,8 +17,8 @@ Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 
 | Aspecto | Detalle |
 |---|---|
-| Stack | HTML5 + CSS3 (BEM) + JavaScript vanilla (ES2020), **sin build ni dependencias** |
-| Externos | `html2pdf.js 0.10.1` (CDN) · Google Fonts *Outfit* · API **DiceBear** (avatares SVG) |
+| Stack | HTML5 + **Bootstrap 5.3.9** (sólo CSS) + CSS propio con BEM + JavaScript vanilla (ES2020), **sin build** |
+| Externos | Bootstrap 5.3.9 (jsDelivr + SRI) · `html2pdf.js 0.10.1` (CDN) · Google Fonts *Outfit* · API **DiceBear** (avatares SVG) |
 | Ejecutar | Abrir `index.html` en el navegador (funciona con `file://`) |
 | Tests | `npm test` → `node --test` (Node ≥ 18, sin instalar nada) |
 
@@ -30,12 +30,13 @@ Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 voley playa/
 ├── index.html                 Vistas, modales (<dialog>), plantillas y carga de scripts
 ├── package.json               Sólo el script "test"
-├── css/                       BEM, de lo genérico a lo específico (el orden de carga importa)
+├── css/                       Se cargan DESPUÉS de bootstrap.min.css (el orden importa)
 │   ├── tokens.css             Variables de diseño + temas (classic / dark / high-contrast)
-│   ├── base.css               Reset, elementos HTML, [hidden], accesibilidad, keyframes
+│   ├── bootstrap-theme.css    Puente: tokens → variables --bs-* (btn, card, form, table, nav…)
+│   ├── base.css               Fondo, márgenes de Reboot, accesibilidad, keyframes
 │   ├── layout.css             app-header, app-main, view, bottom-nav
-│   ├── components.css         btn, card, panel, form-field, modal, tabs, pill, choice,
-│   │                          avatar, data-table, kpi, zone-bar, toast, callout, spinner…
+│   ├── components.css         Modificadores BEM de Bootstrap (btn--pulse, card--glass…) y
+│   │                          bloques propios: app-dialog, avatar, kpi, zone-bar, toast-stack…
 │   ├── court.css              court, court-zone, court-marker, heat-dot, legend
 │   ├── tournaments.css        tournament-card, team-row, match-card, bracket, manual-set
 │   ├── match.css              team-form, sets-tracker, match-clock, scoreboard,
@@ -149,6 +150,7 @@ flowchart TB
 | **`<dialog>` nativo** | Todos los modales | Foco atrapado, Escape, backdrop y apilado gratis. |
 | **Popover API** | toasts y callouts | Para pintarse **encima** de los `<dialog>` (top layer). |
 | **Plantillas `<template>`** | Fila de dupla | Marcado declarativo en HTML, clonado con JS. |
+| **Puente de tema** | `css/bootstrap-theme.css` | Bootstrap se personaliza reasignando sus variables `--bs-*` a nuestros tokens: sin Sass, sin tocar su CSS y con los 3 temas funcionando. |
 | **Constantes centralizadas** | `constants.js` | Añadir un gesto técnico o cambiar una regla en un solo sitio. |
 
 ---
@@ -352,17 +354,34 @@ flowchart LR
 
 ## 7. Convenciones de código
 
-### CSS — BEM
+### CSS — Bootstrap 5.3 + BEM
+
+**Regla:** si Bootstrap lo resuelve, se usa Bootstrap; lo que no cubre, se escribe con BEM.
+
+| Necesidad | Se resuelve con |
+|---|---|
+| Rejilla, espaciado, flex, tipografía, visibilidad | Utilidades de Bootstrap: `row`, `col-*`, `g-*`, `vstack`, `gap-*`, `d-flex`, `text-body-secondary`, `d-none d-sm-table-cell`… |
+| Botones, tarjetas, formularios, tablas, pestañas, barras, avisos, badges | Componentes de Bootstrap: `btn btn-primary`, `card`, `form-control`, `form-select`, `btn-check`, `table`, `nav-underline`, `progress`, `toast`, `badge`, `alert`, `btn-close`, `spinner-border` |
+| Identidad visual (naranja, arena, radios, sombras) | `css/bootstrap-theme.css`: reasigna las variables `--bs-*` a nuestros tokens. **Nunca** editar `bootstrap.min.css` |
+| Variante de un componente de Bootstrap | Modificador BEM sobre su bloque: `btn--pulse`, `btn--dashed`, `btn--team-a`, `card--glass`, `card--narrow`, `progress--thin`, `toast--success` |
+| Piezas del dominio | Bloques BEM propios: `court`, `heat-dot`, `scoreboard`, `match-card`, `bracket`, `reception`, `versus`, `live-board`… |
 
 ```
-.bloque              → componente independiente           .match-card
+.bloque              → componente propio                   .match-card
 .bloque__elemento    → parte interna                       .match-card__team-name
 .bloque--modificador → variante / estado                   .match-card--finished
 ```
 
-- Una sola clase por selector (especificidad plana). Nada de `#id` ni etiquetas fuera de `base.css`.
-- Los modificadores van **junto** a la clase base: `class="btn btn--danger btn--small"`.
-- **Mix** permitido cuando un nodo es dos bloques: `class="card filters"`.
+- **Modales:** no se usa `.modal` de Bootstrap (requiere su JS). Los diálogos son `<dialog>` nativos con el
+  bloque BEM `app-dialog`, que ya trae foco atrapado, Escape y apilado. Tampoco se carga `bootstrap.bundle.js`.
+- **Tema oscuro:** `config-view.applyTheme()` pone `data-theme` (nuestros tokens) y `data-bs-theme`
+  (modo de color nativo de Bootstrap) en el `<body>`.
+- **Estados de JS:** se usan las clases de estado de Bootstrap (`.active`, `.show`) o modificadores BEM
+  (`view--active`, `reception__grade--active`).
+- **Ojo con `.vstack`:** además de `display:flex` fuerza `align-self: stretch`; un bloque que deba quedar
+  centrado dentro de la vista necesita `align-self: center` en su CSS (ver `.scout`).
+- Una sola clase por selector en el CSS propio (especificidad plana). Nada de `#id`.
+- **Mix** permitido cuando un nodo es dos bloques: `class="card card--glass filters"`.
 - Colores siempre con **tokens** (`var(--color-surface)`), nunca valores fijos en componentes → los 3 temas funcionan en toda la app.
 - Mostrar/ocultar con el atributo HTML `hidden` (gana siempre gracias a `[hidden]{display:none!important}`).
 - **Cero estilos inline** en el HTML. Sólo JS asigna `left/top/width` dinámicos.
@@ -396,7 +415,7 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 | Puntos de clasificación Round Robin | `STANDING_POINTS` en `constants.js` |
 | Nuevo formato de torneo | `core/tournament-engine.js` (+ tests) y `views/tournaments-view.js` |
 | Nueva métrica del jugador | `computePlayerProfile` en `core/stats-engine.js` → `player-dashboard.js` → `exporters.js` |
-| Nuevo tema | Bloque `[data-theme="…"]` en `css/tokens.css` + opción en el `theme-picker` de `index.html` |
+| Nuevo tema | Bloque `[data-theme="…"]` en `css/tokens.css` + opción en el `theme-picker` de `index.html`; si es oscuro, `data-bs-theme="dark"` en `applyTheme()` |
 | Nueva vista | `<section class="view">` + botón `bottom-nav__item[data-view]` + `VP.router.register()` en su archivo de vista |
 | Cambiar persistencia (p. ej. backend) | Sólo `js/services/storage.js` |
 
@@ -408,4 +427,4 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 
 **Funcionalidades nuevas:** clasificación Round Robin · campeón y barra de progreso · nombres de ronda en las llaves · historial de partidos en Estadísticas · copia de seguridad · avisos no bloqueantes y diálogos accesibles · atajos de teclado en Marcador Vivo · indicador de saque en Scout · avisos de fin de set y cambio de lado también en Scout · cronómetro que arranca con el primer punto · timeouts visibles en la bitácora · filtros con nombres de jugadores · botón «Limpiar filtros» · jugadores de cada dupla guardados en el torneo.
 
-**Deuda técnica pendiente:** las vistas aún generan HTML con template strings (un micro-framework de componentes sería el siguiente paso) · no hay tests automáticos de UI dentro del repo · los avatares dependen de un servicio externo (DiceBear) y no funcionan sin conexión.
+**Deuda técnica pendiente:** las vistas aún generan HTML con template strings (un micro-framework de componentes sería el siguiente paso) · no hay tests automáticos de UI dentro del repo · los avatares dependen de un servicio externo (DiceBear) y no funcionan sin conexión · Bootstrap se carga por CDN: sin conexión la app pierde los estilos (para una PWA conviene copiarlo a `vendor/`).
