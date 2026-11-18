@@ -91,16 +91,6 @@
 .toast--error { border-left: 5px solid var(--color-error); }
 .toast--warning { border-left: 5px solid var(--color-warning); }
 
-.toast--leaving {
-    animation: toast-out 0.25s ease forwards;
-}
-
-@keyframes toast-out {
-    to {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-}
 
 /* -------------------------------------------------------------------------
    Bloque: section-title (título de tarjeta con subrayado de acento)
@@ -532,14 +522,29 @@
     pointer-events: none; /* Informativo: nunca debe tapar botones de abajo */
 }
 
-.toast-stack .toast {
+/* Cada aviso del contenedor. Entrada y salida van en clases de la MISMA
+   especificidad (una clase) y la de salida va después, para que gane.
+   (Antes la entrada usaba `.toast-stack .toast`, más específica: la salida
+   nunca se aplicaba, no llegaba `animationend` y el aviso no se iba nunca.) */
+.toast-stack__item {
     width: 100%;
     pointer-events: none;
     animation: toast-in 0.25s var(--ease-bounce);
 }
 
+.toast-stack__item--leaving {
+    animation: toast-out 0.25s ease forwards;
+}
+
 @keyframes toast-in {
     from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+}
+
+@keyframes toast-out {
+    to {
         opacity: 0;
         transform: translateY(12px);
     }

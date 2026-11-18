@@ -20,6 +20,14 @@ body {
     background: linear-gradient(135deg, var(--color-bg-start), var(--color-bg-end));
 }
 
+/* El atributo `hidden` oculta SIEMPRE. Reboot ya trae esta regla, pero las
+   utilidades de display de Bootstrap (.d-flex, .vstack, .d-grid…) se declaran
+   después con !important y la anulaban: un `<div class="d-flex" hidden>` se
+   veía. Este archivo carga después de bootstrap.min.css, así que aquí gana. */
+[hidden] {
+    display: none !important;
+}
+
 /* Reboot da margen inferior a títulos y párrafos; en la app el espaciado
    lo controlan los contenedores (gap) y las utilidades mb-*. */
 h1, h2, h3, h4, h5, h6, p {

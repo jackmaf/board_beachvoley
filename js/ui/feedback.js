@@ -20,6 +20,9 @@
     /** Máximo de avisos visibles a la vez: los más antiguos se descartan. */
     const MAX_TOASTS = 3;
 
+    /** Margen tras la animación de salida (0,25 s) para quitar el aviso aunque no llegue `animationend`. */
+    const LEAVE_FALLBACK_MS = 400;
+
     /**
      * Lleva un elemento `popover` a la "top layer" del navegador.
      *
@@ -53,7 +56,7 @@
 
         // Estructura de un .toast de Bootstrap; `.show` lo hace visible sin su JS
         const item = document.createElement('div');
-        item.className = `toast show toast--${type}`;
+        item.className = `toast show toast--${type} toast-stack__item`;
         item.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
         const body = document.createElement('div');
@@ -72,10 +75,21 @@
         while (stack.children.length > MAX_TOASTS) stack.firstElementChild.remove();
         bringToTopLayer(stack);
 
-        // Salida animada y eliminación del DOM
+        // Salida animada y eliminación del DOM. El borrado NO depende sólo de
+        // `animationend`: ese evento no llega si la animación no se aplica, con
+        // «reducir movimiento» en algunos navegadores o con la pestaña en segundo
+        // plano. Por eso hay un temporizador de respaldo que lo quita igualmente.
         setTimeout(() => {
-            item.classList.add('toast--leaving');
-            item.addEventListener('animationend', () => item.remove(), { once: true });
+            const remove = () => {
+                item.remove();
+                // Contenedor vacío: se cierra el popover para no dejar una capa encima
+                if (!stack.children.length && typeof stack.hidePopover === 'function' && stack.matches(':popover-open')) {
+                    stack.hidePopover();
+                }
+            };
+            item.classList.add('toast-stack__item--leaving');
+            item.addEventListener('animationend', remove, { once: true });
+            setTimeout(remove, LEAVE_FALLBACK_MS);
         }, duration);
     }
 
