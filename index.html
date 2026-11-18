@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/court.css">
     <link rel="stylesheet" href="css/tournaments.css">
+    <link rel="stylesheet" href="css/kotc.css">
     <link rel="stylesheet" href="css/match.css">
     <link rel="stylesheet" href="css/stats.css">
 </head>
@@ -594,6 +595,110 @@
                 </div>
             </div>
         </section>
+        <!-- =============================================================
+             VISTA: QUEEN & KING OF THE COURT (pista en vivo)
+             Se abre desde la tarjeta de un torneo con ese formato.
+             ============================================================= -->
+        <section id="vista-kotc" class="view px-3 py-4" aria-labelledby="kotc-title">
+            <div class="kotc vstack gap-3">
+                <header class="kotc__header vstack gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-light" id="btn-kotc-back" aria-label="Volver a Torneos">
+                            ← <span class="d-none d-sm-inline">Torneos</span>
+                        </button>
+                        <div class="kotc__heading flex-grow-1 text-center">
+                            <h2 id="kotc-title" class="kotc__title text-truncate">Torneo</h2>
+                            <p class="kotc__meta" id="kotc-meta"></p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-light" id="btn-kotc-timer"
+                            aria-label="Pausar o reanudar el reloj">⏸️</button>
+                    </div>
+                    <div class="kotc__clock" id="kotc-clock" aria-live="off">00:00</div>
+                </header>
+
+                <p id="kotc-champion" class="champion-banner" hidden></p>
+                <p id="kotc-golden" class="alert alert-warning text-center fw-bold mb-0" hidden></p>
+
+                <!-- La cancha: trono vs retador -->
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="kotc__side kotc__side--throne" id="kotc-throne">
+                            <span class="kotc__side-label" id="kotc-throne-label">👑 Trono</span>
+                            <strong class="kotc__team" id="kotc-throne-name">—</strong>
+                            <span class="kotc__players" id="kotc-throne-players"></span>
+                            <output class="kotc__points" id="kotc-throne-points" aria-live="polite">0</output>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="kotc__side kotc__side--challenger" id="kotc-challenger">
+                            <span class="kotc__side-label">⚔️ Retador · saca</span>
+                            <strong class="kotc__team" id="kotc-challenger-name">—</strong>
+                            <span class="kotc__players" id="kotc-challenger-players"></span>
+                            <output class="kotc__points" id="kotc-challenger-points">0</output>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <button type="button" class="btn btn-warning kotc__action w-100 h-100" id="btn-kotc-throne">
+                            👑 Punto del trono <small class="kotc__action-hint">+1 · retador a la cola</small>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button type="button" class="btn kotc__action kotc__action--challenger w-100 h-100" id="btn-kotc-challenger">
+                            ⚔️ Gana el retador <small class="kotc__action-hint">sube al trono · sin punto</small>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="btn-kotc-undo">↩️ Deshacer última jugada</button>
+
+                <div class="card card--glass">
+                    <div class="card-body vstack gap-2">
+                        <h3 class="section-title">Cola de espera</h3>
+                        <ol class="kotc__queue" id="kotc-queue"></ol>
+                    </div>
+                </div>
+
+                <div class="card card--glass">
+                    <div class="card-body vstack gap-3">
+                        <h3 class="section-title">Tabla de duplas</h3>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-striped align-middle text-center mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th scope="col">#</th>
+                                        <th scope="col" class="text-start">Dupla</th>
+                                        <th scope="col">Puntos</th>
+                                        <th scope="col" title="Tronos conquistados">👑</th>
+                                        <th scope="col">Estado</th>
+                                        <th scope="col">Ajuste</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="kotc-table"></tbody>
+                            </table>
+                        </div>
+                        <p class="small text-body-secondary text-center">
+                            Usa <strong>+1 / −1</strong> sólo para corregir errores: cada corrección queda en el
+                            historial y se puede deshacer.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card card--glass">
+                    <div class="card-body vstack gap-2">
+                        <h3 class="section-title">Últimas jugadas</h3>
+                        <ol class="kotc__log" id="kotc-log"></ol>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-danger" id="btn-kotc-delete">Eliminar torneo</button>
+                <p class="kotc__hint small text-body-secondary text-center">
+                    Atajos: <kbd>T</kbd> / <kbd>←</kbd> punto del trono · <kbd>R</kbd> / <kbd>→</kbd> gana el
+                    retador · <kbd>Z</kbd> deshacer
+                </p>
+            </div>
+        </section>
     </main>
 
     <!-- =================================================================
@@ -667,6 +772,7 @@
                             <option value="" disabled selected>Elegir…</option>
                             <option value="Round Robin">Round Robin (todos vs todos)</option>
                             <option value="Eliminacion Directa">Eliminación directa (llaves)</option>
+                            <option value="Queen &amp; King of the Court">Queen &amp; King of the Court (una cancha)</option>
                         </select>
                     </div>
                 </div>
@@ -682,7 +788,33 @@
                     </button>
                 </div>
 
-                <div class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group" aria-labelledby="t-rules-title">
+                <!-- Ajustes de Queen & King of the Court (visibles sólo con ese formato) -->
+                <div id="t-rules-kotc" class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
+                    aria-labelledby="t-kotc-title" hidden>
+                    <h3 id="t-kotc-title" class="h6 fw-bold text-center">👑 Reglas Queen &amp; King of the Court</h3>
+                    <p class="small text-body-secondary text-center">
+                        Todas las duplas comparten una cancha. El retador saca contra el trono: si gana el trono
+                        suma +1; si gana el retador, sube al trono sin sumar. Sólo se puntúa desde el trono.
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label" for="t-kotc-target">Puntos para ganar</label>
+                            <input class="form-control" type="number" id="t-kotc-target" value="15" min="1" max="99"
+                                inputmode="numeric">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label" for="t-kotc-minutes">Límite de tiempo (min)</label>
+                            <input class="form-control" type="number" id="t-kotc-minutes" value="0" min="0" max="180"
+                                inputmode="numeric" aria-describedby="t-kotc-minutes-hint">
+                        </div>
+                    </div>
+                    <p id="t-kotc-minutes-hint" class="small text-body-secondary text-center">
+                        0 = sin límite. Con límite, al acabar el tiempo gana el líder (empate → punto de oro).
+                    </p>
+                </div>
+
+                <div id="t-rules-sets" class="p-3 rounded-3 bg-body-tertiary vstack gap-3" role="group"
+                    aria-labelledby="t-rules-title">
                     <h3 id="t-rules-title" class="h6 fw-bold text-center">Reglas por defecto del torneo</h3>
                     <div class="row g-3">
                         <div class="col-sm-4">
@@ -944,6 +1076,7 @@
     <script src="js/core/constants.js" defer></script>
     <script src="js/core/utils.js" defer></script>
     <script src="js/core/rules.js" defer></script>
+    <script src="js/core/kotc-engine.js" defer></script>
     <script src="js/core/tournament-engine.js" defer></script>
     <script src="js/core/stats-engine.js" defer></script>
 
@@ -960,6 +1093,7 @@
     <!-- 4. Vistas (una por pantalla) -->
     <script src="js/views/match-actions.js" defer></script>
     <script src="js/views/tournaments-view.js" defer></script>
+    <script src="js/views/kotc-view.js" defer></script>
     <script src="js/views/config-view.js" defer></script>
     <script src="js/views/scout-view.js" defer></script>
     <script src="js/views/live-view.js" defer></script>

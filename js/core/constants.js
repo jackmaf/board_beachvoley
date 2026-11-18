@@ -94,13 +94,15 @@
     /** Formatos de torneo soportados (el valor se guarda tal cual en localStorage). */
     const TOURNAMENT_FORMAT = Object.freeze({
         ROUND_ROBIN: 'Round Robin',
-        KNOCKOUT: 'Eliminacion Directa'
+        KNOCKOUT: 'Eliminacion Directa',
+        KING_OF_COURT: 'Queen & King of the Court'
     });
 
     /** Etiqueta legible de cada formato (el valor guardado no lleva tildes). */
     const FORMAT_LABEL = Object.freeze({
         [TOURNAMENT_FORMAT.ROUND_ROBIN]: 'Round Robin',
-        [TOURNAMENT_FORMAT.KNOCKOUT]: 'Eliminación directa'
+        [TOURNAMENT_FORMAT.KNOCKOUT]: 'Eliminación directa',
+        [TOURNAMENT_FORMAT.KING_OF_COURT]: 'Queen & King of the Court'
     });
 
     /** Estados de un partido dentro de un torneo. */
@@ -123,6 +125,17 @@
 
     /** Etiquetas legibles para el género del torneo. */
     const GENDER_LABEL = Object.freeze({ M: 'Masculino', F: 'Femenino', X: 'Mixto' });
+
+    /**
+     * Queen & King of the Court: valores por defecto.
+     *  - targetPoints:     puntos para ganar (sólo se puntúa desde el trono).
+     *  - timeLimitMinutes: 0 = sin límite de tiempo.
+     *  - minTeams:         con menos de 3 duplas no hay cola y el formato no tiene sentido.
+     */
+    const KOTC_DEFAULTS = Object.freeze({ targetPoints: 15, timeLimitMinutes: 0, minTeams: 3 });
+
+    /** Cómo se llama el trono según la rama del torneo. */
+    const THRONE_LABEL = Object.freeze({ F: 'Reina', M: 'Rey', X: 'Trono' });
 
     /** A partir de cuántos registros se muestra el spinner al recalcular estadísticas. */
     const SPINNER_THRESHOLD = 300;
@@ -147,6 +160,8 @@
         STANDING_POINTS,
         TEAM_EMOJIS,
         GENDER_LABEL,
+        KOTC_DEFAULTS,
+        THRONE_LABEL,
         SPINNER_THRESHOLD
     });
 

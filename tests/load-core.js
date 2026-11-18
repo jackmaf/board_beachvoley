@@ -5,6 +5,7 @@
 require('../js/core/constants.js');
 require('../js/core/utils.js');
 require('../js/core/rules.js');
+require('../js/core/kotc-engine.js');
 require('../js/core/tournament-engine.js');
 require('../js/core/stats-engine.js');
 

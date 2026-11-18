@@ -20,6 +20,7 @@
 
         VP.views.config.init();
         VP.views.tournaments.init();
+        VP.views.kotc.init();
         VP.views.scout.init();
         VP.views.live.init();
         VP.views.playerDashboard.init();

@@ -9,7 +9,7 @@
 
 Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 
-- **Torneos**: Round Robin (con tabla de clasificación) o Eliminación Directa (llaves con pases automáticos por BYE), campeón y progreso.
+- **Torneos**: Round Robin (con tabla de clasificación), Eliminación Directa (llaves con pases automáticos por BYE) y **Queen & King of the Court** (una cancha con cola de duplas y pista en vivo), campeón y progreso.
 - **Scout táctico**: se toca la cancha donde cayó el balón y se elige jugador, punto/error y gesto técnico.
 - **Marcador Vivo**: marcador grande tipo TV, con atajos de teclado.
 - **Estadísticas**: partido en curso o cualquiera del historial, filtros, línea de tiempo animada, heatmap, Salón de la Fama, bitácora y dashboard por jugador (radar + PDF/CSV/JSON).
@@ -39,6 +39,7 @@ voley playa/
 │   │                          bloques propios: app-dialog, avatar, kpi, zone-bar, toast-stack…
 │   ├── court.css              court, court-zone, court-marker, heat-dot, legend
 │   ├── tournaments.css        tournament-card, team-row, match-card, bracket, manual-set
+│   ├── kotc.css               kotc: pista Queen & King (trono, retador, cola, tabla, historial)
 │   ├── match.css              team-form, sets-tracker, match-clock, scoreboard,
 │   │                          action-menu, player-btn, timeout-btn, live-board
 │   └── stats.css              stats, summary, player-stat, fame-card, filters,
@@ -48,6 +49,7 @@ voley playa/
 │   │   ├── constants.js       Reglas por defecto, claves de storage, gestos técnicos…
 │   │   ├── utils.js           escapeHtml, formatDuration, metros, avatares, CSV…
 │   │   ├── rules.js           Motor de reglas: sets, partido, cambio de lado, validación
+│   │   ├── kotc-engine.js     Queen & King of the Court: rotación, puntos, tiempo, deshacer
 │   │   ├── tournament-engine.js  Generación de llaves, BYE, resultados, clasificación
 │   │   └── stats-engine.js    Filtros, marcador, totales, premios, perfil de jugador
 │   ├── services/
@@ -62,6 +64,7 @@ voley playa/
 │   ├── views/                 Una por pantalla: sólo pintan y escuchan eventos
 │   │   ├── match-actions.js   Deshacer / finalizar / anunciar (compartido Scout + Vivo)
 │   │   ├── tournaments-view.js
+│   │   ├── kotc-view.js       Pista en vivo de Queen & King of the Court
 │   │   ├── config-view.js
 │   │   ├── scout-view.js
 │   │   ├── live-view.js
@@ -143,7 +146,7 @@ flowchart TB
 |---|---|---|
 | **Módulos IIFE + namespace `VP`** | Todos los `js/*` | Encapsulan; funcionan con `file://` (los ES Modules no). Los de `core/` además exportan `module.exports` para Node. |
 | **Store + observador** | `match-store.js` | Única fuente de verdad; las vistas se suscriben a `'change'` / `'tick'` y se repintan. |
-| **Funciones puras** | `core/*` | Lógica de dominio aislada y cubierta por 29 tests. |
+| **Funciones puras** | `core/*` | Lógica de dominio aislada y cubierta por 39 tests. |
 | **Repositorio** | `storage.js` | Un solo punto de lectura/escritura, tolerante a JSON corrupto. |
 | **Delegación de eventos** | `dom.delegate` | Sustituye a los `onclick="fn('${nombre}')"` inline (rompían con apóstrofes y exigían globales). |
 | **Escapado de HTML** | `utils.escapeHtml` | Todo texto del usuario pasa por aquí antes de `innerHTML` (anti-XSS). |
@@ -209,7 +212,8 @@ erDiagram
     TOURNAMENT {
         string id
         string name
-        string format "Round Robin | Eliminacion Directa"
+        string format "Round Robin | Eliminacion Directa | Queen & King of the Court"
+        object kotc "sólo Queen & King: estado de la pista (ver 6.4)"
         object config_sets "maxSets, ptsNormal, ptsTiebreak"
         array teams
         number createdAt
@@ -321,7 +325,32 @@ flowchart LR
     F --> G
 ```
 
-### 6.4 Indicadores profesionales (side-out, break point, recepción)
+### 6.4 Queen & King of the Court
+
+Formato de una sola cancha: no genera partidos (`matches: []`), sino un estado de pista en
+`tournament.kotc` gestionado por `core/kotc-engine.js` (funciones puras, 10 tests).
+
+```mermaid
+flowchart LR
+    R[Rally] --> W{¿Quién gana?}
+    W -->|Trono| T["Trono +1 punto<br/>retador → final de la cola<br/>entra el siguiente"]
+    W -->|Retador| C["Retador sube al trono SIN punto<br/>destronado → final de la cola"]
+    T & C --> V{"¿Alguien llega al objetivo?<br/>¿o se acabó el tiempo con líder único?"}
+    V -->|Sí| K[🏆 Campeón]
+    V -->|Empate al acabar el tiempo| G[⚡ Punto de oro]
+```
+
+- **Estado:** `{ settings, teams, throne, queue, points, stats, rallies, timeUp, winnerId, timer, history }`.
+  `queue[0]` es el retador. El trono se llama «Reina», «Rey» o «Trono» según la rama (`THRONE_LABEL`).
+- **Deshacer:** cada acción (rally, corrección ±1, fin de tiempo) guarda antes una instantánea en
+  `history` (máx. 300). Deshacer restaura la última: devuelve exactamente cola, trono, puntos y campeón.
+  El reloj no retrocede, porque el tiempo jugado es real.
+- **Reloj:** arranca con el primer rally y se puede pausar (`timer.elapsedMs + runningSince`).
+  `kotc-view` comprueba cada segundo el límite y llama a `markTimeUp`.
+- **Vista:** `vista-kotc` no está en la barra inferior; se abre desde la tarjeta del torneo
+  (`tournaments-view.openTournament`). Atajos: T/← trono, R/→ retador, Z deshacer.
+
+### 6.5 Indicadores profesionales (side-out, break point, recepción)
 
 Cada rally guarda **quién sacó** (`servingTeam`, calculado por `rules.getServingTeam`: saca quien ganó el
 rally anterior; el primer rally de cada set lo saca el equipo que toca por alternancia según
@@ -340,7 +369,7 @@ flowchart LR
 `withServingTeam` debe aplicarse a la bitácora **completa** antes de filtrar, porque la reconstrucción
 necesita la secuencia entera. En partidos antiguos sin `firstServer` se asume que sacó primero el equipo A.
 
-### 6.5 Pipeline de estadísticas
+### 6.6 Pipeline de estadísticas
 
 ```mermaid
 flowchart LR
@@ -399,7 +428,7 @@ flowchart LR
 ## 8. Cómo probar
 
 ```bash
-npm test          # 29 tests unitarios de js/core (reglas, saque, torneos, estadísticas)
+npm test          # 39 tests unitarios de js/core (reglas, saque, torneos, Queen & King, estadísticas)
 ```
 
 Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless (Puppeteer, fuera del repo) con 56 comprobaciones: partidos completos, deshacer entre sets, filtros, dashboard y radar, torneos con BYE, resultado manual, Marcador Vivo con teclado, tema oscuro, móvil sin scroll horizontal, migración de datos v1, backup y descargas PDF/CSV/JSON.
@@ -413,7 +442,7 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 | Añadir un gesto técnico | Sólo `SKILLS` en `js/core/constants.js` (menú, filtros, premios, radar y CSV se generan solos) |
 | Cambiar reglas de set / cambio de lado | `DEFAULT_RULES`, `SIDE_CHANGE_EVERY` en `constants.js`; lógica en `core/rules.js` |
 | Puntos de clasificación Round Robin | `STANDING_POINTS` en `constants.js` |
-| Nuevo formato de torneo | `core/tournament-engine.js` (+ tests) y `views/tournaments-view.js` |
+| Nuevo formato de torneo | `TOURNAMENT_FORMAT` en `constants.js`, `core/tournament-engine.js` (+ tests) y `views/tournaments-view.js`. Si no usa partidos, un motor propio como `core/kotc-engine.js` + su vista |
 | Nueva métrica del jugador | `computePlayerProfile` en `core/stats-engine.js` → `player-dashboard.js` → `exporters.js` |
 | Nuevo tema | Bloque `[data-theme="…"]` en `css/tokens.css` + opción en el `theme-picker` de `index.html`; si es oscuro, `data-bs-theme="dark"` en `applyTheme()` |
 | Nueva vista | `<section class="view">` + botón `bottom-nav__item[data-view]` + `VP.router.register()` en su archivo de vista |

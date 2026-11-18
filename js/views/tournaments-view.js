@@ -13,7 +13,7 @@
     const VP = (root.VP = root.VP || {});
     const { byId, qs, qsa, delegate, openModal, closeModal } = VP.dom;
     const { escapeHtml, pickTeamEmoji, toInt } = VP.utils;
-    const { TOURNAMENT_FORMAT, FORMAT_LABEL, MATCH_STATUS, SLOT, GENDER_LABEL, STANDING_POINTS } = VP.constants;
+    const { TOURNAMENT_FORMAT, FORMAT_LABEL, MATCH_STATUS, SLOT, GENDER_LABEL, STANDING_POINTS, KOTC_DEFAULTS } = VP.constants;
     const engine = VP.tournamentEngine;
     const storage = VP.storage;
     const { toast, confirm } = VP.feedback;
@@ -39,6 +39,30 @@
     /** Texto "Cat. A · Masculino". */
     const describeTournament = (t) => `Cat. ${t.category} · ${GENDER_LABEL[t.gender] || t.gender}`;
 
+    /**
+     * Línea de progreso de la tarjeta.
+     *  - Formatos con partidos: "3/7 partidos jugados".
+     *  - Queen & King: líder y puntos ("Líder: Brasil 12/15 pts · 40 rallies").
+     */
+    function describeProgress(t) {
+        if (!t.kotc) {
+            const { done, total } = engine.getProgress(t);
+            return `${done}/${total} partidos jugados`;
+        }
+        const [leader] = VP.kotcEngine.computeStandings(t.kotc);
+        const { targetPoints } = t.kotc.settings;
+        return t.kotc.rallies
+            ? `Líder: ${escapeHtml(leader.name)} ${leader.points}/${targetPoints} pts · ${t.kotc.rallies} rallies`
+            : `👑 Listo para empezar · a ${targetPoints} puntos`;
+    }
+
+    /** Abre la pantalla adecuada según el formato del torneo. */
+    function openTournament(id) {
+        const tournament = storage.getTournament(id);
+        if (tournament?.kotc) VP.views.kotc.open(id);
+        else openDetail(id);
+    }
+
     /** Pinta las tarjetas de todos los torneos. */
     function renderList() {
         const tournaments = storage.getTournaments();
@@ -56,7 +80,6 @@
         el.list.innerHTML = [...tournaments]
             .reverse()
             .map((t) => {
-                const { done, total } = engine.getProgress(t);
                 const champion = engine.getChampion(t);
                 return `
                 <button type="button" class="tournament-card" data-tournament-id="${escapeHtml(t.id)}">
@@ -66,7 +89,7 @@
                         <span class="badge text-bg-light">${escapeHtml(FORMAT_LABEL[t.format] || t.format)}</span>
                     </span>
                     <span class="tournament-card__progress">
-                        ${done}/${total} partidos jugados
+                        ${describeProgress(t)}
                         ${champion ? `· 🏆 <strong>${escapeHtml(champion)}</strong>` : ''}
                     </span>
                 </button>`;
@@ -99,8 +122,16 @@
         });
     }
 
+    /** Muestra las reglas de sets o las de Queen & King según el formato elegido. */
+    function syncFormatPanels() {
+        const isKingOfCourt = byId('t-format').value === TOURNAMENT_FORMAT.KING_OF_COURT;
+        byId('t-rules-kotc').hidden = !isKingOfCourt;
+        byId('t-rules-sets').hidden = isKingOfCourt;
+    }
+
     function openCreateModal() {
         el.formTournament.reset();
+        syncFormatPanels();
         el.teamRows.innerHTML = '';
         for (let i = 0; i < MIN_TEAMS; i++) addTeamRow();
         openModal(el.modalCreate);
@@ -126,8 +157,11 @@
         const teams = collectTeams();
         const format = byId('t-format').value;
 
-        if (teams.length < MIN_TEAMS) {
-            toast(`Ingresa al menos ${MIN_TEAMS} duplas válidas (con sus dos jugadores).`, { type: 'error' });
+        const isKingOfCourt = format === TOURNAMENT_FORMAT.KING_OF_COURT;
+        const minTeams = isKingOfCourt ? KOTC_DEFAULTS.minTeams : MIN_TEAMS;
+        if (teams.length < minTeams) {
+            const why = isKingOfCourt ? ' Queen & King necesita trono, retador y al menos una dupla en cola.' : '';
+            toast(`Ingresa al menos ${minTeams} duplas válidas (con sus dos jugadores).${why}`, { type: 'error' });
             return;
         }
 
@@ -153,19 +187,25 @@
                 ptsNormal: toInt(byId('t-pts-normal').value, 21),
                 ptsTiebreak: toInt(byId('t-pts-tiebreak').value, 15)
             },
-            teams
+            teams,
+            kotc: {
+                targetPoints: toInt(byId('t-kotc-target').value, KOTC_DEFAULTS.targetPoints),
+                timeLimitMinutes: toInt(byId('t-kotc-minutes').value, 0)
+            }
         });
 
         storage.addTournament(tournament);
         closeModal(el.modalCreate);
         renderList();
 
-        if (format === TOURNAMENT_FORMAT.ROUND_ROBIN && teams.length < 3) {
+        if (isKingOfCourt) {
+            toast(`¡A jugar! «${tournament.name}»: ${teams.length} duplas a ${tournament.kotc.settings.targetPoints} puntos.`, { type: 'success' });
+        } else if (format === TOURNAMENT_FORMAT.ROUND_ROBIN && teams.length < 3) {
             toast('Torneo creado. Para Round Robin se recomiendan al menos 3 duplas.', { type: 'warning' });
         } else {
             toast(`Torneo «${tournament.name}» creado con ${tournament.matches.length} partidos.`, { type: 'success' });
         }
-        openDetail(tournament.id);
+        openTournament(tournament.id);
     }
 
     // =====================================================================
@@ -575,6 +615,7 @@
         // Crear torneo
         byId('btn-create-tournament').addEventListener('click', openCreateModal);
         byId('btn-add-team').addEventListener('click', addTeamRow);
+        byId('t-format').addEventListener('change', syncFormatPanels);
         el.formTournament.addEventListener('submit', handleCreateSubmit);
         delegate(el.teamRows, 'click', '.team-row__remove', (_event, button) => {
             if (qsa('.team-row', el.teamRows).length <= MIN_TEAMS) {
@@ -586,7 +627,7 @@
         });
 
         // Abrir detalle desde una tarjeta
-        delegate(el.list, 'click', '.tournament-card', (_event, card) => openDetail(card.dataset.tournamentId));
+        delegate(el.list, 'click', '.tournament-card', (_event, card) => openTournament(card.dataset.tournamentId));
 
         // Pestañas del detalle
         delegate(el.tabs, 'click', '.nav-link', (_event, tab) => {

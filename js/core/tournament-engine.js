@@ -153,8 +153,9 @@
      * @param {Object} input.rules   Reglas de los partidos.
      * @param {Array<{name:string,p1:string,p2:string}>} input.teams
      */
-    function createTournament({ name, category, gender, format, rules, teams }) {
+    function createTournament({ name, category, gender, format, rules, teams, kotc }) {
         const isKnockout = format === TOURNAMENT_FORMAT.KNOCKOUT;
+        const isKingOfCourt = format === TOURNAMENT_FORMAT.KING_OF_COURT;
         const tournament = {
             id: createId('t'),
             createdAt: Date.now(),
@@ -165,9 +166,11 @@
             config_sets: normalizeRules(rules),
             status: 'creado',
             teams: teams.map((t) => t.name),
-            matches: isKnockout ? generateKnockout(teams) : generateRoundRobin(teams)
+            // Queen & King of the Court no tiene partidos: es una sola cancha con cola de duplas
+            matches: isKingOfCourt ? [] : isKnockout ? generateKnockout(teams) : generateRoundRobin(teams)
         };
         if (isKnockout) resolveByes(tournament);
+        if (isKingOfCourt) tournament.kotc = VP.kotcEngine.createState(teams, kotc);
         return tournament;
     }
 
@@ -376,6 +379,10 @@
      * @returns {string|null}
      */
     function getChampion(tournament) {
+        if (tournament.kotc) {
+            const winner = VP.kotcEngine.getTeam(tournament.kotc, tournament.kotc.winnerId);
+            return winner ? winner.name : null;
+        }
         if (!tournament.matches.length) return null;
 
         if (tournament.format === TOURNAMENT_FORMAT.KNOCKOUT) {
