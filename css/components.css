@@ -409,6 +409,13 @@
     color: var(--color-team-b);
 }
 
+/* Valor de texto (nombre de campeón, formato…): más pequeño y con corte de línea */
+.kpi__value--compact {
+    font-size: 1.25rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
 .kpi__value--positive {
     color: var(--color-success);
 }

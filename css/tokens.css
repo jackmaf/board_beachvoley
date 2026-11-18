@@ -65,6 +65,19 @@
     --color-court-line: #FFFFFF;
     --color-net: #FFD700;
 
+    /* --- Gráficas: paleta categórica en ORDEN FIJO ------------------------
+       Se asigna por entidad (dupla), nunca por posición. Validada para
+       daltonismo y contraste sobre #fff; el tema oscuro tiene sus propios
+       pasos de las mismas rampas (validados sobre #22272e). */
+    --chart-series-1: #2a78d6;
+    --chart-series-2: #eb6834;
+    --chart-series-3: #1baf7a;
+    --chart-series-4: #eda100;
+    --chart-series-5: #e87ba4;
+    --chart-series-6: #008300;
+    --chart-series-7: #6250d6;
+    --chart-series-8: #e34948;
+
     /* --- Sombras ---------------------------------------------------------- */
     --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
@@ -131,6 +144,15 @@
 
     --color-court: #3A3F46;
     --color-court-line: rgba(255, 255, 255, 0.7);
+
+    --chart-series-1: #3987e5;
+    --chart-series-2: #d95926;
+    --chart-series-3: #199e70;
+    --chart-series-4: #c98500;
+    --chart-series-5: #d55181;
+    --chart-series-6: #0ca30c;
+    --chart-series-7: #9085e9;
+    --chart-series-8: #e66767;
 
     --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
     --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.4);

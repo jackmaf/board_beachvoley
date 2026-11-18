@@ -15,6 +15,7 @@ Una **SPA 100 % frontend** para entrenadores y analistas de voley playa 2 vs 2:
 - **Scout táctico**: se toca la cancha donde cayó el balón y se elige jugador, punto/error y gesto técnico.
 - **Marcador Vivo**: marcador grande tipo TV, con atajos de teclado.
 - **Estadísticas**: partido en curso o cualquiera del historial, filtros, línea de tiempo animada, heatmap, Salón de la Fama, bitácora y dashboard por jugador (radar + PDF/CSV/JSON).
+  Modo **Torneo**: clasificación y rendimiento por dupla/jugador de un torneo y, en Queen & King, gráfica de evolución de puntos y destacados.
 - **Fotos y avatares**: cada jugador y dupla puede llevar una foto (cámara o galería del móvil) o un avatar de ejemplo; sin elección, uno por defecto. Todo se guarda en el dispositivo y funciona sin conexión.
 - **Datos**: `localStorage` con copia de seguridad (exportar/importar).
 
@@ -58,7 +59,8 @@ voley playa/
 │   │   ├── kotc-engine.js     Queen & King of the Court: rotación, puntos, tiempo, deshacer
 │   │   ├── tournament-engine.js  Generación de llaves, BYE, resultados, clasificación
 │   │   ├── prize-engine.js    Premios: pagos, bolsa, administración, reparto y puestos
-│   │   └── stats-engine.js    Filtros, marcador, totales, premios, perfil de jugador
+│   │   ├── stats-engine.js    Filtros, marcador, totales, premios, perfil de jugador
+│   │   └── tournament-stats.js  Estadísticas por torneo: rallies de Q&K, agregados de partidos
 │   ├── i18n/                  🌐 Diccionarios (formato i18next): es.js (por defecto) · en.js
 │   ├── services/
 │   │   ├── storage.js         ÚNICO acceso a localStorage + backup
@@ -72,6 +74,7 @@ voley playa/
 │   │   ├── feedback.js        toast, callout, confirm (Promise), spinner
 │   │   ├── photo-picker.js    Selector 📷 que se engancha a un input de nombre
 │   │   ├── router.js          Navegación entre vistas
+│   │   ├── line-chart.js      Gráfica SVG de líneas escalonadas (evolución de puntos)
 │   │   └── language.js        Traduce el HTML (data-i18n*) y conecta el selector ES/EN
 │   ├── views/                 Una por pantalla: sólo pintan y escuchan eventos
 │   │   ├── match-actions.js   Deshacer / finalizar / anunciar (compartido Scout + Vivo)
@@ -427,6 +430,32 @@ flowchart LR
     F --> HM[Heatmap] & TAB[Tabla jugadores] & LOG["Bitácora (+ timeouts sin filtros)"]
 ```
 
+### 6.7 Estadísticas por torneo
+
+Stats tiene un selector **«🏐 Partido | 🏆 Torneo»**. En modo torneo se ocultan las tarjetas de partido
+(`.stats__match-only`) y `stats-view.renderTournamentStats()` pinta `#stats-tournament-body` con
+`core/tournament-stats.js`. También se llega con «📊 Ver estadísticas» desde la pista Q&K y desde el detalle
+del torneo (`VP.views.stats.showTournament(id)`).
+
+```mermaid
+flowchart LR
+    T{Formato} -->|Queen & King| K["tournament.kotc.history<br/>(instantáneas)"]
+    K --> RP["replayKotcRallies<br/>trono · retador · ganador"] --> KA[computeKotcAnalytics]
+    KA --> G["📈 Gráfica de evolución<br/>(ui/line-chart.js)"] & HL["🏅 Destacados"] & KT["Defensa % · Retos % · Racha"]
+    T -->|Round Robin / Eliminación| H["voley-history<br/>partidos con tournamentId"]
+    H --> MS[computeMatchStats] --> DT["Dupla: puntos, sets,<br/>side-out, break point"] & PT["Jugador: pts, errores,<br/>eficacia (sólo Scout)"] & AN["«Analizar» → modo partido"]
+    T -->|Round Robin / Eliminación| CL["tournamentEngine.computeStandings<br/>(incluye resultados manuales)"]
+```
+
+- **Q&K:** cada entrada `rally` del historial guarda el estado ANTES de la jugada; el de después es la
+  siguiente instantánea (o el estado actual). El historial guarda 300 jugadas: con más, se avisa de que
+  la gráfica y los porcentajes son parciales. Los premios de porcentaje exigen una muestra mínima de 3.
+- **Gráfica:** colores categóricos en orden fijo (`--chart-series-1…8` en `tokens.css`, con pasos propios
+  en tema oscuro), asignados por la dupla y nunca por su puesto; leyenda siempre, etiquetas directas
+  sólo con ≤ 4 series que no se pisen, cruceta + tooltip con ratón, dedo o flechas ← →. Máximo 8 series.
+- **Partidos:** el Marcador Vivo sólo guarda quién gana el punto (`Fast_A/B`): la tabla de jugadores sólo
+  aparece con partidos anotados en Scout. El selector de partidos agrupa con `<optgroup>` por torneo.
+
 ---
 
 ### 6.6 Premios de torneo
@@ -481,7 +510,8 @@ flowchart LR
 - Una sola clase por selector en el CSS propio (especificidad plana). Nada de `#id`.
 - **Mix** permitido cuando un nodo es dos bloques: `class="card card--glass filters"`.
 - Colores siempre con **tokens** (`var(--color-surface)`), nunca valores fijos en componentes → los 3 temas funcionan en toda la app.
-- Mostrar/ocultar con el atributo HTML `hidden` (gana siempre gracias a `[hidden]{display:none!important}`).
+- Mostrar/ocultar con el atributo HTML `hidden` (gana siempre gracias a `[hidden]{display:none!important}` en
+  `base.css`: el de Reboot no basta, porque las utilidades `.d-flex`/`.vstack` se declaran después con `!important`).
 - **Cero estilos inline** en el HTML. Sólo JS asigna `left/top/width` dinámicos.
 
 ### JavaScript
@@ -507,7 +537,7 @@ flowchart LR
 ## 8. Cómo probar
 
 ```bash
-npm test          # 57 tests: js/core (reglas, saque, torneos, Queen & King, premios, estadísticas) + diccionarios i18n
+npm test          # 65 tests: js/core (reglas, saque, torneos, Queen & King, premios, estadísticas) + diccionarios i18n
 ```
 
 Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless (Puppeteer, fuera del repo) con 56 comprobaciones: partidos completos, deshacer entre sets, filtros, dashboard y radar, torneos con BYE, resultado manual, Marcador Vivo con teclado, tema oscuro, móvil sin scroll horizontal, migración de datos v1, backup y descargas PDF/CSV/JSON.
@@ -526,6 +556,7 @@ Además, durante el desarrollo se usó una prueba end-to-end con Chrome headless
 | Cambiar reglas de set / cambio de lado | `DEFAULT_RULES`, `SIDE_CHANGE_EVERY` en `constants.js`; lógica en `core/rules.js` |
 | Puntos de clasificación Round Robin | `STANDING_POINTS` en `constants.js` |
 | Nuevo formato de torneo | `TOURNAMENT_FORMAT` en `constants.js`, `core/tournament-engine.js` (+ tests) y `views/tournaments-view.js`. Si no usa partidos, un motor propio como `core/kotc-engine.js` + su vista |
+| Nueva estadística de torneo | `core/tournament-stats.js` (+ tests) → `renderTournamentStats` en `stats-view.js` + textos `tStats.*` |
 | Nueva métrica del jugador | `computePlayerProfile` en `core/stats-engine.js` → `player-dashboard.js` → `exporters.js` |
 | Nuevo tema | Bloque `[data-theme="…"]` en `css/tokens.css` + opción en el `theme-picker` de `index.html`; si es oscuro, `data-bs-theme="dark"` en `applyTheme()` |
 | Nueva vista | `<section class="view">` + botón `bottom-nav__item[data-view]` + `VP.router.register()` en su archivo de vista |

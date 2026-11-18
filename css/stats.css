@@ -374,3 +374,173 @@
     grid-area: track-b;
     --bs-progress-bar-bg: var(--color-team-b);
 }
+
+/* -------------------------------------------------------------------------
+   Bloque: points-chart (evolución de puntos de un torneo Queen & King)
+   SVG generado por js/ui/line-chart.js.
+   Colores: tokens --chart-series-1…8 (css/tokens.css), en orden fijo y
+   asignados por la dupla (orden de inscripción), nunca por su posición.
+   El texto usa siempre tokens de texto, nunca el color de la serie.
+   ------------------------------------------------------------------------- */
+.points-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+}
+
+.points-chart__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.points-chart__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Muestra de color de la leyenda y del tooltip */
+.points-chart__key {
+    flex-shrink: 0;
+    width: 14px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--chart-series-1);
+}
+
+.points-chart__key--s2 { background: var(--chart-series-2); }
+.points-chart__key--s3 { background: var(--chart-series-3); }
+.points-chart__key--s4 { background: var(--chart-series-4); }
+.points-chart__key--s5 { background: var(--chart-series-5); }
+.points-chart__key--s6 { background: var(--chart-series-6); }
+.points-chart__key--s7 { background: var(--chart-series-7); }
+.points-chart__key--s8 { background: var(--chart-series-8); }
+
+/* Marco con posición relativa: ancla el tooltip */
+.points-chart__frame {
+    position: relative;
+}
+
+.points-chart__svg {
+    display: block;
+    overflow: visible;
+}
+
+.points-chart__grid {
+    stroke: var(--color-border-soft);
+    stroke-width: 1;
+}
+
+.points-chart__axis-label {
+    fill: var(--color-text-muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.points-chart__target {
+    stroke: var(--color-text-muted);
+    stroke-width: 1;
+    stroke-dasharray: 4 4;
+}
+
+/* Líneas de 2 px: finas, con extremos redondeados */
+.points-chart__line {
+    fill: none;
+    stroke: var(--chart-series-1);
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.points-chart__line--s2 { stroke: var(--chart-series-2); }
+.points-chart__line--s3 { stroke: var(--chart-series-3); }
+.points-chart__line--s4 { stroke: var(--chart-series-4); }
+.points-chart__line--s5 { stroke: var(--chart-series-5); }
+.points-chart__line--s6 { stroke: var(--chart-series-6); }
+.points-chart__line--s7 { stroke: var(--chart-series-7); }
+.points-chart__line--s8 { stroke: var(--chart-series-8); }
+
+/* Marcador final con anillo del color de la superficie (separa líneas que coinciden) */
+.points-chart__dot {
+    fill: var(--chart-series-1);
+    stroke: var(--color-surface);
+    stroke-width: 2;
+}
+
+.points-chart__dot--s2 { fill: var(--chart-series-2); }
+.points-chart__dot--s3 { fill: var(--chart-series-3); }
+.points-chart__dot--s4 { fill: var(--chart-series-4); }
+.points-chart__dot--s5 { fill: var(--chart-series-5); }
+.points-chart__dot--s6 { fill: var(--chart-series-6); }
+.points-chart__dot--s7 { fill: var(--chart-series-7); }
+.points-chart__dot--s8 { fill: var(--chart-series-8); }
+
+.points-chart__label {
+    fill: var(--color-text);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.points-chart__crosshair {
+    stroke: var(--color-text-muted);
+    stroke-width: 1;
+    pointer-events: none;
+}
+
+/* Zona de interacción: invisible, mayor que las marcas y enfocable con teclado */
+.points-chart__hit {
+    fill: transparent;
+    cursor: crosshair;
+    touch-action: pan-y;
+}
+
+.points-chart__hit:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.points-chart__tooltip {
+    position: absolute;
+    top: var(--space-2);
+    z-index: 1;
+    min-width: 150px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+    color: var(--color-text);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.points-chart__tooltip-title {
+    margin-bottom: var(--space-1);
+    color: var(--color-text-muted);
+    font-weight: 700;
+}
+
+.points-chart__tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.points-chart__tooltip-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.points-chart__tooltip-value {
+    font-variant-numeric: tabular-nums;
+}

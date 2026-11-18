@@ -2,9 +2,15 @@
  * @file stats-view.js
  * @description Vista "Stats": análisis de un partido (en curso o del historial).
  *
- * Secciones: selector de partido, resumen, desglose por jugador, Salón de la
- * Fama, filtros, heatmap y bitácora global. Todos los cálculos los hace
- * `core/stats-engine.js`; aquí sólo se gestionan filtros y se pinta.
+ * Dos modos (selector «Partido | Torneo»):
+ *  - Partido: resumen, desglose por jugador, indicadores profesionales, Salón
+ *    de la Fama, filtros, heatmap y bitácora. Cálculos en `core/stats-engine.js`.
+ *  - Torneo: resumen del torneo y, según el formato,
+ *      · Queen & King: evolución de puntos (gráfica), destacados y rendimiento
+ *        en el trono/retando (`core/tournament-stats.js` → computeKotcAnalytics).
+ *      · Round Robin / Eliminación: clasificación, rendimiento por dupla y por
+ *        jugador sumando sus partidos archivados, y acceso a cada partido.
+ * Aquí sólo se gestionan filtros y se pinta.
  */
 (function (root) {
     'use strict';
@@ -24,8 +30,12 @@
     const TIMELINE_STEP = 10;      // % que avanza la animación en cada paso
     const TIMELINE_INTERVAL = 800; // ms entre pasos
 
+    /** Qué se analiza: un partido ('match') o un torneo completo ('tournament'). */
+    let mode = 'match';
     /** Partido analizado: 'current' (en curso) o índice del historial. */
     let source = null;
+    /** Torneo analizado en modo torneo (id). */
+    let tournamentSource = null;
     /** Filtros activos (ver stats-engine.js → StatsFilters). */
     let filters = stats.createDefaultFilters();
     let timelineTimer = null;
@@ -60,27 +70,57 @@
         return `${match.config?.teamA} vs ${match.config?.teamB} · ${won.A}-${won.B}${date ? ` · ${date}` : ''}`;
     }
 
-    /** Rellena el <select> de partidos y valida la selección actual. */
+    /**
+     * Rellena el <select> de partidos y valida la selección actual.
+     * Las opciones se agrupan (<optgroup>): partido en curso, un grupo por
+     * torneo y los amistosos; así se encuentra rápido un partido de torneo.
+     */
     function renderSourceOptions() {
         const history = VP.storage.getHistory();
-        const options = [];
-        if (store.hasPoints()) options.push({ value: 'current', label: t('stats.inProgress', { match: describeMatch(store.getState()) }) });
+        const tournamentNames = new Map(VP.storage.getTournaments().map((tour) => [tour.id, tour.name]));
+        const groups = new Map(); // etiqueta → opciones (Map mantiene el orden de inserción)
+        const add = (group, option) => {
+            if (!groups.has(group)) groups.set(group, []);
+            groups.get(group).push(option);
+        };
+
+        if (store.hasPoints()) add(t('tStats.groupCurrent'), { value: 'current', label: t('stats.inProgress', { match: describeMatch(store.getState()) }) });
         // Historial del más reciente al más antiguo
         for (let i = history.length - 1; i >= 0; i--) {
-            if (history[i]?.config) options.push({ value: String(i), label: describeMatch(history[i]) });
+            const match = history[i];
+            if (!match?.config) continue;
+            const tourName = match.tournamentId && tournamentNames.get(match.tournamentId);
+            add(tourName ? t('tStats.groupTournament', { name: tourName }) : t('tStats.groupFriendly'), { value: String(i), label: describeMatch(match) });
         }
 
+        const options = [...groups.values()].flat();
         const values = options.map((o) => o.value);
         if (source === null || !values.includes(String(source))) {
             source = values.length ? parseSource(values[0]) : null;
             filters = stats.createDefaultFilters();
         }
 
+        const optionHtml = (o) => `<option value="${o.value}">${escapeHtml(o.label)}</option>`;
         el.source.innerHTML = options.length
-            ? options.map((o) => `<option value="${o.value}">${escapeHtml(o.label)}</option>`).join('')
+            ? [...groups.entries()]
+                  .map(([label, list]) => `<optgroup label="${escapeHtml(label)}">${list.map(optionHtml).join('')}</optgroup>`)
+                  .join('')
             : `<option value="">${escapeHtml(t('stats.noMatches'))}</option>`;
         el.source.value = source === null ? '' : String(source);
         el.source.disabled = options.length === 0;
+    }
+
+    /** Rellena el <select> de torneos (más recientes primero) y valida la selección. */
+    function renderTournamentOptions() {
+        const tournaments = [...VP.storage.getTournaments()].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        if (!tournaments.some((tour) => tour.id === tournamentSource)) tournamentSource = tournaments[0]?.id ?? null;
+        el.tournament.innerHTML = tournaments.length
+            ? tournaments
+                  .map((tour) => `<option value="${escapeHtml(tour.id)}">${escapeHtml(`${tour.name} · ${i18n.formatLabel(tour.format)}`)}</option>`)
+                  .join('')
+            : `<option value="">${escapeHtml(t('tStats.noTournaments'))}</option>`;
+        el.tournament.value = tournamentSource ?? '';
+        el.tournament.disabled = tournaments.length === 0;
     }
 
     const parseSource = (value) => (value === 'current' ? 'current' : toInt(value, null));
@@ -88,6 +128,7 @@
     /** Selecciona el último partido archivado (se usa al finalizar un partido). */
     function selectLatestHistory() {
         const length = VP.storage.getHistory().length;
+        mode = 'match';
         source = length ? length - 1 : null;
         filters = stats.createDefaultFilters();
     }
@@ -484,6 +525,325 @@
             </div>`;
     }
 
+    // =====================================================================
+    // MODO TORNEO
+    // =====================================================================
+
+    /** Tarjeta de la rejilla del modo torneo (todas comparten estructura). */
+    const sectionCard = (title, body, { hint = '', col = 'col-12' } = {}) => `
+        <div class="${col}">
+            <div class="card card--glass h-100">
+                <div class="card-body vstack gap-3">
+                    <h2 class="section-title">${escapeHtml(title)}</h2>
+                    ${hint ? `<p class="small text-body-secondary mb-0">${escapeHtml(hint)}</p>` : ''}
+                    ${body}
+                </div>
+            </div>
+        </div>`;
+
+    const emptyText = (text) => `<p class="text-center text-body-secondary py-3 mb-0">${escapeHtml(text)}</p>`;
+
+    /** Cabecera de tabla con explicación opcional (title). */
+    const th = (label, hint, extra = '') =>
+        `<th scope="col" class="${extra}"${hint ? ` title="${escapeHtml(hint)}"` : ''}>${escapeHtml(label)}</th>`;
+
+    const table = (head, rows) => `
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle text-center mb-0">
+                <thead class="table-dark"><tr>${head}</tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>`;
+
+    /** Nombre de dupla con su foto (o avatar generado). */
+    const teamCell = (name) => `
+        <td class="text-start">
+            <span class="d-inline-flex align-items-center gap-2 text-nowrap">
+                <img class="avatar avatar--sm" src="${escapeHtml(teamSrc(name))}" alt="">
+                <span class="fw-bold">${escapeHtml(name)}</span>
+            </span>
+        </td>`;
+
+    /** Porcentaje con su muestra («67% 2/3»); «—» si no hay muestra. */
+    const pctCell = (pct, won, total) =>
+        `<td>${formatPct(pct)}${total ? ` <small class="versus__sample">${won}/${total}</small>` : ''}</td>`;
+
+    /** Fila de indicadores (KPI) del resumen del torneo. */
+    function renderTournamentSummary(tour) {
+        const isKotc = Boolean(tour.kotc);
+        const champion = VP.tournamentEngine.getChampion(tour);
+        let teams;
+        let activity;
+        let lead;
+        if (isKotc) {
+            const standings = VP.kotcEngine.computeStandings(tour.kotc);
+            teams = tour.kotc.teams.length;
+            activity = { label: t('tStats.rallies'), value: String(tour.kotc.rallies) };
+            lead = champion
+                ? { label: t('tStats.champion'), value: champion }
+                : { label: t('tStats.leader'), value: tour.kotc.rallies && standings[0] ? `${standings[0].name} · ${standings[0].points}` : '—' };
+        } else {
+            const progress = VP.tournamentEngine.getProgress(tour);
+            const standings = VP.tournamentEngine.computeStandings(tour);
+            teams = (tour.teams || []).length || standings.length;
+            activity = { label: t('tStats.progress'), value: t('tStats.progressValue', { done: progress.done, total: progress.total }) };
+            const leader = standings.find((r) => r.played);
+            lead = champion ? { label: t('tStats.champion'), value: champion } : { label: t('tStats.leader'), value: leader ? leader.team : '—' };
+        }
+
+        const kpi = ({ label, value }, accent = false) => `
+            <div class="col">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body vstack gap-2 text-center">
+                        <span class="kpi__label">${escapeHtml(label)}</span>
+                        <strong class="kpi__value kpi__value--compact ${accent ? 'kpi__value--accent' : ''}">${escapeHtml(value)}</strong>
+                    </div>
+                </div>
+            </div>`;
+
+        const category = [tour.category && t(`categories.${tour.category}`, { defaultValue: tour.category }), tour.gender && i18n.genderLabel(tour.gender)]
+            .filter(Boolean)
+            .join(' · ');
+        const body = `
+            ${category ? `<p class="small text-body-secondary mb-0">${escapeHtml(category)}</p>` : ''}
+            <div class="row row-cols-2 row-cols-md-4 g-3">
+                ${kpi({ label: t('tStats.format'), value: i18n.formatLabel(tour.format) })}
+                ${kpi({ label: t('tStats.teams'), value: String(teams) })}
+                ${kpi(activity)}
+                ${kpi(lead, true)}
+            </div>`;
+        return sectionCard(`🏆 ${tour.name}`, body);
+    }
+
+    // ---------------------------------------------------------------------
+    // Queen & King of the Court
+    // ---------------------------------------------------------------------
+
+    /** Texto traducido de un destacado (el núcleo da la clave y la fila). */
+    function highlightValue(h) {
+        const r = h.row;
+        if (h.key === 'thrones') return t('tStats.hlThrones', { count: r.thrones });
+        if (h.key === 'streak') return t('tStats.hlStreak', { count: r.bestStreak });
+        if (h.key === 'hold') return t('tStats.hlPct', { pct: Math.round(r.holdPct), won: r.holdWins, total: r.holdRallies });
+        return t('tStats.hlPct', { pct: Math.round(r.challengePct), won: r.challengeWins, total: r.challenges });
+    }
+
+    function renderKotcStats(tour) {
+        const analytics = VP.tournamentStats.computeKotcAnalytics(tour.kotc);
+        const sections = [];
+
+        // 1) Evolución de puntos: la gráfica se monta después (necesita su ancho real)
+        sections.push(
+            sectionCard(
+                t('tStats.chartTitle'),
+                analytics.rallies
+                    ? `<div class="points-chart" id="stats-kotc-chart"></div>
+                       ${analytics.partial ? `<p class="small text-body-secondary mb-0">${escapeHtml(t('tStats.partial', { count: analytics.rallies }))}</p>` : ''}`
+                    : emptyText(t('tStats.noRallies')),
+                { hint: analytics.rallies ? t('tStats.chartHint') : '' }
+            )
+        );
+
+        // 2) Destacados (mismo bloque visual que el Salón de la Fama)
+        if (analytics.highlights.length) {
+            const cards = analytics.highlights
+                .map(
+                    (h) => `
+                <div class="col">
+                    <div class="fame-card vstack gap-1 align-items-center">
+                        <img class="avatar avatar--lg" src="${escapeHtml(teamSrc(h.winner))}" alt="">
+                        <span class="fame-card__emoji" aria-hidden="true">${h.emoji}</span>
+                        <span class="fame-card__title">${escapeHtml(t(`tStats.hl.${h.key}`))}</span>
+                        <span class="fame-card__winner">${escapeHtml(h.winner)}</span>
+                        <span class="badge text-bg-light align-self-center">${escapeHtml(highlightValue(h))}</span>
+                    </div>
+                </div>`
+                )
+                .join('');
+            sections.push(sectionCard(t('tStats.highlightsTitle'), `<div class="row row-cols-2 row-cols-md-4 g-3">${cards}</div>`));
+        }
+
+        // 3) Rendimiento por dupla
+        const head = [
+            th('#'),
+            th(t('tStats.colTeam')),
+            th(t('tStats.colPoints')),
+            th(t('tStats.colThrones'), t('kotc.colThronesHint')),
+            th(t('tStats.colHold'), t('tStats.colHoldHint')),
+            th(t('tStats.colChallenge'), t('tStats.colChallengeHint')),
+            th(t('tStats.colStreak'), t('tStats.colStreakHint'), 'd-none d-sm-table-cell')
+        ].join('');
+        const rows = analytics.rows
+            .map(
+                (r, i) => `
+            <tr class="${r.isWinner ? 'table-warning fw-bold' : ''}">
+                <td>${i + 1}</td>
+                ${teamCell(r.name)}
+                <td><strong>${r.points}</strong></td>
+                <td>${r.thrones}</td>
+                ${pctCell(r.holdPct, r.holdWins, r.holdRallies)}
+                ${pctCell(r.challengePct, r.challengeWins, r.challenges)}
+                <td class="d-none d-sm-table-cell">${r.bestStreak}</td>
+            </tr>`
+            )
+            .join('');
+        sections.push(sectionCard(t('tStats.kotcTableTitle'), table(head, rows), { hint: t('tStats.kotcTableHint') }));
+
+        return { html: sections.join(''), analytics };
+    }
+
+    // ---------------------------------------------------------------------
+    // Round Robin / Eliminación directa
+    // ---------------------------------------------------------------------
+
+    function renderMatchTournamentStats(tour) {
+        const isRoundRobin = tour.format !== VP.constants.TOURNAMENT_FORMAT.KNOCKOUT;
+        const data = VP.tournamentStats.computeMatchStats(tour, VP.storage.getHistory());
+        const sections = [];
+
+        // 1) Clasificación (incluye resultados cargados a mano)
+        const standings = VP.tournamentEngine.computeStandings(tour);
+        const standingHead = [
+            th('#'),
+            th(t('standings.team')),
+            th(t('standings.played'), t('standings.playedHint')),
+            th(t('standings.won'), t('standings.wonHint')),
+            th(t('standings.lost'), t('standings.lostHint')),
+            th(t('standings.sets'), t('standings.setsHint')),
+            isRoundRobin ? th(t('standings.points'), t('standings.pointsHint')) : ''
+        ].join('');
+        const standingRows = standings
+            .map(
+                (r, i) => `
+            <tr class="${i === 0 && r.played ? 'table-warning fw-bold' : ''}">
+                <td>${i + 1}</td>
+                ${teamCell(r.team)}
+                <td>${r.played}</td><td>${r.won}</td><td>${r.lost}</td>
+                <td>${r.setsFor}-${r.setsAgainst}</td>
+                ${isRoundRobin ? `<td><strong>${r.points}</strong></td>` : ''}
+            </tr>`
+            )
+            .join('');
+        sections.push(sectionCard(t('tStats.standingsTitle'), standings.length ? table(standingHead, standingRows) : emptyText(t('standings.empty'))));
+
+        if (!data.matches.length) {
+            sections.push(sectionCard(t('tStats.teamsTitle'), emptyText(t('tStats.noMatchData'))));
+            return sections.join('');
+        }
+
+        // 2) Rendimiento por dupla (sólo partidos registrados en la app)
+        const teamHead = [
+            th(t('tStats.colTeam')),
+            th(t('standings.played'), t('tStats.colPlayedHint')),
+            th(t('tStats.colPointsFor'), t('tStats.colPointsForHint')),
+            th('Side-out', t('pro.sideOutHint')),
+            th('Break point', t('pro.breakHint'))
+        ].join('');
+        const teamRows = data.teams
+            .map(
+                (r) => `
+            <tr>
+                ${teamCell(r.name)}
+                <td>${r.played}</td>
+                <td>${r.pointsFor}-${r.pointsAgainst}</td>
+                ${pctCell(r.sideOutPct, r.sideOutWon, r.received)}
+                ${pctCell(r.breakPct, r.breakWon, r.served)}
+            </tr>`
+            )
+            .join('');
+        sections.push(sectionCard(t('tStats.teamsTitle'), table(teamHead, teamRows), { hint: t('tStats.teamsHint') }));
+
+        // 3) Jugadores (sólo con partidos anotados en Scout)
+        let playersBody;
+        if (data.hasScoutData) {
+            const playerHead = [
+                th(t('common.player')),
+                th(t('tStats.colTeam'), '', 'd-none d-sm-table-cell'),
+                th(t('tStats.colPoints')),
+                th(t('stats.errors')),
+                th(t('tStats.colEfficiency'), t('tStats.colEfficiencyHint'))
+            ].join('');
+            const playerRows = data.players
+                .map(
+                    (p) => `
+                <tr>
+                    <td class="text-start">
+                        <span class="d-inline-flex align-items-center gap-2 text-nowrap">
+                            <img class="avatar avatar--sm" src="${escapeHtml(playerSrc(p.name))}" alt="">
+                            <span class="fw-bold">${escapeHtml(p.name)}</span>
+                        </span>
+                    </td>
+                    <td class="d-none d-sm-table-cell text-nowrap">${escapeHtml(p.team)}</td>
+                    <td class="text-success fw-bold">${p.pts}</td>
+                    <td class="text-danger">${p.errs}</td>
+                    <td>${formatPct(p.efficiency)}</td>
+                </tr>`
+                )
+                .join('');
+            playersBody = table(playerHead, playerRows);
+        } else {
+            playersBody = emptyText(t('tStats.noScout'));
+        }
+        sections.push(sectionCard(t('tStats.playersTitle'), playersBody, { col: 'col-12 col-lg-6' }));
+
+        // 4) Partidos registrados → abrir el análisis completo de cada uno
+        const items = [...data.matches]
+            .reverse()
+            .map(
+                (m) => `
+            <li class="list-group-item d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span class="vstack">
+                    <span class="fw-bold">${escapeHtml(`${m.teamA} vs ${m.teamB}`)}</span>
+                    <span class="small text-body-secondary">${escapeHtml(t('tStats.matchScore', { sets: m.sets, points: m.points }))}</span>
+                </span>
+                <button type="button" class="btn btn-outline-primary btn-sm" data-action="analyze-match" data-index="${m.index}">
+                    ${escapeHtml(t('tStats.analyze'))}
+                </button>
+            </li>`
+            )
+            .join('');
+        sections.push(sectionCard(t('tStats.matchesTitle'), `<ul class="list-group">${items}</ul>`, { col: 'col-12 col-lg-6' }));
+
+        return sections.join('');
+    }
+
+    /** Pinta las estadísticas del torneo seleccionado. */
+    function renderTournamentStats() {
+        const tour = tournamentSource ? VP.storage.getTournament(tournamentSource) : null;
+        if (!tour) {
+            el.tournamentBody.innerHTML = sectionCard(t('tStats.modeTournament'), emptyText(t('tStats.noTournamentsHint')));
+            return;
+        }
+
+        if (tour.kotc) {
+            const { html, analytics } = renderKotcStats(tour);
+            el.tournamentBody.innerHTML = renderTournamentSummary(tour) + html;
+            const chart = byId('stats-kotc-chart');
+            if (chart) {
+                VP.charts.renderLineChart(chart, {
+                    labels: analytics.timeline.labels,
+                    series: analytics.timeline.series,
+                    target: tour.kotc.settings.targetPoints,
+                    ariaLabel: t('tStats.chartLabel')
+                });
+            }
+            return;
+        }
+        el.tournamentBody.innerHTML = renderTournamentSummary(tour) + renderMatchTournamentStats(tour);
+    }
+
+    /** Muestra los controles y secciones del modo activo. */
+    function applyMode() {
+        const isTournament = mode === 'tournament';
+        el.modeMatch.checked = !isTournament;
+        el.modeTournament.checked = isTournament;
+        el.matchPicker.hidden = isTournament;
+        el.tournamentPicker.hidden = !isTournament;
+        el.tournamentSections.hidden = !isTournament;
+        el.matchSections.forEach((section) => (section.hidden = isTournament));
+        if (isTournament) stopTimeline();
+    }
+
     /** Calcula y pinta todas las secciones con los filtros actuales. */
     function draw() {
         const match = getSourceMatch();
@@ -512,6 +872,10 @@
      * y difiere el cálculo un instante para que el navegador llegue a pintarlo.
      */
     function render() {
+        if (mode === 'tournament') {
+            renderTournamentStats();
+            return;
+        }
         const match = getSourceMatch();
         if ((match?.points?.length || 0) < SPINNER_THRESHOLD || timelineTimer) {
             draw();
@@ -524,11 +888,38 @@
         }, 30);
     }
 
-    /** Al entrar a la vista: actualiza el selector, los filtros y pinta. */
+    /** Al entrar a la vista: actualiza los selectores, los filtros y pinta. */
     function enter() {
         renderSourceOptions();
+        renderTournamentOptions();
         renderFilterPills(getSourceMatch());
+        applyMode();
         render();
+    }
+
+    /**
+     * Abre Stats en modo torneo con ese torneo seleccionado
+     * (botones «📊 Ver estadísticas» de la pista Queen & King y del detalle).
+     * @param {string} tournamentId
+     */
+    function showTournament(tournamentId) {
+        mode = 'tournament';
+        tournamentSource = tournamentId;
+        if (VP.router.getCurrent() === VIEW_ID) enter();
+        else VP.router.go(VIEW_ID);
+    }
+
+    /**
+     * Cambia a modo partido con un partido del historial seleccionado.
+     * @param {number} historyIndex
+     */
+    function selectMatch(historyIndex) {
+        mode = 'match';
+        source = historyIndex;
+        filters = stats.createDefaultFilters();
+        stopTimeline();
+        enter();
+        el.source.closest('.card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // =====================================================================
@@ -556,8 +947,43 @@
             timeMax: byId('filter-time-max'),
             timeline: byId('filter-timeline'),
             timelineValue: byId('timeline-val'),
-            playTimeline: byId('btn-play-timeline')
+            playTimeline: byId('btn-play-timeline'),
+            // Modo torneo
+            modeMatch: byId('stats-mode-match'),
+            modeTournament: byId('stats-mode-tournament'),
+            matchPicker: byId('stats-match-picker'),
+            tournamentPicker: byId('stats-tournament-picker'),
+            tournament: byId('stats-tournament'),
+            tournamentSections: byId('stats-tournament-sections'),
+            tournamentBody: byId('stats-tournament-body'),
+            matchSections: [...document.querySelectorAll(`#${VIEW_ID} .stats__match-only`)]
         };
+
+        // Selector «Partido | Torneo»
+        [el.modeMatch, el.modeTournament].forEach((radio) =>
+            radio.addEventListener('change', () => {
+                if (!radio.checked) return;
+                mode = radio.value;
+                applyMode();
+                if (mode === 'match') renderFilterPills(getSourceMatch());
+                render();
+            })
+        );
+        el.tournament.addEventListener('change', () => {
+            tournamentSource = el.tournament.value || null;
+            render();
+        });
+        // «Analizar» un partido del torneo → modo partido con ese partido
+        delegate(el.tournamentBody, 'click', '[data-action="analyze-match"]', (_event, button) => {
+            selectMatch(toInt(button.dataset.index, null));
+        });
+        // La gráfica se dibuja al ancho real: se rehace al girar el móvil o cambiar el tamaño
+        window.addEventListener(
+            'resize',
+            debounce(() => {
+                if (mode === 'tournament' && VP.router.getCurrent() === VIEW_ID) renderTournamentStats();
+            }, 200)
+        );
 
         el.source.addEventListener('change', () => {
             stopTimeline();
@@ -609,7 +1035,7 @@
 
         // Si se está viendo el partido en curso, se actualiza en vivo
         store.subscribe((event) => {
-            if (event === 'change' && VP.router.getCurrent() === VIEW_ID && source === 'current') render();
+            if (event === 'change' && VP.router.getCurrent() === VIEW_ID && mode === 'match' && source === 'current') render();
         });
 
         // Cambio de idioma: si la vista está abierta se repinta entera
@@ -623,5 +1049,5 @@
     }
 
     VP.views = VP.views || {};
-    VP.views.stats = Object.freeze({ init, render, selectLatestHistory });
+    VP.views.stats = Object.freeze({ init, render, selectLatestHistory, showTournament, selectMatch });
 })(window);

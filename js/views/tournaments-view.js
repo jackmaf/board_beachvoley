@@ -730,6 +730,13 @@
         });
 
         byId('btn-delete-tournament').addEventListener('click', handleDeleteTournament);
+        // Estadísticas del torneo abierto (Stats en modo «Torneo»)
+        byId('btn-tournament-stats').addEventListener('click', () => {
+            const tour = getOpenTournament();
+            if (!tour) return;
+            closeModal(el.modalDetail);
+            VP.views.stats.showTournament(tour.id);
+        });
         byId('form-manual-score').addEventListener('submit', handleManualSubmit);
         byId('form-edit-team').addEventListener('submit', (event) => {
             event.preventDefault();

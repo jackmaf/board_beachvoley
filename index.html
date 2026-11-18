@@ -449,16 +449,39 @@
             data-i18n-attr="aria-label:stats.viewLabel">
             <div class="stats">
                 <div class="row g-4">
+                    <!-- Qué se analiza: un partido o un torneo completo -->
                     <div class="col-12">
                         <div class="card card--glass">
-                            <div class="card-body d-flex flex-wrap align-items-center gap-3">
-                                <label class="source-picker__label" for="stats-source" data-i18n="stats.source">📂 Partido analizado</label>
-                                <select id="stats-source" class="form-select source-picker__select"></select>
+                            <div class="card-body vstack gap-3">
+                                <div class="d-flex flex-wrap align-items-center gap-3">
+                                    <span class="source-picker__label" id="stats-mode-label" data-i18n="tStats.modeLabel">📂 ¿Qué quieres analizar?</span>
+                                    <div class="btn-group" role="radiogroup" aria-labelledby="stats-mode-label">
+                                        <input type="radio" class="btn-check" name="statsMode" id="stats-mode-match"
+                                            value="match" autocomplete="off" checked>
+                                        <label class="btn btn-outline-secondary btn-sm" for="stats-mode-match" data-i18n="tStats.modeMatch">🏐 Partido</label>
+                                        <input type="radio" class="btn-check" name="statsMode" id="stats-mode-tournament"
+                                            value="tournament" autocomplete="off">
+                                        <label class="btn btn-outline-secondary btn-sm" for="stats-mode-tournament" data-i18n="tStats.modeTournament">🏆 Torneo</label>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center gap-3" id="stats-match-picker">
+                                    <label class="source-picker__label" for="stats-source" data-i18n="tStats.matchPicker">Partido</label>
+                                    <select id="stats-source" class="form-select source-picker__select"></select>
+                                </div>
+                                <div class="d-flex flex-wrap align-items-center gap-3" id="stats-tournament-picker" hidden>
+                                    <label class="source-picker__label" for="stats-tournament" data-i18n="tStats.tournamentPicker">Torneo</label>
+                                    <select id="stats-tournament" class="form-select source-picker__select"></select>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
+                    <!-- Estadísticas de TORNEO: generadas por stats-view.js → renderTournamentStats() -->
+                    <div class="col-12" id="stats-tournament-sections" hidden>
+                        <div class="row g-4" id="stats-tournament-body"></div>
+                    </div>
+
+                    <div class="col-12 col-md-6 stats__match-only">
                         <div class="card card--glass h-100">
                             <div class="card-body vstack gap-3">
                                 <h2 class="section-title" data-i18n="stats.summaryTitle">Resumen del partido</h2>
@@ -472,7 +495,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
+                    <div class="col-12 col-md-6 stats__match-only">
                         <div class="card card--glass h-100">
                             <div class="card-body vstack gap-3">
                                 <h2 class="section-title" data-i18n="stats.playersTitle">Desglose por jugador</h2>
@@ -484,7 +507,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 stats__match-only">
                         <div class="card card--glass">
                             <div class="card-body vstack gap-3">
                                 <h2 class="section-title" data-i18n="stats.proTitle">📈 Indicadores profesionales</h2>
@@ -499,7 +522,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 stats__match-only">
                         <div class="card card--glass">
                             <div class="card-body vstack gap-3">
                                 <h2 class="section-title" data-i18n="stats.fameTitle">👑 Top performers (Salón de la Fama)</h2>
@@ -509,7 +532,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 stats__match-only">
                         <div class="card card--glass filters">
                             <div class="card-body vstack gap-3">
                                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -588,7 +611,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 stats__match-only">
                         <div class="card card--glass">
                             <div class="card-body vstack gap-3">
                                 <h2 class="section-title" data-i18n="stats.heatmapTitle">Mapa de calor</h2>
@@ -615,7 +638,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12">
+                    <div class="col-12 stats__match-only">
                         <div class="card card--glass" id="global-log-section">
                             <div class="card-body vstack gap-3">
                                 <h2 class="section-title" data-i18n="stats.logTitle">Bitácora global del partido</h2>
@@ -747,7 +770,10 @@
                     </div>
                 </div>
 
-                <button type="button" class="btn btn-danger" id="btn-kotc-delete" data-i18n="detail.delete">Eliminar torneo</button>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary flex-fill" id="btn-kotc-stats" data-i18n="tStats.openButton">📊 Ver estadísticas</button>
+                    <button type="button" class="btn btn-danger flex-fill" id="btn-kotc-delete" data-i18n="detail.delete">Eliminar torneo</button>
+                </div>
                 <p class="kotc__hint small text-body-secondary text-center" data-i18n-html="kotc.shortcuts">
                     Atajos: <kbd>T</kbd> / <kbd>←</kbd> punto del trono · <kbd>R</kbd> / <kbd>→</kbd> gana el retador · <kbd>Z</kbd> deshacer
                 </p>
@@ -1089,8 +1115,11 @@
             <!-- Generado por prize-panel.js -->
             <div id="panel-prizes" class="prize-panel vstack gap-3" role="tabpanel" hidden></div>
 
-            <footer class="app-dialog__footer">
-                <button type="button" id="btn-delete-tournament" class="btn btn-danger w-100"
+            <footer class="app-dialog__footer d-flex flex-wrap gap-2">
+                <button type="button" id="btn-tournament-stats" class="btn btn-outline-primary flex-fill" data-i18n="tStats.openButton">
+                    📊 Ver estadísticas
+                </button>
+                <button type="button" id="btn-delete-tournament" class="btn btn-danger flex-fill"
                     data-i18n="detail.delete">Eliminar torneo</button>
             </footer>
         </div>
@@ -1306,6 +1335,7 @@
     <script src="js/core/tournament-engine.js" defer></script>
     <script src="js/core/prize-engine.js" defer></script>
     <script src="js/core/stats-engine.js" defer></script>
+    <script src="js/core/tournament-stats.js" defer></script>
 
     <!-- 2. Diccionarios, servicios y estado -->
     <script src="js/i18n/es.js" defer></script>
@@ -1322,6 +1352,7 @@
     <script src="js/ui/photo-picker.js" defer></script>
     <script src="js/ui/router.js" defer></script>
     <script src="js/ui/language.js" defer></script>
+    <script src="js/ui/line-chart.js" defer></script>
 
     <!-- 4. Vistas (una por pantalla) -->
     <script src="js/views/match-actions.js" defer></script>

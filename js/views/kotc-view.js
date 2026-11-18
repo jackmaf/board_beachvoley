@@ -333,6 +333,10 @@
         });
         byId('btn-kotc-back').addEventListener('click', () => VP.router.go('vista-torneos'));
         byId('btn-kotc-delete').addEventListener('click', handleDelete);
+        // Estadísticas del torneo: gráfica de evolución, destacados y rendimiento en el trono
+        byId('btn-kotc-stats').addEventListener('click', () => {
+            if (tournamentId) VP.views.stats.showTournament(tournamentId);
+        });
         // Premios: el mismo panel que la pestaña «Premios», dentro de un diálogo
         byId('btn-kotc-prizes').addEventListener('click', () => {
             if (!tournamentId) return;

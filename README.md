@@ -71,6 +71,11 @@ todo desde el navegador y sin instalar nada.
 - **Indicadores profesionales**: **side-out %** (puntos ganados recibiendo), **break point %** (puntos ganados sacando), aces, errores de saque, **recepción media 0-3**, % de recepciones positivas, **side-out según la calidad de recepción** y ranking de receptores. Los partidos antiguos también los muestran: el saque se reconstruye a partir de la secuencia de puntos.
 - **Filtros** por jugador, tipo de acción, gesto, set y rango de minutos, además de una **línea de tiempo animada** que reproduce el partido.
 - **Mapa de calor** numerado (los errores llevan borde) y **bitácora** con coordenadas en metros.
+- **Modo Torneo** (selector «🏐 Partido | 🏆 Torneo», o «📊 Ver estadísticas» desde el torneo):
+  - *Queen & King*: **gráfica de evolución de puntos** rally a rally (con tooltip y teclado), destacados
+    (más tronos, mejor racha, mejor defensa del trono, mejor retadora) y tabla de defensa/retos por dupla.
+  - *Round Robin / Eliminación*: clasificación, rendimiento por dupla (puntos, side-out, break point)
+    y por jugador sumando todos sus partidos, con acceso directo al análisis de cada partido.
 
 ### 👤 Dashboard de jugador
 - KPIs: **+/-**, **eficiencia neta**, **puntos clutch** (marcador ajustado) y minuto más productivo.
@@ -220,11 +225,11 @@ board_beachvoley/
 │   ├── stats.css            Estadísticas y dashboard de jugador
 │   └── prizes.css           Premios: ajustes, reparto y pagos
 ├── js/
-│   ├── core/                Lógica pura: constants, utils, rules, kotc-engine, tournament-engine, prize-engine, stats-engine
+│   ├── core/                Lógica pura: constants, utils, rules, kotc-engine, tournament-engine, prize-engine, stats-engine, tournament-stats
 │   ├── i18n/                Diccionarios es.js / en.js (formato i18next)
 │   ├── services/            storage (localStorage + backup), photos, i18n y exporters (PDF/CSV/JSON)
 │   ├── state/               match-store: partido en curso
-│   ├── ui/                  dom, feedback (toasts y confirmaciones), router y language (selector ES/EN)
+│   ├── ui/                  dom, feedback (toasts y confirmaciones), router, language (selector ES/EN) y line-chart
 │   ├── views/               Una vista por pantalla
 │   └── main.js              Arranque
 ├── tests/                   Tests unitarios del núcleo (node:test)
@@ -247,10 +252,11 @@ board_beachvoley/
 npm test
 ```
 
-Ejecuta 57 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
+Ejecuta 65 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
 motor de reglas y del saque, la generación de llaves y los BYE, la clasificación, el formato Queen & King of the Court
 (rotación de cola, puntuación, deshacer, tiempo y punto de oro), los premios (pagos, bolsa y reparto exacto),
-los filtros, los KPIs, los indicadores profesionales (side-out, break point y recepción) y que los diccionarios
+los filtros, los KPIs, los indicadores profesionales (side-out, break point y recepción), las estadísticas por
+torneo (reconstrucción de rallies de Queen & King y agregados por dupla y jugador) y que los diccionarios
 de español e inglés estén completos.
 
 ### Convenciones
