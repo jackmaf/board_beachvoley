@@ -1,99 +1,287 @@
-# 🏐 Voley Playa Scout - Sistema de Estadísticas en Tiempo Real
+<div align="center">
 
-**Voley Playa Scout** es una aplicación web progresiva y ligera diseñada para entrenadores y analistas de voley playa (2 vs 2). Organiza torneos y permite registrar cada punto del partido de forma táctil e interactiva, generando estadísticas automáticas y un mapa de calor para analizar el rendimiento de los jugadores.
+# 🏐 Voley Playa Scout
 
-![Voley Playa Scout](https://img.shields.io/badge/Versi%C3%B3n-1.0-orange?style=for-the-badge)
+**Scouting, torneos y estadísticas en tiempo real para voley playa 2 vs 2.**
+Registra cada punto tocando la cancha, organiza torneos y analiza el rendimiento de cada jugador,
+todo desde el navegador y sin instalar nada.
+
+![Versión](https://img.shields.io/badge/versi%C3%B3n-2.0.0-orange?style=for-the-badge)
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-![JS Vanilla](https://img.shields.io/badge/JS%20Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![CSS3 BEM](https://img.shields.io/badge/CSS3-BEM-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JS-Vanilla-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Tests](https://img.shields.io/badge/tests-24%20passing-2ea44f?style=for-the-badge)
+![Dependencias](https://img.shields.io/badge/dependencias-0-blueviolet?style=for-the-badge)
+
+<img src="docs/screenshots/scout.png" alt="Registro táctico: menú para elegir jugador, tipo de acción y gesto técnico" width="520">
+
+</div>
 
 ---
 
-## 🚀 Características Principales
+## 📑 Contenido
 
-### 1. Configuración de Partido Personalizada
-Antes de comenzar, puedes configurar:
-- Nombres de los equipos (ej. Brasil vs España).
-- Nombres específicos de los 4 jugadores (A1, A2, B1, B2).
-- Persistencia: Si cierras el navegador, el partido actual se mantiene guardado.
-
-### 2. Cancha Interactiva de Registro (8m x 16m)
-Interface optimizada para tablets y móviles a pie de pista:
-- **Captura de Coordenadas**: Haz clic exactamente donde cayó el balón.
-- **Diferenciación de Acción**: Registra si fue un **Punto Ganador (Winner)** o un **Error No Forzado**.
-- **Marcador Automático**: La lógica calcula el punto para el equipo correspondiente según la acción (si el Jugador A1 comete un error, el punto sube al Equipo B).
-
-### 3. Panel de Estadísticas Avanzadas
-Análisis profundo al finalizar o durante el partido:
-- **Duración del Encuentro**: Calculada automáticamente desde el primer hasta el último punto.
-- **Desglose de Eficiencia**:
-    - Puntos ganadores por jugador.
-    - Cantidad de errores por jugador.
-    - Porcentaje de aporte al total de puntos del equipo.
-- **Mapa de Calor (Heatmap)**: Visualización de la distribución de puntos en la cancha. Los errores se visualizan con un borde distintivo para identificar zonas de fallo.
-
-### 4. Persistencia Local
-- Utiliza **localStorage** para guardar el historial de partidos.
-- Botón de **"Finalizar Partido"** que archiva el encuentro actual y prepara la app para el siguiente set o partido.
+- [Características](#-características)
+- [Capturas](#-capturas)
+- [Inicio rápido](#-inicio-rápido)
+- [Guía de uso](#-guía-de-uso)
+- [Reglas implementadas](#-reglas-implementadas)
+- [Arquitectura](#-arquitectura)
+- [Estructura del proyecto](#-estructura-del-proyecto)
+- [Desarrollo](#-desarrollo)
+- [Datos y privacidad](#-datos-y-privacidad)
+- [Compatibilidad](#-compatibilidad)
+- [Roadmap](#-roadmap)
 
 ---
 
-## 🛠️ Instalación y Uso
+## ✨ Características
 
-No requiere servidores ni bases de datos complejas. Es una solución "Serverless" pura.
+### 🏅 Torneos
+- **Round Robin** (todos contra todos) con **tabla de clasificación**: victoria = 2 pts, derrota = 1 pt, desempate por diferencia de sets.
+- **Eliminación directa** con cuadro de llaves por rondas (cuartos, semis, final), cabezas de serie y **pases automáticos por BYE**.
+- Campeón, barra de progreso, edición de duplas y carga manual del resultado con validación por sets.
+- Al «Pitar» un partido, la configuración (duplas, jugadores y reglas) se precarga sola.
 
-1. Clona este repositorio:
-   ```bash
-   git clone https://github.com/tu-usuario/voley-playa-scout.git
-   ```
-2. Abre el archivo `index.html` en cualquier navegador moderno.
-3. ¡Empieza a scoutear!
+### 🎯 Scout táctico
+- Cancha de **8 m × 16 m** con **zona libre** alrededor para marcar balones que caen fuera.
+- Por cada acción: **punto (winner)** o **error no forzado**, **jugador** y **gesto técnico** (Ataque, Saque, Bloqueo, Antebrazos, Garrita, Toque, Dedos).
+- Marcador automático (un error suma al rival), sets, tie-break, **tiempos muertos**, indicador de saque y avisos de **fin de set** y **cambio de lado**.
+- **Cronómetro oficial** (arranca solo con el primer punto y sobrevive a recargas) y reloj de referencia de Bogotá.
+- **Deshacer** cualquier acción, incluso la que cerró un set.
+
+### ⏱️ Marcador vivo
+- Marcador grande tipo TV con botones +1 por equipo, pensado para torneos.
+- **Atajos de teclado** para anotar sin mirar la pantalla.
+
+### 📊 Estadísticas
+- Analiza el **partido en curso o cualquiera del historial**.
+- Resumen (marcador, sets, duración), desglose por jugador y **Salón de la Fama** con 9 premios.
+- **Filtros** por jugador, tipo de acción, gesto, set y rango de minutos, además de una **línea de tiempo animada** que reproduce el partido.
+- **Mapa de calor** numerado (los errores llevan borde) y **bitácora** con coordenadas en metros.
+
+### 👤 Dashboard de jugador
+- KPIs: **+/-**, **eficiencia neta**, **puntos clutch** (marcador ajustado) y minuto más productivo.
+- Distribución por zonas, heatmap personal y **heptagrama** (radar de los 7 gestos).
+- Exportación a **PDF**, **CSV** (compatible con Excel) y **JSON**.
+
+### 🧰 Datos, temas y accesibilidad
+- Todo se guarda en el navegador, con **copia de seguridad** para exportar e importar.
+- Tres temas: **Clásico**, **Oscuro** y **Alto contraste** (lectura bajo sol directo).
+- Diseño responsive pensado para el móvil a pie de pista, diálogos accesibles con teclado y avisos que no bloquean la pantalla.
 
 ---
 
-## 📱 Diseño y Estética
+## 📸 Capturas
 
-La aplicación utiliza un diseño **Glassmorphism** moderno con una paleta de colores deportiva:
-- **Fondo**: Degradado inspirado en la arena y el mar.
-- **Tipografía**: 'Outfit' para una lectura clara y profesional.
-- **Responsividad**: Adaptable a cualquier pantalla mediante CSS Grid y Flexbox.
+| Llaves de eliminación directa | Clasificación Round Robin |
+|:---:|:---:|
+| <img src="docs/screenshots/llaves.png" alt="Cuadro de llaves con cuartos, semifinales y final" width="420"> | <img src="docs/screenshots/clasificacion.png" alt="Tabla de clasificación de un torneo Round Robin" width="420"> |
+| **Estadísticas del partido** | **Mapa de calor** |
+| <img src="docs/screenshots/estadisticas.png" alt="Selector de partido, resumen y desglose por jugador" width="420"> | <img src="docs/screenshots/heatmap.png" alt="Mapa de calor con los puntos numerados sobre la cancha" width="420"> |
+| **Dashboard del jugador** | **Heptagrama de habilidades** |
+| <img src="docs/screenshots/dashboard-jugador.png" alt="KPIs del jugador: plus/minus, eficiencia y puntos clutch" width="420"> | <img src="docs/screenshots/radar.png" alt="Radar de los 7 gestos técnicos" width="420"> |
+
+| Salón de la Fama | Marcador vivo (móvil) | Tema oscuro (móvil) |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/salon-fama.png" alt="Premios del Salón de la Fama" width="300"> | <img src="docs/screenshots/marcador-movil.png" alt="Marcador vivo en un móvil" width="190"> | <img src="docs/screenshots/estadisticas-oscuro-movil.png" alt="Estadísticas en tema oscuro en un móvil" width="190"> |
 
 ---
 
-## 📄 Estructura del Proyecto
+## 🚀 Inicio rápido
+
+No necesita servidor, base de datos ni `npm install`.
+
+```bash
+git clone git@github.com:jackmaf/board_beachvoley.git
+cd board_beachvoley
+```
+
+Después, **abre `index.html`** en el navegador (doble clic). Si lo prefieres, sírvelo en local:
+
+```bash
+python3 -m http.server 8000      # → http://localhost:8000
+# o bien
+npx serve .
+```
+
+> La primera carga necesita internet para las fuentes, los avatares y la librería de PDF. Sin conexión
+> la app funciona, pero sin avatares ni exportación a PDF.
+
+---
+
+## 📖 Guía de uso
+
+### Partido amistoso
+1. **Config** → nombres de las duplas y los jugadores, y reglas (sets y puntos) → **Empezar partido**.
+2. **Scout** → toca la cancha donde cayó el balón → elige **Punto/Error**, el **gesto** y el **jugador**.
+3. Al terminar → **Finalizar y guardar partido**: se abre **Stats** con ese partido.
+
+### Partido de torneo
+1. **Torneos** → **Crear nuevo torneo** → duplas, formato y reglas.
+2. En el detalle, **🏐 Pitar** un partido → revisa la configuración precargada → **Empezar partido**.
+3. Anota en **Marcador** y pulsa **Finalizar**: el ganador avanza solo en el cuadro.
+4. ¿Ya tienes el resultado? Usa **Colocar marcador** para cargarlo set a set.
+
+### Atajos de teclado (Marcador vivo)
+
+| Tecla | Acción |
+|---|---|
+| <kbd>A</kbd> o <kbd>←</kbd> | Punto para el equipo A |
+| <kbd>L</kbd> o <kbd>→</kbd> | Punto para el equipo B |
+| <kbd>Z</kbd> | Deshacer la última acción |
+| <kbd>Esc</kbd> | Cerrar el modal o el menú de acción |
+
+---
+
+## 📐 Reglas implementadas
+
+| Regla | Valor por defecto | Configurable |
+|---|---|---|
+| Modalidad | Al mejor de 3 sets | 1, 3 o 5 sets |
+| Puntos por set | 21 | ✅ |
+| Puntos del tie-break (último set) | 15 | ✅ |
+| Ventaja mínima para cerrar un set | 2 puntos | — |
+| Tiempos muertos | 1 por equipo y set | — |
+| Cambio de lado | Cada 7 puntos (5 en tie-break) | — |
+| Clasificación Round Robin | Victoria 2 pts · derrota 1 pt | — |
+
+Los valores fijos están centralizados en [`js/core/constants.js`](js/core/constants.js).
+
+---
+
+## 🏗️ Arquitectura
+
+App de una sola página en **JavaScript vanilla, organizada por capas**. Las dependencias solo van
+hacia abajo: la lógica de dominio no conoce el DOM y las vistas nunca tocan `localStorage`.
+
+```mermaid
+flowchart TB
+    V["🖥️ Vistas<br/>js/views"] --> UI["🧩 UI<br/>router · diálogos · avisos"]
+    V --> ST[("📦 Store del partido<br/>js/state")]
+    V --> SVC["🔌 Servicios<br/>storage · exporters"]
+    ST --> CORE["⚙️ Núcleo puro y testeado<br/>reglas · torneos · estadísticas"]
+    ST --> SVC
+    V --> CORE
+    SVC --> LS[("💾 localStorage")]
+```
+
+- **Núcleo puro** (`js/core`): reglas, torneos y estadísticas como funciones sin efectos secundarios, cubiertas por tests.
+- **Store** (`js/state/match-store.js`): única fuente de verdad del partido. Las vistas se suscriben y se repintan solas.
+- **Scripts clásicos** con el namespace global `VP`, para que la app funcione al abrir `index.html` directamente (`file://`), algo que los ES Modules no permiten.
+- **CSS con BEM** (`bloque__elemento--modificador`) y tokens de diseño para los temas.
+
+📘 La documentación técnica completa, con diagramas de flujo, modelo de datos y convenciones, está en **[CLAUDE.md](CLAUDE.md)**.
+
+---
+
+## 🗂️ Estructura del proyecto
 
 ```
-index.html        Vistas, modales (<dialog>) y carga de scripts
-css/              Estilos con metodología BEM (tokens → base → layout → componentes → vistas)
-js/core/          Lógica pura y testeada: reglas, torneos, estadísticas
-js/services/      Persistencia (localStorage) y exportaciones
-js/state/         Store del partido en curso
-js/ui/            Router, diálogos, avisos y utilidades de DOM
-js/views/         Una vista por pantalla
-tests/            Tests unitarios (node:test)
+board_beachvoley/
+├── index.html               Vistas, modales (<dialog>) y carga ordenada de scripts
+├── css/                     Estilos BEM, de lo genérico a lo específico
+│   ├── tokens.css           Variables de diseño y temas
+│   ├── base.css             Reset, accesibilidad y animaciones
+│   ├── layout.css           Cabecera, vistas y navegación inferior
+│   ├── components.css       Botones, tarjetas, formularios, modales, tablas, avisos…
+│   ├── court.css            Cancha, mapa de calor y leyenda
+│   ├── tournaments.css      Torneos, partidos y llaves
+│   ├── match.css            Configuración, Scout y Marcador vivo
+│   └── stats.css            Estadísticas y dashboard de jugador
+├── js/
+│   ├── core/                Lógica pura: constants, utils, rules, tournament-engine, stats-engine
+│   ├── services/            storage (localStorage + backup) y exporters (PDF/CSV/JSON)
+│   ├── state/               match-store: partido en curso
+│   ├── ui/                  dom, feedback (toasts y confirmaciones) y router
+│   ├── views/               Una vista por pantalla
+│   └── main.js              Arranque
+├── tests/                   Tests unitarios del núcleo (node:test)
+├── docs/screenshots/        Capturas de este README
+├── CLAUDE.md                Guía de arquitectura
+└── package.json             Sólo el script de tests (sin dependencias)
 ```
 
-La arquitectura completa, con diagramas, está en [CLAUDE.md](CLAUDE.md).
+---
+
+## 🛠️ Desarrollo
+
+### Requisitos
+- Un navegador moderno (ver [Compatibilidad](#-compatibilidad)).
+- **Node.js ≥ 18**, solo para ejecutar los tests.
 
 ### Tests
 
 ```bash
-npm test   # Node 18 o superior, sin dependencias
+npm test
 ```
 
+Ejecuta 24 tests unitarios con el runner nativo de Node (`node:test`), sin instalar nada. Cubren el
+motor de reglas, la generación de llaves y los BYE, la clasificación, los filtros y los KPIs.
+
+### Convenciones
+
+| Ámbito | Convención |
+|---|---|
+| CSS | **BEM**: una clase por selector, sin `#id` ni estilos inline, colores siempre con tokens `var(--color-…)` |
+| JavaScript | Un módulo por archivo, bloque `@file` + **JSDoc**, `'use strict'`, texto del usuario siempre con `escapeHtml()` |
+| Formato | [`.editorconfig`](.editorconfig): UTF-8, LF y 4 espacios (2 en JSON/YAML) |
+| Commits | [Conventional Commits](https://www.conventionalcommits.org/es/) con emoji: `✨ feat(scout): …`, `🐛 fix(stats): …` (agente [`committer`](.claude/agents/committer.md)) |
+
+### Recetas rápidas
+
+| Quiero… | Dónde |
+|---|---|
+| Añadir un gesto técnico | Solo en `SKILLS` de `js/core/constants.js`: menú, filtros, premios, radar y CSV se actualizan solos |
+| Cambiar una regla del juego | `js/core/rules.js` y sus tests en `tests/rules.test.js` |
+| Crear un tema nuevo | Bloque `[data-theme="…"]` en `css/tokens.css` y su opción en el selector de `index.html` |
+| Cambiar dónde se guardan los datos | Solo `js/services/storage.js` |
+
 ---
 
-## ✅ Hecho desde la v1
+## 🔒 Datos y privacidad
+
+- **Todo se guarda en tu navegador** (`localStorage`). No hay servidor ni cuentas, y los datos no se envían a ningún sitio.
+- Como los datos viven en un solo navegador, usa **Config → Copia de seguridad** para exportarlos o pasarlos a otro dispositivo.
+- **Servicios externos** que se cargan desde internet:
+  - [DiceBear](https://www.dicebear.com/) genera los avatares a partir de los **nombres de jugadores y equipos**, que viajan en la URL de la imagen.
+  - [cdnjs](https://cdnjs.com/) sirve `html2pdf.js` para exportar a PDF.
+  - [Google Fonts](https://fonts.google.com/) sirve la tipografía *Outfit*.
+- Los archivos exportados (`VoleyPlaya_*.pdf/csv/json`) están en el `.gitignore` para que no se suban por error.
+
+---
+
+## 🌐 Compatibilidad
+
+| Navegador | Versión mínima |
+|---|---|
+| Chrome / Edge | 119+ |
+| Firefox | 125+ |
+| Safari (macOS / iOS) | 17+ |
+
+La app usa `<dialog>`, la Popover API y `:user-invalid`. En navegadores más antiguos sigue
+funcionando, pero los avisos pueden quedar detrás de los modales.
+
+---
+
+## 🗺️ Roadmap
+
+**Hecho en la v2**
+- [x] Arquitectura modular por capas con tests y CSS BEM.
+- [x] Torneos: clasificación Round Robin, llaves con BYE automáticos y campeón.
+- [x] Historial de partidos en Estadísticas y copia de seguridad.
 - [x] Exportación a PDF, CSV y JSON.
-- [x] Registro de gesto técnico (7 gestos).
-- [x] Tiempos muertos y cronómetro oficial.
-- [x] Torneos (Round Robin con clasificación y Eliminación Directa con llaves).
-- [x] Historial de partidos y copia de seguridad.
+- [x] Avisos no bloqueantes, diálogos accesibles y atajos de teclado.
 
-## 💡 Futuras Mejoras (Roadmap)
-- [ ] Avatares sin conexión (hoy dependen de DiceBear).
-- [ ] Comparativa entre partidos de un mismo jugador.
-- [ ] Instalable como PWA (funcionamiento offline).
+**Próximamente**
+- [ ] Instalable como **PWA** y uso 100 % sin conexión (incluidos los avatares).
+- [ ] Comparativa de un jugador a lo largo de varios partidos.
+- [ ] Tests end-to-end dentro del repositorio.
 
 ---
-Desarrollado con ❤️ para la comunidad de Voley Playa.
+
+<div align="center">
+
+Desarrollado con ❤️ para la comunidad de voley playa.
+
+</div>
