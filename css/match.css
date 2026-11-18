@@ -470,12 +470,13 @@
 
 .live-board__serve {
     position: absolute;
-    top: 10px;
+    top: 8px;
     right: 10px;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
 }
 
 .live-board__name {
+    margin-top: var(--space-4); /* Deja la esquina superior libre para el indicador de saque */
     font-size: 1.1rem;
     text-align: center;
     text-transform: uppercase;

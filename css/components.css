@@ -292,6 +292,15 @@
     overflow: visible;
 }
 
+/*
+ * Al abrirse, el <dialog> (o su panel, que Chrome hace enfocable por tener
+ * scroll) recibe el foco: el contorno lo llevan sus controles, no el modal entero.
+ */
+.modal:focus-visible,
+.modal__panel:focus-visible {
+    outline: none;
+}
+
 .modal::backdrop {
     background: var(--color-overlay);
     backdrop-filter: blur(4px);
