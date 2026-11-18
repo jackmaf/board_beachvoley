@@ -56,11 +56,14 @@
         replayAnimation(element, bumpClass);
     }
 
-    /** Selecciona el botón activo de un grupo de "pills" (modificador `pill--active`). */
+    /**
+     * Marca el botón activo de un grupo de filtros (botones con `data-value`).
+     * Usa la clase de estado `.active` de Bootstrap, que pinta el botón relleno.
+     */
     function setActivePill(group, value) {
-        qsa('.pill', group).forEach((pill) => {
+        qsa('[data-value]', group).forEach((pill) => {
             const isActive = pill.dataset.value === String(value);
-            pill.classList.toggle('pill--active', isActive);
+            pill.classList.toggle('active', isActive);
             pill.setAttribute('aria-pressed', String(isActive));
         });
     }

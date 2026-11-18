@@ -128,7 +128,11 @@
         }
         const body = document.body;
         const originalTheme = body.dataset.theme;
-        if (originalTheme === 'dark') body.dataset.theme = 'classic';
+        const originalBsTheme = body.dataset.bsTheme;
+        if (originalTheme === 'dark') {
+            body.dataset.theme = 'classic';
+            body.dataset.bsTheme = 'light'; // También el modo de color de Bootstrap
+        }
         element.classList.add('player-dash--printing');
 
         try {
@@ -149,6 +153,7 @@
             // Restaurar SIEMPRE, aunque la exportación falle
             element.classList.remove('player-dash--printing');
             body.dataset.theme = originalTheme;
+            body.dataset.bsTheme = originalBsTheme;
         }
     }
 

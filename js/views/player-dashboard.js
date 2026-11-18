@@ -50,7 +50,7 @@
     function renderReception(reception) {
         if (!reception.count) {
             el.reception.innerHTML = `
-                <p class="empty-state__text">
+                <p class="text-center text-body-secondary mb-0">
                     Sin recepciones registradas. En Scout, marca 3·2·1·0 sobre este jugador cuando reciba.
                 </p>`;
             return;
@@ -61,17 +61,19 @@
             const share = (count / reception.count) * 100;
             return `
                 <div class="zone-bar">
-                    <span class="zone-bar__label"><span class="grade-badge grade-badge--g${g.grade}">${g.grade}</span></span>
-                    <div class="zone-bar__track"><div class="zone-bar__fill zone-bar__fill--g${g.grade}" style="width:${share}%"></div></div>
+                    <span class="zone-bar__label"><span class="badge grade-badge grade-badge--g${g.grade}">${g.grade}</span></span>
+                    <div class="progress zone-bar__track" role="progressbar" aria-label="Recepciones de calidad ${g.grade}">
+                        <div class="progress-bar zone-bar__fill--g${g.grade}" style="width:${share}%"></div>
+                    </div>
                     <span class="zone-bar__value">${count}</span>
                 </div>`;
         }).join('');
 
         el.reception.innerHTML = `
-            <div class="player-dash__kpis">
-                <div class="kpi"><span class="kpi__label">Recepciones</span><strong class="kpi__value kpi__value--neutral">${reception.count}</strong></div>
-                <div class="kpi"><span class="kpi__label">Media</span><strong class="kpi__value">${reception.average.toFixed(2)}</strong><span class="kpi__sub">sobre 3</span></div>
-                <div class="kpi"><span class="kpi__label">Positivas (2-3)</span><strong class="kpi__value kpi__value--accent">${pct(reception.positivePct)}</strong><span class="kpi__sub">Side-out tras recibir: ${pct(reception.sideOutPct)}</span></div>
+            <div class="row g-3 mb-2">
+                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">Recepciones</span><strong class="kpi__value kpi__value--neutral">${reception.count}</strong></div></div></div>
+                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">Media</span><strong class="kpi__value">${reception.average.toFixed(2)}</strong><span class="kpi__sub">sobre 3</span></div></div></div>
+                <div class="col-sm-4"><div class="card h-100 border-0 shadow-sm"><div class="card-body vstack gap-1 text-center"><span class="kpi__label">Positivas (2-3)</span><strong class="kpi__value kpi__value--accent">${pct(reception.positivePct)}</strong><span class="kpi__sub">Side-out tras recibir: ${pct(reception.sideOutPct)}</span></div></div></div>
             </div>
             ${bars}`;
     }
@@ -79,10 +81,12 @@
     function renderSkills(skills) {
         el.skills.innerHTML = SKILLS.map(
             (skill) => `
-            <div class="skill-tile">
+            <div class="col">
+            <div class="skill-tile vstack gap-1 align-items-center">
                 <span class="skill-tile__icon" aria-hidden="true">${skill.emoji}</span>
                 <span class="skill-tile__name">${skill.key}</span>
                 <span class="skill-tile__count">${skills[skill.key] || 0}</span>
+            </div>
             </div>`
         ).join('');
     }

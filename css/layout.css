@@ -1,31 +1,26 @@
 /* =========================================================================
-   LAYOUT
-   Bloques estructurales de la aplicación: cabecera, contenedor principal,
-   vistas y barra de navegación inferior.
+   LAYOUT (BEM)
+   Estructura de la SPA. La rejilla interna de cada vista usa la de Bootstrap
+   (.row / .col-*); aquí sólo están los bloques que Bootstrap no cubre.
    ========================================================================= */
 
 /* -------------------------------------------------------------------------
    Bloque: app-header
    ------------------------------------------------------------------------- */
 .app-header {
-    padding: var(--space-3) var(--space-4);
     background: var(--color-strong);
     color: var(--color-on-strong);
-    text-align: center;
     box-shadow: var(--shadow-md);
 }
 
 .app-header__title {
+    color: inherit;
     font-size: 1.25rem;
     font-weight: 900;
     letter-spacing: 1px;
 }
 
-@media (min-width: 600px) {
-    .app-header {
-        padding: var(--space-4);
-    }
-
+@media (min-width: 576px) {
     .app-header__title {
         font-size: 1.5rem;
     }
@@ -40,13 +35,11 @@
 }
 
 /* -------------------------------------------------------------------------
-   Bloque: view (cada pantalla de la SPA)
-   Modificador --active: la vista visible.
+   Bloque: view (cada pantalla de la SPA; la activa la elige el router)
    ------------------------------------------------------------------------- */
 .view {
     display: none;
     width: 100%;
-    padding: var(--space-5) var(--space-4);
 }
 
 .view--active {
@@ -58,18 +51,9 @@
 }
 
 /* -------------------------------------------------------------------------
-   Bloque: bottom-nav
-   Elementos: __item, __icon, __label
-   Modificador: __item--active
+   Bloque: bottom-nav (se combina con .fixed-bottom y .d-flex de Bootstrap)
    ------------------------------------------------------------------------- */
 .bottom-nav {
-    position: fixed;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    display: flex;
-    justify-content: space-around;
     min-height: var(--nav-height);
     padding: var(--space-2) 0 calc(var(--space-2) + env(safe-area-inset-bottom));
     background: var(--color-strong);
@@ -114,7 +98,7 @@
     color: var(--color-secondary);
 }
 
-@media (min-width: 600px) {
+@media (min-width: 576px) {
     .bottom-nav__item {
         font-size: 0.85rem;
     }

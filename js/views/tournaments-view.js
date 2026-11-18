@@ -45,9 +45,9 @@
 
         if (tournaments.length === 0) {
             el.list.innerHTML = `
-                <div class="empty-state">
-                    <span class="empty-state__icon" aria-hidden="true">🏖️</span>
-                    <p class="empty-state__text">No hay torneos creados aún.</p>
+                <div class="text-center text-body-secondary py-4">
+                    <div class="fs-1" aria-hidden="true">🏖️</div>
+                    <p>No hay torneos creados aún.</p>
                 </div>`;
             return;
         }
@@ -61,9 +61,9 @@
                 return `
                 <button type="button" class="tournament-card" data-tournament-id="${escapeHtml(t.id)}">
                     <span class="tournament-card__title">${escapeHtml(t.name)}</span>
-                    <span class="tournament-card__meta">
+                    <span class="tournament-card__meta d-flex flex-wrap justify-content-between gap-2">
                         <span>${escapeHtml(describeTournament(t))}</span>
-                        <span class="tournament-card__badge">${escapeHtml(FORMAT_LABEL[t.format] || t.format)}</span>
+                        <span class="badge text-bg-light">${escapeHtml(FORMAT_LABEL[t.format] || t.format)}</span>
                     </span>
                     <span class="tournament-card__progress">
                         ${done}/${total} partidos jugados
@@ -222,9 +222,9 @@
 
     /** Activa la pestaña seleccionada y muestra su panel. */
     function renderTabs() {
-        qsa('.tabs__tab', el.tabs).forEach((tab) => {
+        qsa('.nav-link', el.tabs).forEach((tab) => {
             const isActive = tab.dataset.tab === context.activeTab;
-            tab.classList.toggle('tabs__tab--active', isActive);
+            tab.classList.toggle('active', isActive);
             tab.setAttribute('aria-selected', String(isActive));
         });
         byId('panel-fixture').hidden = context.activeTab !== 'fixture';
@@ -241,7 +241,7 @@
 
         return `
             <div class="match-card__team ${isWinner ? 'match-card__team--winner' : ''}">
-                <span class="match-card__emoji" aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>
+                <span aria-hidden="true">${isPlaceholder ? '⏳' : pickTeamEmoji(name)}</span>
                 <div class="match-card__team-info">
                     <span class="match-card__team-name ${isPlaceholder ? 'match-card__team-name--placeholder' : ''}">
                         ${escapeHtml(isPlaceholder ? placeholderText[name] : name)}
@@ -249,7 +249,7 @@
                     ${p1 || p2 ? `<span class="match-card__players">👤 ${escapeHtml(p1 || '?')} / ${escapeHtml(p2 || '?')}</span>` : ''}
                 </div>
                 ${canEdit
-                    ? `<button type="button" class="match-card__edit" data-action="edit-team"
+                    ? `<button type="button" class="btn btn-link btn-sm p-0 fw-bold text-uppercase small" data-action="edit-team"
                          data-match-id="${escapeHtml(match.id)}" data-slot="${slot}">Editar</button>`
                     : ''}
             </div>`;
@@ -258,20 +258,22 @@
     /** HTML de la zona de acciones según el estado del partido. */
     function matchActionsHtml(match) {
         const id = escapeHtml(match.id);
-        if (match.walkover) return '<p class="match-card__status">Pase directo (BYE)</p>';
+        if (match.walkover) return '<p class="match-card__status small fst-italic text-body-secondary">Pase directo (BYE)</p>';
         if (match.status === MATCH_STATUS.FINISHED) {
             return `
                 <span class="match-card__score">Resultado: ${escapeHtml(match.score)}</span>
-                <button type="button" class="btn btn--outline btn--small" data-action="manual-score" data-match-id="${id}">
+                <button type="button" class="btn btn-outline-primary btn-sm" data-action="manual-score" data-match-id="${id}">
                     Modificar marcador
                 </button>`;
         }
-        if (!engine.isPlayable(match)) return '<p class="match-card__status">A la espera de rivales</p>';
+        if (!engine.isPlayable(match)) {
+            return '<p class="match-card__status small fst-italic text-body-secondary">A la espera de rivales</p>';
+        }
         return `
-            <button type="button" class="btn btn--primary btn--small" data-action="start-match" data-match-id="${id}">
+            <button type="button" class="btn btn-primary btn-sm" data-action="start-match" data-match-id="${id}">
                 🏐 Pitar
             </button>
-            <button type="button" class="btn btn--outline btn--small" data-action="manual-score" data-match-id="${id}">
+            <button type="button" class="btn btn-outline-primary btn-sm" data-action="manual-score" data-match-id="${id}">
                 Colocar marcador
             </button>`;
     }
@@ -292,17 +294,21 @@
                 const canEdit = !isFinished;
                 const modifier = isFinished ? 'match-card--finished' : engine.isPlayable(match) ? '' : 'match-card--waiting';
                 return `
-                <article class="match-card ${modifier}">
-                    <header class="match-card__header">
-                        <span class="match-card__label">Partido ${index + 1}</span>
-                        ${rounds ? `<span class="match-card__round">${roundOf(match)}</span>` : ''}
-                    </header>
-                    <div class="match-card__teams">
-                        ${teamSlotHtml(match, 'teamA', { canEdit, isWinner: winnerSlot === 'teamA' })}
-                        <div class="match-card__vs" aria-hidden="true">VS</div>
-                        ${teamSlotHtml(match, 'teamB', { canEdit, isWinner: winnerSlot === 'teamB' })}
+                <article class="card match-card ${modifier}">
+                    <div class="card-body vstack gap-3">
+                        <header class="d-flex justify-content-between gap-2">
+                            <span class="match-card__label">Partido ${index + 1}</span>
+                            ${rounds ? `<span class="match-card__round">${roundOf(match)}</span>` : ''}
+                        </header>
+                        <div class="vstack gap-1">
+                            ${teamSlotHtml(match, 'teamA', { canEdit, isWinner: winnerSlot === 'teamA' })}
+                            <div class="match-card__vs" aria-hidden="true">VS</div>
+                            ${teamSlotHtml(match, 'teamB', { canEdit, isWinner: winnerSlot === 'teamB' })}
+                        </div>
+                        <footer class="match-card__actions d-flex flex-wrap align-items-center justify-content-end gap-2 pt-2 border-top">
+                            ${matchActionsHtml(match)}
+                        </footer>
                     </div>
-                    <footer class="match-card__actions">${matchActionsHtml(match)}</footer>
                 </article>`;
             })
             .join('');
@@ -313,13 +319,13 @@
         const rows = engine.computeStandings(t);
         const panel = byId('panel-standings');
         if (!rows.length) {
-            panel.innerHTML = '<p class="empty-state__text">Aún no hay duplas en la clasificación.</p>';
+            panel.innerHTML = '<p class="text-center text-body-secondary py-3">Aún no hay duplas en la clasificación.</p>';
             return;
         }
         panel.innerHTML = `
-            <div class="table-scroll">
-                <table class="data-table standings">
-                    <thead>
+            <div class="table-responsive">
+                <table class="table table-sm table-striped align-middle text-center mb-0">
+                    <thead class="table-dark">
                         <tr>
                             <th scope="col">#</th><th scope="col">Dupla</th>
                             <th scope="col" title="Partidos jugados">PJ</th>
@@ -333,9 +339,9 @@
                         ${rows
                             .map(
                                 (r, i) => `
-                            <tr class="${i === 0 && r.played ? 'data-table__row--leader' : ''}">
+                            <tr class="${i === 0 && r.played ? 'table-warning fw-bold' : ''}">
                                 <td>${i + 1}</td>
-                                <td class="standings__team">${pickTeamEmoji(r.team)} ${escapeHtml(r.team)}</td>
+                                <td class="text-start text-nowrap">${pickTeamEmoji(r.team)} ${escapeHtml(r.team)}</td>
                                 <td>${r.played}</td><td>${r.won}</td><td>${r.lost}</td>
                                 <td>${r.setsFor}-${r.setsAgainst}</td>
                                 <td><strong>${r.points}</strong></td>
@@ -345,7 +351,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="standings__legend">
+            <p class="small text-body-secondary text-center mt-2">
                 Victoria = ${STANDING_POINTS.win} pts · Derrota = ${STANDING_POINTS.loss} pt ·
                 Desempate por diferencia de sets.
             </p>`;
@@ -363,7 +369,7 @@
             const name = match[slot] === SLOT.TBD ? 'Por definir' : match[slot];
             return `
                 <div class="bracket__team ${winnerSlot === slot ? 'bracket__team--winner' : ''}">
-                    <span class="bracket__team-name">${escapeHtml(name)}</span>
+                    <span class="text-truncate">${escapeHtml(name)}</span>
                     <span class="bracket__team-score">${value}</span>
                 </div>`;
         };
@@ -426,19 +432,19 @@
 
         // Una fila por set posible
         const header = `
-            <div class="manual-sets__header">
+            <div class="manual-set">
                 <span></span>
-                <span class="manual-sets__team">${escapeHtml(match.teamA)}</span>
+                <span class="manual-set__team">${escapeHtml(match.teamA)}</span>
                 <span></span>
-                <span class="manual-sets__team">${escapeHtml(match.teamB)}</span>
+                <span class="manual-set__team">${escapeHtml(match.teamB)}</span>
             </div>`;
         const rows = Array.from({ length: maxSets }, (_, i) => `
-            <div class="manual-set">
-                <span class="manual-set__label">Set ${i + 1}</span>
-                <input type="number" class="manual-set__input" data-set="${i}" data-team="a" min="0" max="99"
+            <div class="manual-set manual-set--body">
+                <span class="small fw-bold">Set ${i + 1}</span>
+                <input type="number" class="form-control manual-set__input" data-set="${i}" data-team="a" min="0" max="99"
                     inputmode="numeric" aria-label="Set ${i + 1}, puntos de ${escapeHtml(match.teamA)}">
-                <span class="manual-set__separator">-</span>
-                <input type="number" class="manual-set__input" data-set="${i}" data-team="b" min="0" max="99"
+                <span class="text-center">-</span>
+                <input type="number" class="form-control manual-set__input" data-set="${i}" data-team="b" min="0" max="99"
                     inputmode="numeric" aria-label="Set ${i + 1}, puntos de ${escapeHtml(match.teamB)}">
             </div>`).join('');
         el.manualSets.innerHTML = header + rows;
@@ -454,7 +460,7 @@
 
         // Leer los inputs como [{a, b}, …] (null = vacío)
         const read = (input) => (input.value === '' ? null : toInt(input.value, null));
-        const setScores = qsa('.manual-set', el.manualSets).map((row) => ({
+        const setScores = qsa('.manual-set--body', el.manualSets).map((row) => ({
             a: read(qs('[data-team="a"]', row)),
             b: read(qs('[data-team="b"]', row))
         }));
@@ -559,7 +565,7 @@
             formTournament: byId('form-tournament'),
             teamRows: byId('t-dynamic-teams'),
             modalDetail: byId('modal-tournament-detail'),
-            tabs: qs('#modal-tournament-detail .tabs'),
+            tabs: byId('detail-tabs'),
             matches: byId('tournament-matches'),
             modalManual: byId('modal-manual-score'),
             manualSets: byId('manual-sets'),
@@ -583,7 +589,7 @@
         delegate(el.list, 'click', '.tournament-card', (_event, card) => openDetail(card.dataset.tournamentId));
 
         // Pestañas del detalle
-        delegate(el.tabs, 'click', '.tabs__tab', (_event, tab) => {
+        delegate(el.tabs, 'click', '.nav-link', (_event, tab) => {
             context.activeTab = tab.dataset.tab;
             renderDetail();
         });

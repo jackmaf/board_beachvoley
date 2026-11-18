@@ -1,28 +1,14 @@
 /* =========================================================================
-   PARTIDO
-   Configuración de equipos, registro táctico (Scout) y Marcador Vivo.
+   PARTIDO (BEM): Configuración, Scout y Marcador Vivo
+   Formularios, rejilla, botones y radios-botón (.btn-check) son de
+   Bootstrap; aquí está lo específico del juego.
    ========================================================================= */
 
 /* -------------------------------------------------------------------------
-   Bloques: team-forms / team-form (columnas de Equipo A y B en Config)
+   Bloque: team-form (columna de Equipo A / B en Config; dentro de .col)
    ------------------------------------------------------------------------- */
-.team-forms {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-}
-
-@media (min-width: 600px) {
-    .team-forms {
-        flex-direction: row;
-    }
-}
-
 .team-form {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: var(--space-3);
+    height: 100%;
     padding: var(--space-5);
     border-top: 5px solid transparent;
     border-radius: var(--radius-md);
@@ -37,20 +23,15 @@
     border-top-color: var(--color-team-b);
 }
 
-.team-form__title {
-    color: var(--color-heading);
-    font-size: 1.2rem;
-    text-align: center;
-}
-
 /* -------------------------------------------------------------------------
    Bloque: scout (contenedor de la vista de registro táctico)
    ------------------------------------------------------------------------- */
+/*
+ * `align-self: center` es necesario porque el contenedor también usa .vstack
+ * de Bootstrap, que fuerza `align-self: stretch` y lo pegaría a la izquierda.
+ */
 .scout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-4);
+    align-self: center;
     width: 100%;
     max-width: 500px;
 }
@@ -118,10 +99,6 @@
    Bloque: match-clock (hora real + cronómetro oficial)
    ------------------------------------------------------------------------- */
 .match-clock {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-2);
     padding: var(--space-3) var(--space-5);
     border-radius: var(--radius-md);
     background: var(--color-surface);
@@ -135,12 +112,6 @@
     letter-spacing: 0.5px;
 }
 
-.match-clock__stopwatch {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-}
-
 .match-clock__time {
     padding: 0.2rem 1rem;
     border: 1px solid var(--color-border-soft);
@@ -151,11 +122,6 @@
     font-size: 2.2rem;
     font-weight: 800;
     letter-spacing: 1px;
-}
-
-.match-clock__controls {
-    display: flex;
-    gap: var(--space-2);
 }
 
 .match-clock__btn {
@@ -240,12 +206,8 @@
 }
 
 .scoreboard__serve {
-    padding: 1px 8px;
-    border-radius: var(--radius-pill);
     background: var(--color-secondary);
     color: #2C363F;
-    font-size: 0.7rem;
-    font-weight: 700;
     text-transform: uppercase;
 }
 
@@ -257,6 +219,7 @@
 
 /* -------------------------------------------------------------------------
    Bloque: action-menu (¿quién fue el responsable?)
+   Los radios de tipo y gesto son .btn-check + .btn de Bootstrap.
    ------------------------------------------------------------------------- */
 .action-menu {
     position: absolute;
@@ -279,6 +242,19 @@
     animation: menu-in 0.2s var(--ease-bounce);
 }
 
+.action-menu__title {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+/* Gestos técnicos: chips compactos */
+.action-menu__skill {
+    --bs-btn-padding-y: 0.35rem;
+    --bs-btn-padding-x: 0.45rem;
+    --bs-btn-font-size: 0.75rem;
+    flex: 1 1 auto;
+}
+
 /*
  * Con la fila de recepción el menú es alto: en móviles se compacta y, como red
  * de seguridad, nunca supera el alto visible (descontando la barra inferior);
@@ -295,10 +271,6 @@
 
     .action-menu__title {
         font-size: 1rem;
-    }
-
-    .action-menu .choice__label {
-        padding: 0.5rem 0.4rem;
     }
 
     .action-menu .player-btn {
@@ -326,34 +298,12 @@
     }
 }
 
-.action-menu__title {
-    font-size: 1.15rem;
-}
-
-.action-menu__group {
-    display: flex;
-    gap: var(--space-2);
-}
-
-.action-menu__group--wrap {
-    flex-wrap: wrap;
-}
-
-.action-menu__players {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-}
-
 /* -------------------------------------------------------------------------
    Bloque: reception (calidad de recepción dentro del menú de acción)
-   Elementos: __title __optional __rows __row __player __grades __grade __legend
+   Elementos: __title __optional __row __player __grade __legend
    Modificadores: __row--a / --b (equipo), __grade--g0…g3 (color), __grade--active
    ------------------------------------------------------------------------- */
 .reception {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
     padding: var(--space-3);
     border-radius: var(--radius-sm);
     background: var(--color-surface-soft);
@@ -368,16 +318,7 @@
     font-size: 0.75rem;
 }
 
-.reception__rows {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-}
-
 .reception__row {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
     padding-left: var(--space-2);
     border-left: 3px solid transparent;
 }
@@ -393,17 +334,9 @@
 .reception__player {
     flex: 1;
     min-width: 0;
-    overflow: hidden;
     font-size: 0.85rem;
     font-weight: 700;
     text-align: left;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.reception__grades {
-    display: flex;
-    gap: var(--space-1);
 }
 
 /* Botón de calidad: borde del color de su nota; se rellena al seleccionarlo */
@@ -480,28 +413,9 @@
     background: #F0F0F0;
 }
 
-.player-btn__name {
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 /* -------------------------------------------------------------------------
-   Bloques: scout-controls / timeout-btn
+   Bloque: timeout-btn (tiempo muerto con el color del equipo)
    ------------------------------------------------------------------------- */
-.scout-controls {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    width: 100%;
-}
-
-.scout-controls__timeouts {
-    display: flex;
-    gap: var(--space-3);
-}
-
 .timeout-btn {
     display: flex;
     flex: 1;
@@ -537,19 +451,11 @@
     background: var(--color-team-b);
 }
 
-.timeout-btn__label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
 /* -------------------------------------------------------------------------
    Bloque: live-board (Marcador Vivo tipo TV)
    ------------------------------------------------------------------------- */
 .live-board {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
+    align-self: center; /* Ver nota en .scout: anula el `align-self: stretch` de .vstack */
     width: 100%;
     max-width: 600px;
     min-height: 70vh;
@@ -561,24 +467,17 @@
     background: var(--color-strong);
     color: var(--color-on-strong);
     box-shadow: var(--shadow-md);
-    text-align: center;
 }
 
 .live-board__tournament {
-    margin-bottom: var(--space-1);
     color: var(--color-secondary);
     font-size: 1.2rem;
+    font-weight: 700;
 }
 
 .live-board__set {
     font-size: 1.05rem;
     font-weight: 700;
-}
-
-.live-board__teams {
-    display: flex;
-    flex: 1;
-    gap: var(--space-4);
 }
 
 .live-board__team {
@@ -612,7 +511,9 @@
 
 .live-board__name {
     margin-top: var(--space-4); /* Deja la esquina superior libre para el indicador de saque */
+    color: inherit;
     font-size: 1.1rem;
+    font-weight: 700;
     text-align: center;
     text-transform: uppercase;
     word-break: break-word;
@@ -656,26 +557,15 @@
     opacity: 0.5;
 }
 
-.live-board__controls {
-    display: flex;
-    gap: var(--space-4);
-}
-
 .live-board__controls > .btn {
+    --bs-btn-padding-y: var(--space-4);
+    --bs-btn-font-size: 1.15rem;
     flex: 1;
-    padding: var(--space-4);
-    font-size: 1.15rem;
-}
-
-.live-board__hint {
-    color: var(--color-text-muted);
-    font-size: 0.8rem;
-    text-align: center;
 }
 
 /* Los atajos de teclado no tienen sentido en pantallas táctiles */
 @media (hover: none) {
     .live-board__hint {
-        display: none;
+        display: none !important;
     }
 }

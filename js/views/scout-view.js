@@ -32,15 +32,17 @@
     // Pintado
     // ---------------------------------------------------------------------
 
-    /** Genera los botones de gesto técnico a partir de VP.constants.SKILLS. */
+    /**
+     * Genera los botones de gesto técnico a partir de VP.constants.SKILLS.
+     * Son radios de Bootstrap (.btn-check + label.btn): accesibles y con
+     * aspecto de botón sin JS extra.
+     */
     function renderSkillChoices() {
         el.skillGroup.innerHTML = SKILLS.map(
             (skill) => `
-            <label class="choice choice--detail">
-                <input class="choice__input" type="radio" name="actionDetail" value="${skill.key}"
-                    ${skill.key === DEFAULT_SKILL ? 'checked' : ''}>
-                <span class="choice__label">${skill.emoji} ${skill.key}</span>
-            </label>`
+            <input class="btn-check" type="radio" name="actionDetail" id="skill-${skill.key}" value="${skill.key}"
+                autocomplete="off" ${skill.key === DEFAULT_SKILL ? 'checked' : ''}>
+            <label class="btn btn-outline-secondary action-menu__skill" for="skill-${skill.key}">${skill.emoji} ${skill.key}</label>`
         ).join('');
     }
 
@@ -65,9 +67,9 @@
                         title="${g.grade} · ${g.label}: ${g.hint}">${g.grade}</button>`;
                 }).join('');
                 return `
-                <div class="reception__row reception__row--${receivingTeam.toLowerCase()}">
-                    <span class="reception__player">${name}</span>
-                    <div class="reception__grades" role="group" aria-label="Calidad de recepción de ${name}">${buttons}</div>
+                <div class="reception__row reception__row--${receivingTeam.toLowerCase()} d-flex align-items-center gap-2">
+                    <span class="reception__player text-truncate">${name}</span>
+                    <div class="d-flex gap-1" role="group" aria-label="Calidad de recepción de ${name}">${buttons}</div>
                 </div>`;
             })
             .join('');

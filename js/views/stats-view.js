@@ -96,23 +96,23 @@
     function renderFilterPills(match) {
         const config = match?.config || {};
         el.filterPlayers.innerHTML = [
-            '<button type="button" class="pill" data-value="all">Todos</button>',
+            '<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">Todos</button>',
             ...PLAYER_IDS.map(
-                (id) => `<button type="button" class="pill pill--team-${id.charAt(0).toLowerCase()}" data-value="${id}">
+                (id) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary btn--team-${id.charAt(0).toLowerCase()}" data-value="${id}">
                     ${escapeHtml(config[`p${id}`] || id)}</button>`
             )
         ].join('');
 
         el.filterDetails.innerHTML = [
-            '<button type="button" class="pill" data-value="all">Todas</button>',
-            ...SKILLS.map((s) => `<button type="button" class="pill" data-value="${s.key}">${s.emoji} ${s.key}</button>`)
+            '<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">Todas</button>',
+            ...SKILLS.map((s) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="${s.key}">${s.emoji} ${s.key}</button>`)
         ].join('');
 
         const maxSets = VP.rules.normalizeRules(config).maxSets;
         el.filterSetsContainer.hidden = maxSets <= 1;
         el.filterSets.innerHTML = [
-            '<button type="button" class="pill" data-value="all">Todos los sets</button>',
-            ...Array.from({ length: maxSets }, (_, i) => `<button type="button" class="pill" data-value="${i + 1}">Set ${i + 1}</button>`)
+            '<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="all">Todos los sets</button>',
+            ...Array.from({ length: maxSets }, (_, i) => `<button type="button" class="btn btn-sm rounded-pill btn-outline-secondary" data-value="${i + 1}">Set ${i + 1}</button>`)
         ].join('');
 
         syncFilterControls();
@@ -138,7 +138,7 @@
 
     /** Conecta un grupo de pills con una clave del objeto `filters`. */
     function bindPillGroup(group, key, parse = (v) => v) {
-        delegate(group, 'click', '.pill', (_event, pill) => {
+        delegate(group, 'click', '[data-value]', (_event, pill) => {
             const value = pill.dataset.value;
             filters[key] = value === 'all' ? 'all' : parse(value);
             setActivePill(group, value);
@@ -180,14 +180,14 @@
     // =====================================================================
 
     function renderEmpty() {
-        el.finalScore.innerHTML = '<p class="empty-state__text">No hay datos registrados aún.</p>';
+        el.finalScore.innerHTML = '<p class="text-center text-body-secondary py-3 mb-0">No hay datos registrados aún.</p>';
         el.duration.textContent = '00:00';
         el.totalPoints.textContent = '0';
-        el.players.innerHTML = '<p class="empty-state__text">Registra un partido en «Scout» para ver estadísticas.</p>';
+        el.players.innerHTML = '<p class="text-center text-body-secondary py-3 mb-0">Registra un partido en «Scout» para ver estadísticas.</p>';
         el.fame.innerHTML = '';
-        el.pro.innerHTML = '<p class="empty-state__text">Sin datos para calcular indicadores.</p>';
+        el.pro.innerHTML = '<p class="text-center text-body-secondary py-3 mb-0">Sin datos para calcular indicadores.</p>';
         el.heatmap.innerHTML = '';
-        el.logBody.innerHTML = '<tr><td colspan="7" class="data-table__empty">Sin datos registrados.</td></tr>';
+        el.logBody.innerHTML = '<tr><td colspan="7" class="text-body-secondary py-3">Sin datos registrados.</td></tr>';
         el.timelineValue.textContent = 'Todo el partido';
     }
 
@@ -205,9 +205,9 @@
 
         el.finalScore.innerHTML = `
             ${teamHtml(teamA, 'a')}
-            <div class="summary__result">
+            <div class="d-flex flex-column align-items-center">
                 <span class="summary__points">${score.A} - ${score.B}</span>
-                <span class="summary__sets">${subtitle}</span>
+                <span class="small text-body-secondary">${subtitle}</span>
             </div>
             ${teamHtml(teamB, 'b')}`;
 
@@ -223,18 +223,18 @@
             const p = totals[id];
             const team = p.team.toLowerCase();
             return `
-            <div class="player-stat">
-                <div class="player-stat__info">
+            <div class="player-stat d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="player-stat__info d-flex align-items-center gap-2">
                     <img class="avatar avatar--md avatar--team-${team}" src="${getAvatarUrl(p.name)}" alt="">
                     <span class="player-stat__name">${escapeHtml(p.name)}</span>
                 </div>
-                <div class="player-stat__values">
+                <div class="d-flex flex-column align-items-end">
                     <span class="player-stat__pts">${p.pts} <small class="player-stat__unit">pts ganadores</small></span>
                     <span class="player-stat__errs">${p.errs} errores</span>
                 </div>
-                <div class="player-stat__actions">
-                    <button type="button" class="btn btn--dark btn--small" data-action="dashboard" data-player="${id}">🕸️ Heptagrama</button>
-                    <button type="button" class="btn btn--primary btn--small" data-action="log" data-player="${id}">📜 Bitácora</button>
+                <div class="d-flex gap-2 w-100">
+                    <button type="button" class="btn btn-dark btn-sm flex-fill" data-action="dashboard" data-player="${id}">🕸️ Heptagrama</button>
+                    <button type="button" class="btn btn-primary btn-sm flex-fill" data-action="log" data-player="${id}">📜 Bitácora</button>
                 </div>
             </div>`;
         }).join('');
@@ -242,19 +242,21 @@
 
     function renderFame(awards) {
         if (!awards.length) {
-            el.fame.innerHTML = '<p class="empty-state__text">Aún no hay jugadas suficientes para el Salón de la Fama.</p>';
+            el.fame.innerHTML = '<div class="col-12"><p class="text-center text-body-secondary py-3 mb-0">Aún no hay jugadas suficientes para el Salón de la Fama.</p></div>';
             return;
         }
         el.fame.innerHTML = awards
             .map(
                 (award) => `
-            <div class="fame-card ${award.isNegative ? 'fame-card--negative' : ''}">
+            <div class="col">
+            <div class="fame-card vstack gap-1 align-items-center ${award.isNegative ? 'fame-card--negative' : ''}">
                 <img class="avatar avatar--lg avatar--pulse avatar--team-${award.team.toLowerCase()}"
                     src="${getAvatarUrl(award.winner)}" alt="">
                 <span class="fame-card__emoji" aria-hidden="true">${award.emoji}</span>
                 <span class="fame-card__title">${escapeHtml(award.title)}</span>
                 <span class="fame-card__winner">${escapeHtml(award.winner)}</span>
-                <span class="fame-card__value">${escapeHtml(award.value)}</span>
+                <span class="badge text-bg-light align-self-center">${escapeHtml(award.value)}</span>
+            </div>
             </div>`
             )
             .join('');
@@ -289,7 +291,7 @@
         const rows = bySet.filter((p) => visibleSet.has(p) || (p.tipoAccion === ACTION.TIMEOUT && noActorFilters && inMinuteRange(p)));
 
         if (!rows.length) {
-            el.logBody.innerHTML = '<tr><td colspan="7" class="data-table__empty">Sin acciones para estos filtros.</td></tr>';
+            el.logBody.innerHTML = '<tr><td colspan="7" class="text-body-secondary py-3">Sin acciones para estos filtros.</td></tr>';
             return;
         }
 
@@ -297,19 +299,19 @@
             .map((p) => {
                 const row = stats.toLogRow(p, totals[p.jugadorId]?.name);
                 const isTimeout = p.tipoAccion === ACTION.TIMEOUT;
-                const cellModifier = isTimeout ? '' : p.tipoAccion === ACTION.POINT ? 'data-table__cell--point' : 'data-table__cell--error';
+                const cellModifier = isTimeout ? '' : p.tipoAccion === ACTION.POINT ? 'text-success fw-bold' : 'text-danger fw-bold';
                 const avatar = isTimeout || !totals[p.jugadorId]
                     ? '—'
                     : `<img class="avatar avatar--sm avatar--team-${row.team.toLowerCase()}" src="${getAvatarUrl(row.playerName)}" alt="">`;
                 return `
-                <tr class="${isTimeout ? 'data-table__row--timeout' : ''}">
+                <tr class="${isTimeout ? 'table-secondary fst-italic' : ''}">
                     <td>#${row.pointNumber ?? '-'} (Set ${row.setNumber})</td>
                     <td>${avatar}</td>
-                    <td class="data-table__cell--strong">${escapeHtml(isTimeout ? (row.team === 'A' ? config.teamA : config.teamB) : row.playerName)}</td>
+                    <td class="fw-bold">${escapeHtml(isTimeout ? (row.team === 'A' ? config.teamA : config.teamB) : row.playerName)}</td>
                     <td class="${cellModifier}">${escapeHtml(row.action)}</td>
                     <td>${escapeHtml(row.score)}</td>
-                    <td class="data-table__cell--optional">${row.xMeters === '-' ? '-' : `${row.xMeters} m`}</td>
-                    <td class="data-table__cell--optional">${row.yMeters === '-' ? '-' : `${row.yMeters} m`}</td>
+                    <td class="d-none d-sm-table-cell">${row.xMeters === '-' ? '-' : `${row.xMeters} m`}</td>
+                    <td class="d-none d-sm-table-cell">${row.yMeters === '-' ? '-' : `${row.yMeters} m`}</td>
                 </tr>`;
             })
             .join('');
@@ -344,8 +346,12 @@
             <div class="versus__row" title="${escapeHtml(hint)}">
                 <span class="versus__label">${label}</span>
                 ${value('a', aText)}
-                <div class="versus__track versus__track--a"><div class="versus__bar versus__bar--a" style="width:${width(a)}%"></div></div>
-                <div class="versus__track versus__track--b"><div class="versus__bar versus__bar--b" style="width:${width(b)}%"></div></div>
+                <div class="progress versus__track versus__track--a" role="progressbar" aria-label="${label}: equipo A">
+                    <div class="progress-bar" style="width:${width(a)}%"></div>
+                </div>
+                <div class="progress versus__track versus__track--b" role="progressbar" aria-label="${label}: equipo B">
+                    <div class="progress-bar" style="width:${width(b)}%"></div>
+                </div>
                 ${value('b', bText)}
             </div>`;
     }
@@ -393,19 +399,19 @@
         ].join('');
 
         const header = `
-            <div class="versus__head">
+            <div class="d-flex justify-content-between gap-3">
                 <span class="versus__team versus__team--a">${escapeHtml(config.teamA)}</span>
                 <span class="versus__team versus__team--b">${escapeHtml(config.teamB)}</span>
             </div>`;
 
-        el.pro.innerHTML = `<div class="versus">${header}${rows}</div>${renderReceptionDetail(pro, config)}`;
+        el.pro.innerHTML = `<div class="versus vstack gap-3">${header}${rows}</div>${renderReceptionDetail(pro, config)}`;
     }
 
     /** Tablas de recepción: side-out por calidad y ranking de receptores. */
     function renderReceptionDetail(pro, config) {
         if (!pro.hasReceptionData) {
             return `
-                <p class="pro-stats__empty">
+                <p class="small text-body-secondary text-center bg-body-tertiary rounded-3 p-3 mb-0">
                     💡 Para ver la calidad de recepción, marca <strong>3 · 2 · 1 · 0</strong> sobre el receptor
                     en el menú de Scout al registrar cada punto.
                 </p>`;
@@ -415,7 +421,7 @@
         const byGradeRows = RECEPTION_GRADES.map(
             (g) => `
             <tr>
-                <td class="pro-stats__grade-cell"><span class="grade-badge grade-badge--g${g.grade}">${g.grade}</span> ${g.label}</td>
+                <td class="text-start text-nowrap"><span class="badge grade-badge grade-badge--g${g.grade}">${g.grade}</span> ${g.label}</td>
                 <td>${cell(pro.byGrade.A[g.grade])}</td>
                 <td>${cell(pro.byGrade.B[g.grade])}</td>
             </tr>`
@@ -427,26 +433,26 @@
                 const r = pro.players[id];
                 return `
                 <tr>
-                    <td class="data-table__cell--strong pro-stats__player-cell">
+                    <td class="fw-bold text-start text-nowrap">
                         <span class="pro-stats__dot pro-stats__dot--${id.charAt(0).toLowerCase()}"></span>
                         ${escapeHtml(config[`p${id}`] || id)}
                     </td>
                     <td>${r.count}</td>
                     <td><strong>${formatAvg(r.average)}</strong></td>
                     <td>${formatPct(r.positivePct)}</td>
-                    <td class="data-table__cell--optional">${formatPct(r.perfectPct)}</td>
+                    <td class="d-none d-sm-table-cell">${formatPct(r.perfectPct)}</td>
                     <td>${formatPct(r.sideOutPct)}</td>
                 </tr>`;
             })
             .join('');
 
         return `
-            <div class="pro-stats__tables">
-                <section class="pro-stats__section">
+            <div class="row g-4">
+                <section class="col-md-6">
                     <h3 class="pro-stats__subtitle">Side-out según la calidad de recepción</h3>
-                    <div class="table-scroll">
-                        <table class="data-table">
-                            <thead><tr>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle text-center mb-0">
+                            <thead class="table-dark"><tr>
                                 <th scope="col">Recepción</th>
                                 <th scope="col">${escapeHtml(config.teamA)}</th>
                                 <th scope="col">${escapeHtml(config.teamB)}</th>
@@ -455,16 +461,16 @@
                         </table>
                     </div>
                 </section>
-                <section class="pro-stats__section">
+                <section class="col-md-6">
                     <h3 class="pro-stats__subtitle">Receptores</h3>
-                    <div class="table-scroll">
-                        <table class="data-table">
-                            <thead><tr>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-striped align-middle text-center mb-0">
+                            <thead class="table-dark"><tr>
                                 <th scope="col">Jugador</th>
                                 <th scope="col" title="Recepciones registradas">Rec.</th>
                                 <th scope="col" title="Media 0-3">Media</th>
                                 <th scope="col" title="% de recepciones 2-3">Posit.</th>
-                                <th scope="col" class="data-table__cell--optional" title="% de recepciones 3">Perf.</th>
+                                <th scope="col" class="d-none d-sm-table-cell" title="% de recepciones 3">Perf.</th>
                                 <th scope="col" title="% de rallies ganados tras su recepción">Side-out</th>
                             </tr></thead>
                             <tbody>${receivers}</tbody>

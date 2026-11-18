@@ -1,0 +1,327 @@
+/* =========================================================================
+   PUENTE ENTRE NUESTROS TOKENS Y BOOTSTRAP 5.3
+   -------------------------------------------------------------------------
+   Bootstrap expone casi todo su diseño como variables CSS (--bs-*). En vez
+   de recompilar Sass, aquí reasignamos esas variables a nuestros tokens
+   (tokens.css). Resultado:
+     - Los componentes de Bootstrap (btn, card, form-control, table, nav,
+       progress, toast…) se ven con la identidad de la app (naranja, arena…).
+     - Los 3 temas (classic / dark / high-contrast) siguen funcionando: los
+       tokens cambian con [data-theme] y Bootstrap los hereda.
+     - El tema oscuro activa además el modo nativo `data-bs-theme="dark"`.
+
+   Especificidad: Bootstrap declara sus variables en `:root` y
+   `[data-bs-theme=…]` (0,1,0). Usamos `body[data-bs-theme]` (0,1,1) para
+   que las nuestras ganen siempre.
+   ========================================================================= */
+
+body[data-bs-theme] {
+    /* Tipografía y colores base */
+    --bs-body-font-family: var(--font-family);
+    --bs-body-color: var(--color-text);
+    --bs-body-bg: var(--color-surface);
+    --bs-emphasis-color: var(--color-heading);
+    --bs-heading-color: var(--color-heading);
+    --bs-secondary-color: var(--color-text-muted);
+    --bs-tertiary-color: var(--color-text-subtle);
+    --bs-secondary-bg: var(--color-surface-muted);
+    --bs-tertiary-bg: var(--color-surface-soft);
+    --bs-border-color: var(--color-border);
+    --bs-border-color-translucent: var(--color-border-soft);
+
+    /* Paleta (los -rgb los usan las utilidades text-*, bg-* y los focus) */
+    --bs-primary: var(--color-primary);
+    --bs-primary-rgb: 255, 123, 84;
+    --bs-success: var(--color-success);
+    --bs-success-rgb: 39, 174, 96;
+    --bs-danger: var(--color-error);
+    --bs-danger-rgb: 232, 65, 24;
+    --bs-warning: var(--color-warning);
+    --bs-warning-rgb: 243, 156, 18;
+    --bs-link-color: var(--color-primary);
+    --bs-link-color-rgb: 255, 123, 84;
+    --bs-link-hover-color: var(--color-primary-strong);
+
+    /* Forma */
+    --bs-border-radius: var(--radius-sm);
+    --bs-border-radius-lg: var(--radius-md);
+    --bs-border-radius-xl: var(--radius-lg);
+    --bs-border-radius-xxl: var(--radius-xl);
+    --bs-focus-ring-color: var(--color-primary-soft);
+}
+
+/* En alto contraste el "primario" es negro */
+body[data-theme="high-contrast"][data-bs-theme] {
+    --bs-primary-rgb: 0, 0, 0;
+    --bs-link-color-rgb: 0, 0, 0;
+}
+
+/* -------------------------------------------------------------------------
+   Botones
+   Mantienen el aspecto original: peso 700, esquinas redondeadas y un ligero
+   "salto" al pasar el ratón.
+   ------------------------------------------------------------------------- */
+.btn {
+    --bs-btn-font-weight: 700;
+    --bs-btn-padding-y: 0.7rem;
+    --bs-btn-padding-x: 1.25rem;
+    --bs-btn-border-radius: var(--radius-md);
+    --bs-btn-border-width: 2px;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+/*
+ * Bootstrap pinta el foco por teclado con los colores de "hover": un botón
+ * secundario enfocado parecía la acción principal (p. ej. "Cancelar" relleno
+ * de naranja). Aquí el foco sólo añade el anillo y conserva el relleno normal.
+ */
+.btn:focus-visible {
+    border-color: var(--bs-btn-border-color);
+    background-color: var(--bs-btn-bg);
+    color: var(--bs-btn-color);
+}
+
+.btn-sm {
+    --bs-btn-padding-y: 0.4rem;
+    --bs-btn-padding-x: 0.8rem;
+    --bs-btn-font-size: 0.85rem;
+    --bs-btn-border-radius: var(--radius-sm);
+}
+
+.btn-primary {
+    --bs-btn-color: var(--color-on-primary);
+    --bs-btn-bg: var(--color-primary);
+    --bs-btn-border-color: var(--color-primary);
+    --bs-btn-hover-color: var(--color-on-primary);
+    --bs-btn-hover-bg: var(--color-primary-strong);
+    --bs-btn-hover-border-color: var(--color-primary-strong);
+    --bs-btn-active-color: var(--color-on-primary);
+    --bs-btn-active-bg: var(--color-primary-strong);
+    --bs-btn-active-border-color: var(--color-primary-strong);
+    --bs-btn-disabled-color: var(--color-on-primary);
+    --bs-btn-disabled-bg: var(--color-primary);
+    --bs-btn-disabled-border-color: var(--color-primary);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+    box-shadow: var(--shadow-primary);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--color-primary);
+    --bs-btn-border-color: var(--color-primary);
+    --bs-btn-hover-color: var(--color-on-primary);
+    --bs-btn-hover-bg: var(--color-primary);
+    --bs-btn-hover-border-color: var(--color-primary);
+    --bs-btn-active-color: var(--color-on-primary);
+    --bs-btn-active-bg: var(--color-primary);
+    --bs-btn-active-border-color: var(--color-primary);
+    --bs-btn-disabled-color: var(--color-primary);
+    --bs-btn-disabled-border-color: var(--color-primary);
+    --bs-btn-focus-shadow-rgb: var(--bs-primary-rgb);
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--color-danger);
+    --bs-btn-border-color: var(--color-danger);
+    --bs-btn-hover-bg: #FF6B81;
+    --bs-btn-hover-border-color: #FF6B81;
+    --bs-btn-active-bg: #E63E4F;
+    --bs-btn-active-border-color: #E63E4F;
+    --bs-btn-disabled-bg: var(--color-danger);
+    --bs-btn-disabled-border-color: var(--color-danger);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.3);
+}
+
+.btn-warning {
+    --bs-btn-color: #FFFFFF;
+    --bs-btn-bg: var(--color-warning);
+    --bs-btn-border-color: var(--color-warning);
+    --bs-btn-hover-color: #FFFFFF;
+    --bs-btn-hover-bg: #E08E0B;
+    --bs-btn-hover-border-color: #E08E0B;
+    --bs-btn-active-color: #FFFFFF;
+    --bs-btn-active-bg: #E08E0B;
+    --bs-btn-disabled-color: #FFFFFF;
+    --bs-btn-disabled-bg: var(--color-warning);
+    --bs-btn-disabled-border-color: var(--color-warning);
+}
+
+.btn-success {
+    --bs-btn-bg: var(--color-success);
+    --bs-btn-border-color: var(--color-success);
+    --bs-btn-hover-bg: #229954;
+    --bs-btn-hover-border-color: #229954;
+    --bs-btn-active-bg: #1E8449;
+    --bs-btn-active-border-color: #1E8449;
+}
+
+.btn-dark {
+    --bs-btn-bg: var(--color-strong);
+    --bs-btn-border-color: var(--color-strong);
+    --bs-btn-hover-bg: var(--color-strong);
+    --bs-btn-active-bg: var(--color-strong);
+}
+
+.btn-light {
+    --bs-btn-bg: var(--color-surface-muted);
+    --bs-btn-border-color: var(--color-surface-muted);
+    --bs-btn-color: var(--color-text);
+    --bs-btn-hover-bg: var(--color-border-soft);
+    --bs-btn-hover-color: var(--color-text);
+}
+
+/* Botones-radio (btn-check): colores de "punto", "error" y gestos técnicos */
+.btn-outline-success {
+    --bs-btn-color: var(--color-text);
+    --bs-btn-border-color: var(--color-border);
+    --bs-btn-hover-bg: transparent;
+    --bs-btn-hover-color: var(--color-text);
+    --bs-btn-hover-border-color: var(--color-point);
+    --bs-btn-active-bg: var(--color-point);
+    --bs-btn-active-border-color: var(--color-point);
+    --bs-btn-active-color: #FFFFFF;
+}
+
+.btn-outline-danger {
+    --bs-btn-color: var(--color-text);
+    --bs-btn-border-color: var(--color-border);
+    --bs-btn-hover-bg: transparent;
+    --bs-btn-hover-color: var(--color-text);
+    --bs-btn-hover-border-color: var(--color-error);
+    --bs-btn-active-bg: var(--color-error);
+    --bs-btn-active-border-color: var(--color-error);
+    --bs-btn-active-color: #FFFFFF;
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--color-text-muted);
+    --bs-btn-border-color: var(--color-border);
+    --bs-btn-hover-bg: transparent;
+    --bs-btn-hover-color: var(--color-text);
+    --bs-btn-hover-border-color: var(--color-accent);
+    --bs-btn-active-bg: var(--color-strong);
+    --bs-btn-active-border-color: var(--color-strong);
+    --bs-btn-active-color: var(--color-on-strong);
+}
+
+/* -------------------------------------------------------------------------
+   Tarjetas
+   ------------------------------------------------------------------------- */
+.card {
+    --bs-card-bg: var(--color-surface);
+    --bs-card-color: var(--color-text);
+    --bs-card-border-color: var(--color-border-soft);
+    --bs-card-border-radius: var(--radius-md);
+    --bs-card-inner-border-radius: var(--radius-md);
+    --bs-card-title-color: var(--color-heading);
+}
+
+/* -------------------------------------------------------------------------
+   Formularios
+   ------------------------------------------------------------------------- */
+.form-label {
+    margin-bottom: 0.3rem;
+    color: var(--color-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.form-control,
+.form-select {
+    padding-top: 0.7rem;
+    padding-bottom: 0.7rem;
+    border-width: 2px;
+    border-color: var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem var(--color-primary-soft);
+}
+
+.form-control:user-invalid {
+    border-color: var(--color-error);
+}
+
+/* El slider de la línea de tiempo con el color de la marca */
+.form-range::-webkit-slider-thumb {
+    background-color: var(--color-primary);
+}
+
+.form-range::-moz-range-thumb {
+    background-color: var(--color-primary);
+}
+
+.form-range:focus::-webkit-slider-thumb {
+    box-shadow: 0 0 0 1px var(--color-surface), 0 0 0 0.25rem var(--color-primary-soft);
+}
+
+/* -------------------------------------------------------------------------
+   Navegación (pestañas con subrayado)
+   ------------------------------------------------------------------------- */
+.nav-underline {
+    --bs-nav-link-color: var(--color-text-muted);
+    --bs-nav-link-hover-color: var(--color-primary);
+    --bs-nav-underline-link-active-color: var(--color-primary);
+    --bs-nav-underline-border-width: 3px;
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+/* -------------------------------------------------------------------------
+   Tablas
+   ------------------------------------------------------------------------- */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--color-text);
+    --bs-table-border-color: var(--color-border-soft);
+    --bs-table-striped-bg: var(--color-surface-soft);
+    --bs-table-striped-color: var(--color-text);
+    --bs-table-hover-bg: var(--color-primary-soft);
+    --bs-table-hover-color: var(--color-text);
+    font-size: 0.85rem;
+}
+
+.table > thead.table-dark {
+    --bs-table-bg: var(--color-strong);
+    --bs-table-color: var(--color-on-strong);
+    --bs-table-border-color: var(--color-strong);
+}
+
+.table > thead th {
+    white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------
+   Barra de progreso, alertas y avisos (toast)
+   ------------------------------------------------------------------------- */
+.progress {
+    --bs-progress-bg: var(--color-surface-muted);
+    --bs-progress-bar-bg: var(--color-primary);
+    --bs-progress-border-radius: var(--radius-pill);
+}
+
+.toast {
+    --bs-toast-bg: var(--color-strong);
+    --bs-toast-color: var(--color-on-strong);
+    --bs-toast-border-width: 0;
+    --bs-toast-border-radius: var(--radius-md);
+    --bs-toast-max-width: 420px;
+    --bs-toast-font-size: 0.9rem;
+    --bs-toast-box-shadow: var(--shadow-lg);
+}
+
+/* (En tema oscuro, Bootstrap ya invierte el icono de .btn-close por sí solo) */
+.btn-close:focus {
+    box-shadow: 0 0 0 0.25rem var(--color-primary-soft);
+}

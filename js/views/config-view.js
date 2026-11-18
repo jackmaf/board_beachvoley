@@ -154,8 +154,13 @@
     // Tema visual
     // ---------------------------------------------------------------------
 
+    /**
+     * Aplica un tema. Además de nuestros tokens ([data-theme]) activa el modo
+     * de color nativo de Bootstrap ([data-bs-theme]) para sus componentes.
+     */
     function applyTheme(theme) {
         document.body.dataset.theme = theme;
+        document.body.dataset.bsTheme = theme === 'dark' ? 'dark' : 'light';
         qsa('.theme-picker__input').forEach((input) => {
             input.checked = input.value === theme;
         });

@@ -51,19 +51,23 @@
         const stack = byId('toast-stack');
         if (!stack) return;
 
+        // Estructura de un .toast de Bootstrap; `.show` lo hace visible sin su JS
         const item = document.createElement('div');
-        item.className = `toast toast--${type}`;
+        item.className = `toast show toast--${type}`;
         item.setAttribute('role', type === 'error' ? 'alert' : 'status');
 
+        const body = document.createElement('div');
+        body.className = 'toast-body d-flex align-items-center gap-2';
+
         const icon = document.createElement('span');
-        icon.className = 'toast__icon';
+        icon.className = 'flex-shrink-0';
         icon.textContent = TOAST_ICONS[type] || TOAST_ICONS.info;
 
         const text = document.createElement('span');
-        text.className = 'toast__message';
         text.textContent = message; // textContent: nunca interpreta HTML
 
-        item.append(icon, text);
+        body.append(icon, text);
+        item.append(body);
         stack.appendChild(item);
         while (stack.children.length > MAX_TOASTS) stack.firstElementChild.remove();
         bringToTopLayer(stack);
@@ -115,8 +119,8 @@
 
         const okButton = byId('confirm-accept');
         okButton.textContent = confirmLabel;
-        okButton.classList.toggle('btn--danger', danger);
-        okButton.classList.toggle('btn--primary', !danger);
+        okButton.classList.toggle('btn-danger', danger);
+        okButton.classList.toggle('btn-primary', !danger);
         byId('confirm-cancel').textContent = cancelLabel;
 
         return new Promise((resolve) => {
@@ -124,7 +128,9 @@
             dialog.addEventListener('close', () => resolve(dialog.returnValue === 'accept'), { once: true });
             dialog.returnValue = '';
             openModal(dialog);
-            okButton.focus();
+            // En acciones destructivas el foco inicial va a "Cancelar" (buena práctica:
+            // pulsar Enter por inercia no debe borrar nada).
+            (danger ? byId('confirm-cancel') : okButton).focus();
         });
     }
 
